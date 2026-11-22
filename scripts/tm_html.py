@@ -242,6 +242,28 @@ details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 
 .panel{border:1px solid var(--line);border-radius:6px;padding:8px 12px}.panel h2{margin:0 0 6px;border:none;font-size:16px}
 .panel table{margin:2px 0 6px}.panel h3{margin:8px 0 2px;font-size:14px}.panel ul{margin:2px 0;padding-left:20px}
 .numbers{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0;font-size:13px}.numbers b{font-size:16px}
+:root{--pass:#2da44e;--fail:#cf222e;--block:#bf8700;--notrun:#d0d7de;--unimpl:#8c959f;--explored:#8250df}
+@media (prefers-color-scheme: dark){:root{--notrun:#3d444d;--unimpl:#6e7781}}
+.tabs input{position:absolute;opacity:0}.tabs label{display:inline-block;padding:6px 14px;border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;margin-right:4px;background:var(--soft)}
+.tabs input:checked+label{background:var(--bg);font-weight:700}.tabs input:focus-visible+label{outline:2px solid var(--link)}
+.pane{display:none;border-top:1px solid var(--line)}
+#tab-req:checked~#req-coverage,#tab-risk:checked~#risk-coverage{display:block}
+.tree details{border:none;border-radius:0;margin:0;padding:0}
+.tree summary{font-weight:400;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:5px 8px;border-bottom:1px solid var(--line)}
+.tree summary:hover{background:var(--soft)}
+.tree summary.ng{box-shadow:inset 3px 0 0 var(--fail)}.tree summary.warn{box-shadow:inset 3px 0 0 var(--block)}.tree summary.ok{box-shadow:inset 3px 0 0 var(--pass)}
+.tree .kids{margin-left:22px;border-left:1px dashed var(--line)}
+.tree .lv-REQ>summary,.tree .lv-RISK>summary{font-weight:600}
+.kind{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;white-space:nowrap}
+.tree .title{flex:1 1 280px;min-width:0}
+.bar{display:inline-flex;width:140px;height:10px;border-radius:5px;overflow:hidden;background:var(--notrun);flex:none}
+.bar i,.legend i{display:inline-block;height:100%}.pass{background:var(--pass)}.fail{background:var(--fail)}.block{background:var(--block)}
+.notrun{background:var(--notrun)}.unimpl{background:repeating-linear-gradient(45deg,var(--unimpl) 0 3px,transparent 3px 6px)}.explored{background:var(--explored)}
+.rate{font-size:12.5px;white-space:nowrap;min-width:120px}
+.flags b{font-size:11.5px;font-weight:600;margin-right:6px;white-space:nowrap}.flags .f{color:var(--fail)}.flags .w{color:var(--block)}
+.ci{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.leaf{padding:4px 8px;border-bottom:1px solid var(--line);font-size:13px}.leaf .memo{color:var(--muted);font-size:12px;margin-left:8px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;margin:6px 0}.legend i{width:12px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
 """
 
 
@@ -637,6 +659,152 @@ def _first_view(v: View, m: dict, judgments: dict[str, tuple[str, str]], lacking
     return f'<section id="first-view">{banner}<div class="cols">{done}{problems}</div></section>'
 
 
+# ---- テストレポート: 開いてたどれるトレーサビリティ ----
+
+# たどる順。キーの種類の下に、値の種類を開く。
+_TREE_CHILDREN = {"REQ": ["SPEC", "COND"], "SPEC": ["COND"], "RISK": ["COND"], "COND": ["HTC", "CH"],
+                  "HTC": ["LTC"], "CH": ["SES"]}
+# 色帯の並び(数えるキー, CSSのクラス)
+_TREE_SEGMENTS = [("Pass", "pass"), ("Fail", "fail"), ("ブロック", "block"), ("未実行", "notrun"),
+                  ("未実装", "unimpl"), ("探索済み", "explored"), ("未探索", "notrun")]
+
+
+class _Tree:
+    """要求(またはリスク)から、テスト結果・証跡・欠陥レポートまでを、開いてたどれる入れ子にする。"""
+
+    def __init__(self, v: View):
+        self.v, self.p = v, v.project
+        self.final = self.p.final_results()
+        self.unimplemented = set(tm_core.unimplemented_htcs(self.p))
+
+    def kids(self, record_id: str, types: list[str]) -> list[str]:
+        return [c for c in self.p.children(record_id) if type_of(c) in types]
+
+    def counts(self, record_id: str) -> dict:
+        """その成果物から下のテストの内訳。"""
+        t = type_of(record_id)
+        zero = {k: 0 for k, _ in _TREE_SEGMENTS} | {"bugs": 0}
+        if t in ("REQ", "SPEC", "RISK", "COND"):
+            row = tm_core.coverage(self.p, record_id)
+            return zero | {k: row[k] for k in tm_core.RESULTS} | {
+                "未実装": row["未実装"], "探索済み": row["charters_done"],
+                "未探索": row["charters"] - row["charters_done"], "bugs": row["open_bugs"]}
+        if t == "HTC":
+            c = dict(zero, 未実装=1 if record_id in self.unimplemented else 0)
+            for ltc in self.kids(record_id, ["LTC"]):
+                c[tm_core._status(self.final, ltc)] += 1
+            open_ids = {b.id for b in tm_core.open_bugs(self.p)}
+            c["bugs"] = len({b for ltc in self.kids(record_id, ["LTC"]) for b in self.kids(ltc, ["BUG"]) if b in open_ids})
+            return c
+        sessions = self.kids(record_id, ["SES"])  # CH
+        open_ids = {b.id for b in tm_core.open_bugs(self.p)}
+        return dict(zero, 探索済み=1 if sessions else 0, 未探索=0 if sessions else 1,
+                    bugs=len({b for s in sessions for b in self.kids(s, ["BUG"]) if b in open_ids}))
+
+    def bar(self, c: dict) -> tuple[str, str]:
+        total = sum(c[k] for k, _ in _TREE_SEGMENTS)
+        if not total:
+            return '<span class="rate none-text">テストなし</span>', "none"
+        parts = "".join(f'<i class="{cls}" style="width:{100 * c[k] / total:.1f}%" title="{k} {c[k]}"></i>'
+                        for k, cls in _TREE_SEGMENTS if c[k])
+        executed = c["Pass"] + c["Fail"] + c["探索済み"]
+        waiting = c["未実行"] + c["ブロック"] + c["未探索"]
+        flags = ([f'<b class="f">Fail {c["Fail"]}</b>'] if c["Fail"] else []) \
+            + ([f'<b class="w">未実行 {waiting}</b>'] if waiting else []) \
+            + ([f'<b class="w">未実装 {c["未実装"]}</b>'] if c["未実装"] else []) \
+            + ([f'<b class="f">不具合 {c["bugs"]}</b>'] if c["bugs"] else [])
+        level = "ng" if c["Fail"] or c["bugs"] else ("warn" if executed < total else "ok")
+        return (f'<span class="bar">{parts}</span>'
+                f'<span class="rate">実行 {executed}/{total}({round(100 * executed / total)}%)</span>'
+                f'<span class="flags">{"".join(flags)}</span>'), level
+
+    def coverage_items(self, cond_id: str) -> str:
+        items = self.kids(cond_id, ["CI"])
+        if not items:
+            return ""
+        covered = [i for i in items if any(h not in self.unimplemented for h in self.kids(i, ["HTC"]))]
+        return (f'<span class="ci" title="テスト設計で出したカバレッジアイテムのうち、実装したテストケースで通るもの">'
+                f'カバレッジアイテム {len(covered)}/{len(items)}</span>')
+
+    def label(self, record_id: str) -> str:
+        record = self.p.records[record_id]
+        title = (record.fields.get("テストケース", "") if type_of(record_id) == "LTC" else "") or record.title
+        level = f' {_badge(record.fields.get("区分", ""))}' if type_of(record_id) == "RISK" else ""
+        return (f'<span class="kind">{TYPES[type_of(record_id)]}</span>{self.v.ref(record_id, False)}{level}'
+                f' <span class="title">{_escape(title[:70])}</span>')
+
+    def leaf_ltc(self, ltc: str) -> str:
+        result = self.final.get(ltc)
+        if result is None:
+            return f'<div class="leaf" data-id="{ltc}">{self.label(ltc)} {_badge("未実行")} テスト結果が無い</div>'
+        files = [e for e in result.evidence if not re.match(r"^[a-z]+://", e)]
+        evidence = " ".join(
+            f'<a href="{self.v.file_base}{tm_core.EXECUTION_DIR}/{result.run}/{html_lib.escape(e)}">'
+            f'証跡{n if len(files) > 1 else ""}</a>' for n, e in enumerate(files, 1))
+        bugs = " ".join(self.v.ref(b, False) for b in result.bugs)
+        memo = f'<div class="memo">{self.v.text(result.memo[:200])}</div>' if result.memo and result.result != "Pass" else ""
+        return (f'<div class="leaf" data-id="{ltc}">{self.label(ltc)} {_badge(result.result)}'
+                f' <span class="none-text">{_escape(result.run)}</span> {evidence} {bugs}{memo}</div>')
+
+    def leaf_session(self, ses: str) -> str:
+        record = self.p.records[ses]
+        bugs = " ".join(self.v.ref(b, False) for b in self.kids(ses, ["BUG"]))
+        return (f'<div class="leaf" data-id="{ses}">{self.label(ses)}'
+                f' <span class="none-text">{_escape(record.fields.get("かかった時間(分)", ""))}分</span>'
+                f' {self.v.file_link(record.file, "セッションシート")} {bugs}</div>')
+
+    def node(self, record_id: str, top: bool = False) -> str:
+        t = type_of(record_id)
+        if t == "LTC":
+            return self.leaf_ltc(record_id)
+        if t == "SES":
+            return self.leaf_session(record_id)
+        # 利用の流れのテスト条件(要求に直接紐づくもの)は、仕様のあとに出す。
+        # 要求の仕様にも紐づくテスト条件は、その仕様の下に出るので、要求の直下には出さない。
+        children = sorted(self.kids(record_id, _TREE_CHILDREN[t]), key=lambda c: (type_of(c) != "SPEC", tm_core._id_key(c)))
+        if t == "REQ":
+            specs = {c for c in children if type_of(c) == "SPEC"}
+            children = [c for c in children if type_of(c) == "SPEC" or not specs & self.p.records[c].links]
+        bar, level = self.bar(self.counts(record_id))
+        extra = self.coverage_items(record_id) if t == "COND" else ""
+        inner = "".join(self.node(c) for c in children)
+        if t == "HTC" and record_id in self.unimplemented:
+            entry = self.p.unimplemented.get(record_id)
+            reason = entry.reason if entry else self.p.records[record_id].fields.get("状態", "") or "理由の記録が無い"
+            inner += f'<div class="leaf none-text">未実装: {self.v.text(reason)}</div>'
+        inner = inner or '<div class="leaf none-text">この下にテストが無い</div>'
+        anchor = f' id="tree-{record_id}"' if top else ""
+        return (f'<details class="lv-{t}"{anchor} data-id="{record_id}"><summary class="{level}">{self.label(record_id)}'
+                f'{bar}{extra}</summary><div class="kids">{inner}</div></details>')
+
+
+def _trace_tree(v: View, m: dict) -> str:
+    tree = _Tree(v)
+    legend = "".join(f'<span><i class="{cls}"></i>{name}</span>' for name, cls in [
+        ("Pass", "pass"), ("Fail", "fail"), ("ブロック", "block"), ("未実行・未探索", "notrun"),
+        ("未実装", "unimpl"), ("探索的テスト済み", "explored")])
+    req = "".join(tree.node(r["id"], top=True) for r in m["requirements"])
+    risk = "".join(tree.node(r["id"], top=True) for r in m["risks"])
+    return (
+        '<h2 id="trace">要求とリスクのカバレッジ(トレーサビリティ)</h2>'
+        "<p class=\"muted\">行をクリックすると、紐づく下の成果物が開く(要求 → 仕様 → テスト条件 → テストケース・テストチャーター → 結果・証跡・欠陥レポート)。"
+        "左の線は、赤 = Fail か修正されていない不具合がある、黄 = 実行していないものがある、緑 = すべて実行して Pass。"
+        "「実行 x/y」= 実行したもの(Pass + Fail + 探索したテストチャーター) ÷ (ローレベルテストケース + 未実装のハイレベルテストケース + テストチャーター)。"
+        "テスト条件の「カバレッジアイテム」は、テスト設計で出したパターンのうち、実装したテストケースで通るものの数。"
+        "リスクは、リスクに直接紐づくテスト条件のテストを数え、リスクレベルの高い順に並べる。</p>"
+        f'<div class="legend">{legend}</div>'
+        '<div class="tabs">'
+        '<input type="radio" name="trace-tab" id="tab-req" checked><label for="tab-req">要求からたどる</label>'
+        '<input type="radio" name="trace-tab" id="tab-risk"><label for="tab-risk">リスクからたどる</label>'
+        f'<div class="pane tree" id="req-coverage">{req}</div>'
+        f'<div class="pane tree" id="risk-coverage">{risk}</div></div>'
+        # ファーストビューからリスクへのリンクで来たときは、リスクのタブを開く(スクリプトが無くても要求のタブは見える)
+        "<script>function tmTab(){if(location.hash==='#risk-coverage'){document.getElementById('tab-risk').checked=true}"
+        "else if(location.hash==='#req-coverage'){document.getElementById('tab-req').checked=true}}"
+        "tmTab();addEventListener('hashchange',tmTab)</script>"
+    )
+
+
 def _charter_time_table(v: View, rows: list[dict]) -> str:
     body = [[v.ref(r["id"]), f"{r['minutes']:g}", str(r["timebox"]) if r["timebox"] is not None else "-",
              _badge("達した" if r["reached"] else "達していない"), v.refs(r["sessions"], False) if r["sessions"] else "なし"]
@@ -645,13 +813,13 @@ def _charter_time_table(v: View, rows: list[dict]) -> str:
                    ["time-" + r["id"] for r in rows]) if rows else "<p>ありません。</p>")
 
 
-def _coverage_table(v: View, rows: list[dict], risk: bool, label: str = "要求") -> str:
-    headers = (["リスク", "リスクレベル", "区分"] if risk else [label]) + ["テスト条件"] + COUNT_HEADERS
+def _coverage_table(v: View, rows: list[dict], label: str) -> str:
+    headers = [label, "テスト条件"] + COUNT_HEADERS
     body = []
     for row in rows:
-        cells = [v.ref(row["id"])] + ([str(row["level"]), _badge(row["class"])] if risk else [])
-        cells += [str(row["conditions"]), str(row["testcases"]), str(row["Pass"]), str(row["Fail"]), str(row["ブロック"]),
-                  str(row["未実行"]), str(row["未実装"]), str(row["sessions"]), str(row["bugs"]), _badge(row["state"])]
+        cells = [v.ref(row["id"]), str(row["conditions"]), str(row["testcases"]), str(row["Pass"]), str(row["Fail"]),
+                 str(row["ブロック"]), str(row["未実行"]), str(row["未実装"]), str(row["sessions"]), str(row["bugs"]),
+                 _badge(row["state"])]
         body.append(cells)
     return _table(headers, body, ["cov-" + r["id"] for r in rows])
 
@@ -708,14 +876,9 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
         f'使ったテストラン: {_escape(", ".join(m["runs"]) or "なし")}。'
         "数字はすべて、このレポートを作った時点の成果物(snapshot フォルダ)から数え直したもの。"
         "同じテストケースを何回か実行したときは、いちばん新しいテストランの結果を数えている。</div>"
-        '<h2 id="req-coverage">要求のカバレッジ</h2>'
-        "<p class=\"muted\">要求ごとに、紐づくテストがどれだけ実行されたか。未実行・ブロック・未実装は、実行した数に含めない。"
-        "状態の分母は「ローレベルテストケース + 未実装のハイレベルテストケース + テストチャーター」。</p>"
-        + _coverage_table(v, m["requirements"], risk=False)
-        + '<h2 id="risk-coverage">リスクのカバレッジ</h2><p class="muted">リスクレベルの高い順。リスクに直接紐づくテスト条件のテストを数える。</p>'
-        + _coverage_table(v, m["risks"], risk=True)
+        + _trace_tree(v, m)
         + '<h2 id="spec-coverage">仕様のカバレッジ</h2><p class="muted">仕様ごとに、その仕様を直接確かめるテスト条件のテストを数える。</p>'
-        + _coverage_table(v, m["specs"], risk=False, label="仕様")
+        + _coverage_table(v, m["specs"], "仕様")
         + '<h2 id="charter-time">テストチャーターごとのセッションの時間</h2>'
         "<p class=\"muted\">セッションシートの「かかった時間(分)」(中断を除いた時間)の合計を、テストチャーターの時間枠と比べる。</p>"
         + _charter_time_table(v, m["charters"])

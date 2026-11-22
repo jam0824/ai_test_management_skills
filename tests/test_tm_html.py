@@ -174,13 +174,63 @@ class Testテストレポート:
         html = (out / "index.html").read_text(encoding="utf-8")
         assert "すべての終了条件を満たした" in html.split('id="first-view"')[1].split('id="details"')[0]
 
-    def test_要求とリスクのカバレッジを数えて出す(self, root):
+    def _tree_block(self, html, top_id, next_id=None):
+        block = html.split(f'id="tree-{top_id}"')[1]
+        return block.split(f'id="tree-{next_id}"')[0] if next_id else block
+
+    def test_要求からテスト結果まで開いてたどれる(self, root):
         out = self._build(root)
         html = (out / "index.html").read_text(encoding="utf-8")
-        row = next(line for line in html.split("</tr>") if 'id="cov-REQ-001"' in line)
-        assert "実行したがFailあり" in row
+        block = self._tree_block(html, "REQ-001", "REQ-002")
+        order = [block.index(i) for i in ["SPEC-001", "COND-001", "HTC-001", "LTC-001"]]
+        assert order == sorted(order)
+        ltc = block.split('data-id="LTC-002"')[1].split("</div>")[0]
+        assert "Fail" in ltc and "BUG-001" in ltc and "証跡" in ltc
+        assert "COND-003" in block and "CH-001" in block and "SES-001" in block  # 利用の流れと探索的テスト
+
+    def test_仕様の下に出るテスト条件は要求の直下にもう一度出さない(self, root):
+        text = (root / "04_テスト分析/テスト分析.md").read_text(encoding="utf-8")
+        text = text.replace("| COND-001 | 年齢の有効範囲 | FT-001 | TA-001 | SPEC-001 |", "| COND-001 | 年齢の有効範囲 | FT-001 | TA-001 | SPEC-001, REQ-001 |")
+        (root / "04_テスト分析/テスト分析.md").write_text(text, encoding="utf-8")
+        out = self._build(root)
+        html = (out / "index.html").read_text(encoding="utf-8")
+        block = self._tree_block(html, "REQ-001", "REQ-002")
+        assert block.count('data-id="COND-001"') == 1
+
+    def test_行に実行の割合と問題の件数を出す(self, root):
+        out = self._build(root)
+        html = (out / "index.html").read_text(encoding="utf-8")
+        summary = self._tree_block(html, "REQ-001").split("</summary>")[0]
+        assert "実行 3/3(100%)" in summary  # LTC-001・LTC-002 と、探索したテストチャーター CH-001
+        assert "Fail 1" in summary and "不具合 1" in summary
+        assert 'class="ng"' in summary
+        summary = self._tree_block(html, "REQ-002").split("</summary>")[0]
+        assert "実行 1/1(100%)" in summary and 'class="ok"' in summary
+
+    def test_テスト条件の行にカバレッジアイテムの通る数を出す(self, root):
+        out = self._build(root)
+        html = (out / "index.html").read_text(encoding="utf-8")
+        cond = self._tree_block(html, "REQ-001", "REQ-002").split('data-id="COND-001"')[1].split("</summary>")[0]
+        assert "カバレッジアイテム 2/2" in cond
+
+    def test_未実装のハイレベルテストケースは理由を出す(self, root):
+        text = (root / "05_テスト設計/テスト設計.md").read_text(encoding="utf-8")
+        text = text.replace("| CI-003 | 確認画面が表示される | COND-002 |", "| CI-003 | 確認画面が表示される | COND-002 |\n| CI-004 | 上限の境界値 65 | COND-001 |")
+        text = text.replace("| 手動テスト | 低 | 設計済み |\n", "| 手動テスト | 低 | 設計済み |\n| HTC-004 | 上限の境界値のとき登録できる | COND-001 | CI-004 | 登録できる | E2E自動テスト | 高 | 回答待ち(Q-001) |\n")
+        (root / "05_テスト設計/テスト設計.md").write_text(text, encoding="utf-8")
+        append_to(root, "06_テスト実装/未実装.md", "# 未実装\n\n| ハイレベルテストケースID | 理由 |\n|---|---|\n| HTC-004 | 回答待ち(Q-001) |\n")
+        out = self._build(root)
+        html = (out / "index.html").read_text(encoding="utf-8")
+        htc = self._tree_block(html, "REQ-001", "REQ-002").split('data-id="HTC-004"')[1].split("</details>")[0]
+        assert "未実装" in htc and "Q-001" in htc
+        cond = self._tree_block(html, "REQ-001", "REQ-002").split('data-id="COND-001"')[1].split("</summary>")[0]
+        assert "カバレッジアイテム 2/3" in cond
+
+    def test_リスクからたどる版をリスクレベルの高い順に出す(self, root):
+        out = self._build(root)
+        html = (out / "index.html").read_text(encoding="utf-8")
         risk_part = html.split('id="risk-coverage"')[1]
-        assert risk_part.index("RISK-001") < risk_part.index("RISK-002")
+        assert risk_part.index('id="tree-RISK-001"') < risk_part.index('id="tree-RISK-002"')
 
     def test_仕様のカバレッジとテストチャーターの時間を出す(self, root):
         out = self._build(root)

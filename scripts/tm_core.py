@@ -603,13 +603,13 @@ def coverage(project: Project, record_id: str) -> dict:
         "testcases": len(ltcs),
         "未実装": sum(1 for d in down if d in not_implemented),
         "charters": len(charters),
+        "charters_done": sum(1 for c in charters if any(type_of(x) == "SES" for x in project.children(c))),
         "sessions": sum(1 for d in down if type_of(d) == "SES"),
         "bugs": sum(1 for d in down if type_of(d) == "BUG"),
         "open_bugs": sum(1 for d in down if d in open_ids),
     })
-    done_charters = sum(1 for c in charters if any(type_of(x) == "SES" for x in project.children(c)))
     total = len(ltcs) + row["未実装"] + len(charters)
-    executed = row["Pass"] + row["Fail"] + done_charters
+    executed = row["Pass"] + row["Fail"] + row["charters_done"]
     if executed == 0:
         row["state"] = "まったくテストしていない"
     elif row["Fail"] or row["open_bugs"]:
