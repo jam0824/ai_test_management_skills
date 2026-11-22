@@ -147,4 +147,6 @@ claude plugin validate .        # プラグインの形の確認
 - `shared/` … 全スキル共通のルールと、JSTQBのテスト技法の一覧
 - `scripts/` … 成果物を読むスクリプト(`tm.py` が入口、`tm_core.py` が読み取り・確認・集計、`tm_html.py` がHTML)
 - `tests/` … スクリプトのテスト
-- `sample_app/` … 試しにテストしてみるための小さなアプリ
+- `sample_app/` … 試しにテストしてみるための小さなアプリ(老後資金シミュレーター)
+  - `web/` … Web版(HTML 1枚)
+  - `android/` … Android版(Kotlin + Jetpack Compose、Web版と同じ計算)
