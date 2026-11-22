@@ -149,4 +149,4 @@ claude plugin validate .        # プラグインの形の確認
 - `tests/` … スクリプトのテスト
 - `sample_app/` … 試しにテストしてみるための小さなアプリ(老後資金シミュレーター)
   - `web/` … Web版(HTML 1枚)
-  - `android/` … Android版(Kotlin + Jetpack Compose、Web版と同じ計算)
+  - `android/` … Android版(Kotlin + Jetpack Compose、Web版と同じ仕様)

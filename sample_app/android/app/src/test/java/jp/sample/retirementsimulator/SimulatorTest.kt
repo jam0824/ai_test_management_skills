@@ -5,7 +5,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.random.Random
 
-/** Web版の calculateNetMonthly / simulateRetirement と同じ結果になるかを確かめる */
+/** 手取りとシミュレーションの計算が仕様どおりかを確かめる */
 class SimulatorTest {
 
     /** 決めた順に値を返す乱数(イベントの発生を固定するため) */

@@ -73,7 +73,7 @@ class SimulatorViewModel : ViewModel() {
     }
 
     fun removeSalaryChange(key: Long) {
-        salaryChanges.removeAll { it.key == key }
+        if (salaryChanges.any { it.key == key }) salaryChanges.removeAt(salaryChanges.lastIndex)
     }
 
     /** Web版の runSimulation と同じ。数として読めない欄は0として扱う */

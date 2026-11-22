@@ -84,7 +84,7 @@
         if (salaryChanges && salaryChanges.length > 0) {
           // 年齢に応じて適用される給与変更を探す（降順でソート済み）
           for (const change of salaryChanges) {
-            if (age >= change.age) {
+            if (age > change.age) {
               currentSalary = change.salary;
               break;
             }

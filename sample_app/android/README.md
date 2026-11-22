@@ -1,9 +1,9 @@
 # 老後資金シミュレーター(Android版)
 
-Web版(`../web/retirement_simulator.html`)と同じ計算・同じ画面項目を、Kotlin + Jetpack Compose で作ったもの。
+Web版と同じアプリを、Kotlin + Jetpack Compose で作ったもの。
 テスト活動のスキルが Android アプリでも回せるかを確かめるための題材。
 
-- 計算はWeb版をそのまま移した。同じ入力なら結果の行もWeb版と1文字まで同じになる(数値の丸め方や表示の形もJavaScriptに合わせている)
+- 仕様はWeb版と同じ(`../web/README.md`)。結果の行の書き方や数値の丸め方もWeb版に合わせている
 - Web版と同じく、ネットワーク通信はしない(INTERNET 権限を宣言していない)
 - 画面の回転では、入力と結果は消えない(ViewModel に持たせている)
 

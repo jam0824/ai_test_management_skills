@@ -32,7 +32,7 @@ data class SimulationOptions(
     val eventTypes: List<LifeEvent>,
 )
 
-/** Web版(sample_app/web/retirement_simulator.html)の計算をそのまま移したもの */
+/** 老後資金の計算。仕様はWeb版と同じ(sample_app/web/README.md) */
 object Simulator {
 
     private data class Bracket(val up: Double, val rate: Double)
