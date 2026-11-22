@@ -136,6 +136,34 @@ class Test下流が無いものの警告:
         _, warnings = tm_core.check(tm_core.load_project(root), stage="execution")
         assert any("LTC-003" in w for w in warnings)
 
+    def test_テストアプローチが無い高いリスクをテスト計画の工程で警告する(self, root):
+        replace_in(root, "03_テスト計画/テスト計画.md", "| SPEC-001, SPEC-002 | RISK-001 |", "| SPEC-001, SPEC-002 | |")
+        replace_in(root, "03_テスト計画/テスト計画.md", "| 登録まわりを探索する | SPEC-001 | RISK-001 |", "| 登録まわりを探索する | SPEC-001 | |")
+        _, warnings = tm_core.check(tm_core.load_project(root), stage="plan")
+        assert any("RISK-001" in w and "テストアプローチ" in w for w in warnings)
+        assert not any("RISK-002" in w for w in warnings)  # 低いリスクは警告しない
+
+    def test_テストアプローチが無い仕様をテスト計画の工程で警告する(self, root):
+        replace_in(root, "03_テスト計画/テスト計画.md", "| SPEC-001, SPEC-002 | RISK-001 |", "| SPEC-001 | RISK-001 |")
+        _, warnings = tm_core.check(tm_core.load_project(root), stage="plan")
+        assert any("SPEC-002" in w and "テストアプローチ" in w for w in warnings)
+        assert not any("SPEC-001" in w for w in warnings)
+
+    def test_リスクを通してテストアプローチがある仕様は警告しない(self, root):
+        # SPEC-003 は TA-002 の仕様IDからは外しても、RISK-002 を通して TA-002 がある
+        replace_in(root, "03_テスト計画/テスト計画.md", "| SPEC-003 | RISK-002 |", "| | RISK-002 |")
+        _, warnings = tm_core.check(tm_core.load_project(root), stage="plan")
+        assert not any("SPEC-003" in w for w in warnings)
+
+    def test_通さない理由を書いたカバレッジアイテムは警告しない(self, root):
+        table = "\n## 通さないカバレッジアイテム\n\n| ID | カバレッジアイテム | テスト条件ID | 通さない理由 |\n|---|---|---|---|\n| CI-004 | 上限の外 66 | COND-001 | {} |\n"
+        append_to(root, "05_テスト設計/テスト設計.md", table.format(""))
+        _, warnings = tm_core.check(tm_core.load_project(root), stage="design")
+        assert any("CI-004" in w for w in warnings)
+        replace_in(root, "05_テスト設計/テスト設計.md", "| COND-001 |  |", "| COND-001 | 範囲外の機能で期待値が決まるため |")
+        _, warnings = tm_core.check(tm_core.load_project(root), stage="design")
+        assert not any("CI-004" in w for w in warnings)
+
     def test_工程を指定しないと成果物がある最後の工程まで確認する(self, root):
         assert tm_core.detect_stage(tm_core.load_project(root)) == "execution"
 
@@ -152,6 +180,22 @@ class Testたどる:
         replace_in(root, "03_テスト計画/テスト計画.md", "| SPEC-003 | RISK-002 |", "| SPEC-001, SPEC-003 | RISK-002 |")
         project = tm_core.load_project(root)
         assert "REQ-001" not in project.ancestors("COND-002")
+
+    def test_フィーチャーを経由して上流の要求に数えない(self, root):
+        # フィーチャーは複数の仕様をまとめるので、フィーチャー経由でたどると、
+        # テスト条件が確かめていない仕様の要求までカバーしたことになる。
+        replace_in(root, "04_テスト分析/テスト分析.md", "| FT-002 | 確認画面 | 機能 | SPEC-003 |", "| FT-002 | 確認画面 | 機能 | SPEC-001, SPEC-003 |")
+        project = tm_core.load_project(root)
+        assert "REQ-001" not in project.ancestors("COND-002")
+
+    def test_質問の影響はフィーチャーやリスクやテストアプローチを経由して広げない(self, root):
+        # SPEC-002 を直接確かめるテスト条件は無い。FT-001 や TA-001 を経由した
+        # COND-001・COND-003 は、Q-001 の回答を待っていない。
+        replace_in(root, "質問表.md", "| SPEC-001 | 曖昧 |", "| SPEC-002 | 曖昧 |")
+        impact = tm_core.impact(tm_core.load_project(root), ["Q-001"])
+        assert impact["SPEC"] == ["SPEC-002"]
+        assert "FT-001" in impact["FT"] and "TA-001" in impact["TA"]
+        assert "COND" not in impact and "LTC" not in impact
 
     def test_要求から欠陥レポートまで下にたどれる(self, root):
         project = tm_core.load_project(root)
@@ -219,6 +263,20 @@ class Test集計:
         m = tm_core.metrics(tm_core.load_project(root))
         assert [q["id"] for q in m["open_questions"]] == ["Q-001"]
 
+    def test_仕様ごとの状態を出す(self, root):
+        m = tm_core.metrics(tm_core.load_project(root))
+        by_id = {r["id"]: r for r in m["specs"]}
+        assert by_id["SPEC-001"]["state"] == "実行したがFailあり"
+        assert by_id["SPEC-002"]["state"] == "まったくテストしていない"  # 直接確かめるテスト条件が無い
+        assert by_id["SPEC-003"]["state"] == "すべて実行してすべてPass"
+
+    def test_テストチャーターごとにセッションの時間が時間枠に達したかを出す(self, root):
+        m = tm_core.metrics(tm_core.load_project(root))
+        assert m["charters"] == [{"id": "CH-001", "timebox": 15, "minutes": 15.0, "sessions": ["SES-001"], "reached": True}]
+        replace_in(root, "08_テスト実行/RUN-20261101-100000/セッションシート/SES-001.md", "| 2026-11-01 10:30 | 15 |", "| 2026-11-01 10:30 | 12.5 |")
+        m = tm_core.metrics(tm_core.load_project(root))
+        assert m["charters"][0]["minutes"] == 12.5 and m["charters"][0]["reached"] is False
+
     def test_未実装のハイレベルテストケースを数える(self, root):
         replace_in(root, "05_テスト設計/テスト設計.md", "| 手動テスト | 低 | 設計済み |\n",
                    "| 手動テスト | 低 | 設計済み |\n| HTC-004 | 上限の境界値のとき登録できる | COND-001 | CI-001 | 登録できる | E2E自動テスト | 高 | 回答待ち(Q-001) |\n")
@@ -226,6 +284,33 @@ class Test集計:
         assert m["testcases"]["未実装"] == 1
         by_id = {r["id"]: r for r in m["requirements"]}
         assert by_id["REQ-001"]["未実装"] == 1
+
+
+class Test欠陥レポートの範囲:
+    HEADER = "| ID | タイトル | 重要度 | 状態 | 見つけた日時 | 関連ID |\n|---|---|---|---|---|---|\n| BUG-001 | 17歳で登録できてしまう | 高 | 未修正 | 2026-11-01 10:05 | LTC-002 |\n"
+    NEW = ("| ID | タイトル | 重要度 | 状態 | 見つけた日時 | 関連ID | 要求・仕様ID |\n|---|---|---|---|---|---|---|\n"
+           "| BUG-001 | 17歳で登録できてしまう | 高 | 未修正 | 2026-11-01 10:05 | LTC-002 | |\n"
+           "| BUG-002 | {title} | 中 | 未修正 | 2026-11-01 10:40 | SES-001 | {scope} |\n")
+
+    def _bugs(self, root, title, scope):
+        replace_in(root, "08_テスト実行/欠陥レポート.md", self.HEADER, self.NEW.format(title=title, scope=scope))
+        m = tm_core.metrics(tm_core.load_project(root))
+        return {r["id"]: r for r in m["requirements"]}
+
+    def test_スコープ外と書いた不具合は要求の不具合に数えない(self, root):
+        by_id = self._bugs(root, "範囲外の画面の表示崩れ", "スコープ外")
+        assert by_id["REQ-001"]["bugs"] == 1  # BUG-001 だけ
+        assert tm_core.metrics(tm_core.load_project(root))["open_bugs"][1]["id"] == "BUG-002"  # 不具合の一覧には残す
+
+    def test_要求仕様IDを書いた不具合はその要求に数える(self, root):
+        by_id = self._bugs(root, "確認画面の文言の誤り", "SPEC-003")
+        assert by_id["REQ-001"]["bugs"] == 1
+        assert by_id["REQ-002"]["bugs"] == 1
+        assert by_id["REQ-002"]["state"] == "実行したがFailあり"
+
+    def test_要求仕様IDが空の不具合は見つけたテストからたどる(self, root):
+        by_id = self._bugs(root, "入力チェックの漏れ", "")
+        assert by_id["REQ-001"]["bugs"] == 2
 
 
 class TestE2Eの結果の取り込み:
@@ -267,6 +352,26 @@ class TestE2Eの結果の取り込み:
         assert parsed["LTC-005"]["result"] == "未実行"
         assert parsed["LTC-006"]["result"] == "Fail"
         assert "不安定" in parsed["LTC-006"]["memo"]
+
+    def test_PassにもJSONレポートを証跡として書く(self, root):
+        run_dir = root / "08_テスト実行/RUN-20261103-120000"
+        run_dir.mkdir(parents=True)
+        report = run_dir / "playwright-report.json"
+        report.write_text("{}", encoding="utf-8")
+        parsed = tm_core.parse_playwright_report(self._report())
+        tm_core.write_e2e_results(root, "RUN-20261103-120000", parsed, expected=["LTC-001"], report=report)
+        final = tm_core.load_project(root).final_results()
+        assert final["LTC-001"].result == "Pass"
+        assert final["LTC-001"].evidence == ["playwright-report.json"]
+
+    def test_JSONレポートがテストランの外にあればコピーして証跡にする(self, root, tmp_path):
+        report = tmp_path / "report.json"
+        report.write_text("{}", encoding="utf-8")
+        parsed = tm_core.parse_playwright_report(self._report())
+        tm_core.write_e2e_results(root, "RUN-20261103-120000", parsed, expected=["LTC-001"], report=report)
+        final = tm_core.load_project(root).final_results()
+        assert final["LTC-001"].evidence == ["証跡/report.json"]
+        assert (root / "08_テスト実行/RUN-20261103-120000/証跡/report.json").is_file()
 
     def test_結果にidが無いケースはPassにせず理由を書く(self, root):
         parsed = tm_core.parse_playwright_report(self._report())

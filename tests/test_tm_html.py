@@ -154,6 +154,14 @@ class Testテストレポート:
         assert "BUG-001" in first and "17歳で登録できてしまう" in first
         assert "未回答の質問" in first
 
+    def test_満たしていない終了条件を先に並べてバナーにIDを書く(self, root):
+        out = self._build(root)
+        html = (out / "index.html").read_text(encoding="utf-8")
+        first = html.split('id="first-view"')[1].split('id="details"')[0]
+        banner = first.split("</div>")[0]
+        assert "EXIT-002" in banner and "EXIT-001" not in banner
+        assert first.index('EXIT-002') < first.index('EXIT-001')
+
     def test_判定が書かれていない終了条件は未判定として出す(self, root):
         out = self._build(root, JUDGMENT.replace("| EXIT-002 | 満たしていない | 重要度が高の BUG-001 が未修正 |\n", ""))
         html = (out / "index.html").read_text(encoding="utf-8")
@@ -173,6 +181,23 @@ class Testテストレポート:
         assert "実行したがFailあり" in row
         risk_part = html.split('id="risk-coverage"')[1]
         assert risk_part.index("RISK-001") < risk_part.index("RISK-002")
+
+    def test_仕様のカバレッジとテストチャーターの時間を出す(self, root):
+        out = self._build(root)
+        html = (out / "index.html").read_text(encoding="utf-8")
+        row = next(line for line in html.split("</tr>") if 'id="cov-SPEC-002"' in line)
+        assert "まったくテストしていない" in row
+        row = next(line for line in html.split("</tr>") if 'id="time-CH-001"' in line)
+        assert "15" in row and "達した" in row
+
+    def test_スコープ外の不具合は影響する要求を出さずスコープ外と書く(self, root):
+        text = (root / "08_テスト実行/欠陥レポート.md").read_text(encoding="utf-8")
+        text = text.replace("| 関連ID |\n|---|---|---|---|---|---|\n", "| 関連ID | 要求・仕様ID |\n|---|---|---|---|---|---|---|\n")
+        text = text.replace("| LTC-002 |\n", "| LTC-002 | スコープ外 |\n")
+        (root / "08_テスト実行/欠陥レポート.md").write_text(text, encoding="utf-8")
+        html = tm_html.render_stage(tm_core.load_project(root), "execution")
+        row = next(line for line in html.split("</tr>") if "BUG-001" in line and "<td" in line and "高" in line)
+        assert "スコープ外" in row and "REQ-001" not in row
 
     def test_判定に書いた文章と戻し記録を載せる(self, root):
         out = self._build(root)

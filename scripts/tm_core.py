@@ -82,9 +82,17 @@ REQUIRED = {
     "SES": [["CH"]],
     "BUG": [["LTC", "SES"]],
 }
-# リスクとテストアプローチは複数の仕様にまたがるので、ここを経由して上下にたどると
-# 関係のない要求や仕様までカバーしたことになる。カバレッジを数えるときは経由しない。
-NO_PASS_THROUGH = {"RISK", "TA"}
+# リスク・テストアプローチ・フィーチャーは複数の仕様にまたがるので、ここを経由して上下にたどると
+# 関係のない要求や仕様までカバーしたこと(影響を受けること)になる。カバレッジも影響範囲も経由しない。
+# テスト条件は、確かめる仕様・要求・リスクを自分の列に直接書くので、経由しなくてもたどれる。
+NO_PASS_THROUGH = {"RISK", "TA", "FT"}
+
+# カバレッジアイテムの表のこの列に理由があれば、テストケースで通していなくても警告しない(カバレッジには数えない)
+CI_SKIP_REASON = "通さない理由"
+# 欠陥レポートのこの列に要求・仕様のIDがあれば、その要求・仕様の不具合として数える。
+# 「スコープ外」なら、どの要求・リスクの不具合にも数えない。空なら、見つけたテストからたどる。
+BUG_SCOPE = "要求・仕様ID"
+OUT_OF_SCOPE = "スコープ外"
 
 RESULTS = ["Pass", "Fail", "ブロック", "未実行"]
 SEVERITIES = ["高", "中", "低"]
@@ -251,13 +259,13 @@ class Project:
         return self._children.get(record_id, [])
 
     def ancestors(self, record_id: str) -> set[str]:
-        return self._walk(record_id, self.parents, full=False)
+        return self._walk(record_id, self.parents)
 
-    def descendants(self, record_id: str, full: bool = False) -> set[str]:
-        """下流をたどる。full=True はリスクやテストアプローチも経由する(変更の影響範囲を見るとき)。"""
-        return self._walk(record_id, self.children, full=full)
+    def descendants(self, record_id: str) -> set[str]:
+        """下流をたどる。起点はどの種類でも広げるが、途中の NO_PASS_THROUGH の種類からは先へ進まない。"""
+        return self._walk(record_id, self.children)
 
-    def _walk(self, start: str, step, full: bool) -> set[str]:
+    def _walk(self, start: str, step) -> set[str]:
         seen: set[str] = set()
         stack = [start]
         while stack:
@@ -266,7 +274,7 @@ class Project:
                 if nxt in seen or nxt == start:
                     continue
                 seen.add(nxt)
-                if full or type_of(nxt) not in NO_PASS_THROUGH:
+                if type_of(nxt) not in NO_PASS_THROUGH:
                     stack.append(nxt)
         return seen
 
@@ -483,6 +491,11 @@ def _check(project: Project, stage: str | None) -> tuple[list[tuple[str, str]], 
 
     asked = {link for q in project.of_type("Q") for link in q.links}
     warn("REQ", ["SPEC"], "仕様が無い要求。質問表に記載が要る", skip=lambda r: r.id in asked)
+    if index >= STAGE_KEYS.index("plan"):
+        warn("RISK", ["TA"], "テストアプローチが無い高いリスク", skip=lambda r: r.fields.get("区分", "").strip() != "高")
+        # 仕様にテストアプローチが直接無くても、仕様のリスクにあればよい
+        warn("SPEC", ["TA"], "テストアプローチが無い仕様",
+             skip=lambda r: any(type_of(c) == "RISK" and not lacks(records[c], ["TA"]) for c in project.children(r.id)))
     if index >= STAGE_KEYS.index("analysis"):
         warn("SPEC", ["FT"], "フィーチャーが無い仕様")
         warn("TA", ["COND"], "テスト条件が無いテストアプローチ")
@@ -490,7 +503,8 @@ def _check(project: Project, stage: str | None) -> tuple[list[tuple[str, str]], 
         warn("RISK", ["COND"], "テスト条件が無いリスク")
     if index >= STAGE_KEYS.index("design"):
         warn("COND", ["HTC", "CH"], "テストケースもテストチャーターも無いテスト条件")
-        warn("CI", ["HTC"], "テストケースで通していないカバレッジアイテム")
+        warn("CI", ["HTC"], "テストケースで通していないカバレッジアイテム。通さないなら「通さない理由」に書く",
+             skip=lambda r: bool(r.fields.get(CI_SKIP_REASON, "").strip()))
     if index >= STAGE_KEYS.index("implementation"):
         warn("HTC", ["LTC"], "ローレベルテストケースが無く、未実装にも記録されていない",
              skip=lambda r: r.id in project.unimplemented)
@@ -513,6 +527,8 @@ def impact(project: Project, ids: list[str]) -> dict[str, list[str]]:
 
     質問のIDを渡したときは、その質問の関連IDに書かれた成果物と、
     状態や備考に質問のIDを書いて回答を待っている成果物、それらの下流を返す。
+    リスク・テストアプローチ・フィーチャーは影響を受けるものとして出すが、そこから先へは広げない
+    (そこを変えたときは、その工程をやり直したあとで、変えたIDを渡して出し直す)。
     """
     affected: set[str] = set()
     for record_id in ids:
@@ -523,7 +539,7 @@ def impact(project: Project, ids: list[str]) -> dict[str, list[str]]:
                        if r.type not in ("Q", "RB") and record_id in (r.links | r.mentions)]
             affected |= set(starts)
         for start in starts:
-            affected |= project.descendants(start, full=True)
+            affected |= project.descendants(start)
     affected -= set(ids)
     grouped: dict[str, list[str]] = {}
     for record_id in sorted(affected, key=_id_key):
@@ -547,10 +563,32 @@ def open_bugs(project: Project) -> list[Record]:
     return sorted(bugs, key=lambda b: (order.get(b.fields.get("重要度", "").strip(), len(order)), _id_key(b.id)))
 
 
+def bug_scope(bug: Record) -> set[str] | None:
+    """欠陥レポートが影響する要求・仕様を、欠陥レポートに書かれているときだけ返す。
+
+    None は「書かれていない(見つけたテストからたどる)」、空の集合は「スコープ外」。
+    """
+    text = bug.fields.get(BUG_SCOPE, "").strip()
+    if OUT_OF_SCOPE in text:
+        return set()
+    ids = {i for i in find_ids(text) if type_of(i) in ("REQ", "SPEC")}
+    return ids or None
+
+
+def bug_affects(project: Project, bug_id: str, record_id: str) -> bool:
+    """その欠陥レポートを、要求・仕様・リスクなど record_id の不具合として数えるか。"""
+    scope = bug_scope(project.records[bug_id])
+    if scope is None:
+        return bug_id in project.descendants(record_id)
+    related = {record_id} | project.ancestors(record_id) | project.descendants(record_id)
+    return bool(scope & related)
+
+
 def coverage(project: Project, record_id: str) -> dict:
     """要求やリスクなど1件について、下流のテストがどれだけ実行されたかを数える。"""
     final = project.final_results()
-    down = project.descendants(record_id)
+    down = {d for d in project.descendants(record_id) if type_of(d) != "BUG"}
+    down |= {b.id for b in project.of_type("BUG") if bug_affects(project, b.id, record_id)}
     not_implemented = set(unimplemented_htcs(project))
     ltcs = [d for d in down if type_of(d) == "LTC"]
     charters = [d for d in down if type_of(d) == "CH"]
@@ -581,6 +619,25 @@ def coverage(project: Project, record_id: str) -> dict:
     else:
         row["state"] = "一部しか実行していない"
     return row
+
+
+def _to_float(text: str) -> float | None:
+    try:
+        return float(str(text).strip())
+    except ValueError:
+        return None
+
+
+def charter_time(project: Project) -> list[dict]:
+    """テストチャーターごとに、セッションの時間(中断を除いて書かれたもの)の合計が時間枠に達したか。"""
+    rows = []
+    for charter in project.of_type("CH"):
+        sessions = [c for c in project.children(charter.id) if type_of(c) == "SES"]
+        minutes = sum(_to_float(project.records[s].fields.get("かかった時間(分)", "")) or 0.0 for s in sessions)
+        timebox = _to_int(charter.fields.get("時間枠(分)", ""))
+        rows.append({"id": charter.id, "timebox": timebox, "minutes": minutes, "sessions": sessions,
+                     "reached": timebox is not None and minutes >= timebox})
+    return rows
 
 
 def metrics(project: Project) -> dict:
@@ -630,6 +687,8 @@ def metrics(project: Project) -> dict:
         "testcases": testcases,
         "by_method": by_method,
         "requirements": [coverage(project, r.id) for r in project.of_type("REQ")],
+        "specs": [coverage(project, s.id) for s in project.of_type("SPEC")],
+        "charters": charter_time(project),
         "risks": risks,
         "open_bugs": [
             {"id": b.id, "title": b.title, "severity": b.fields.get("重要度", ""), "state": b.fields.get("状態", ""),
@@ -705,10 +764,24 @@ def parse_playwright_report(data: dict) -> dict[str, dict]:
     return parsed
 
 
-def write_e2e_results(root: Path | str, run_id: str, parsed: dict[str, dict], expected: list[str]) -> Path:
-    """idごとの結果を、テストランのフォルダに表として書く。証跡のファイルがあればコピーする。"""
+def write_e2e_results(root: Path | str, run_id: str, parsed: dict[str, dict], expected: list[str],
+                      report: Path | str | None = None) -> Path:
+    """idごとの結果を、テストランのフォルダに表として書く。証跡のファイルがあればコピーする。
+
+    report(PlaywrightのJSONレポート)を渡すと、idつきの結果のもとなので、どの行の証跡にも書く。
+    テストランのフォルダの外にあれば `証跡/` にコピーする(次の実行で消えないように)。
+    """
     run_dir = Path(root) / EXECUTION_DIR / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
+    report_evidence = []
+    if report is not None and Path(report).is_file():
+        report_path = Path(report).resolve()
+        if not report_path.is_relative_to(run_dir.resolve()):
+            target = run_dir / "証跡" / report_path.name
+            target.parent.mkdir(exist_ok=True)
+            shutil.copyfile(report_path, target)
+            report_path = target.resolve()
+        report_evidence = [report_path.relative_to(run_dir.resolve()).as_posix()]
     lines = [
         "# テスト結果(E2E自動テスト)",
         "",
@@ -732,6 +805,8 @@ def write_e2e_results(root: Path | str, run_id: str, parsed: dict[str, dict], ex
                 evidence.append(target.relative_to(run_dir).as_posix())
             else:
                 evidence.append(source)
+        if ltc in parsed:
+            evidence += report_evidence
         memo = entry["memo"].replace("|", "\\|").replace("\n", " ")
         lines.append(f"| {ltc} | E2E自動テスト | {entry['result']} | {'<br>'.join(evidence)} | | {memo} |")
     path = run_dir / "テスト結果_E2E自動.md"

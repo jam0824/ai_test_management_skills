@@ -90,7 +90,7 @@ def cmd_e2e_results(args) -> int:
     data = json.loads(Path(args.json).read_text(encoding="utf-8-sig"))
     parsed = tm_core.parse_playwright_report(data)
     expected = [s_link for s in project.of_type("SCR") for s_link in s.links if tm_core.type_of(s_link) == "LTC"]
-    path = tm_core.write_e2e_results(project.root, args.run, parsed, expected)
+    path = tm_core.write_e2e_results(project.root, args.run, parsed, expected, report=args.json)
     counts = {status: 0 for status in tm_core.RESULTS}
     missing = [ltc for ltc in expected if ltc not in parsed]
     for ltc in set(expected) | set(parsed):
@@ -116,13 +116,19 @@ def cmd_metrics(args) -> int:
     print(f"テストラン: {', '.join(data['runs']) or 'なし'}")
     print(f"修正されていない不具合 {len(data['open_bugs'])} 件: " + ", ".join(f"{b['id']}({b['severity']})" for b in data["open_bugs"]))
     print(f"未回答の質問 {len(data['open_questions'])} 件: " + ", ".join(q["id"] for q in data["open_questions"]))
-    for label, rows in (("要求", data["requirements"]), ("リスク", data["risks"])):
+    for label, rows in (("要求", data["requirements"]), ("仕様", data["specs"]), ("リスク", data["risks"])):
         print(f"{label}ごとの状態:")
         for row in rows:
             level = f" レベル{row['level']}({row['class']})" if "level" in row else ""
             print(f"  {row['id']}{level}: {row['state']} (Pass {row['Pass']} / Fail {row['Fail']} / ブロック {row['ブロック']}"
                   f" / 未実行 {row['未実行']} / 未実装 {row['未実装']} / セッション {row['sessions']})")
-    print("終了条件:")
+    print("テストチャーターごとのセッションの時間(中断を除いた時間の合計 / 時間枠):")
+    for charter in data["charters"]:
+        timebox = f"{charter['timebox']}分" if charter["timebox"] is not None else "時間枠なし"
+        state = "達した" if charter["reached"] else "達していない"
+        print(f"  {charter['id']}: {charter['minutes']:g}分 / {timebox} → {state}"
+              f" (セッション: {', '.join(charter['sessions']) or 'なし'})")
+    print("終了条件(判定はしない。上の数字と測り方を照らし合わせて判定する):")
     for criterion in data["exit_criteria"]:
         print(f"  {criterion['id']}: {criterion['text']} (測り方: {criterion['measure']})")
     return 0

@@ -142,7 +142,7 @@ def _table(headers: list[str], rows: list[list[str]], row_ids: list[str] | None 
 
 def _badge(text: str) -> str:
     kinds = {
-        "Pass": "ok", "満たした": "ok", "すべて実行してすべてPass": "ok", "クローズ": "ok", "低": "low",
+        "Pass": "ok", "満たした": "ok", "達した": "ok", "達していない": "ng", "すべて実行してすべてPass": "ok", "クローズ": "ok", "低": "low",
         "Fail": "ng", "満たしていない": "ng", "未判定": "ng", "実行したがFailあり": "ng", "未修正": "ng", "高": "high",
         "ブロック": "warn", "一部しか実行していない": "warn", "修正済み": "warn", "中": "mid",
         "未実行": "none", "まったくテストしていない": "none", "未実装": "none",
@@ -337,7 +337,8 @@ def _stage_design(v: View) -> str:
         row_ids.append("cov-" + condition.id)
     return (
         "<h2>テスト条件ごとの技法とカバレッジ</h2><p class=\"muted\">カバレッジ = テストケースで通るカバレッジアイテム ÷ 出したカバレッジアイテム。"
-        "「うち回答待ち」は、回答待ちのテストケースでしか通らないカバレッジアイテムの数(回答が来るまで実行できない)。</p>"
+        "「うち回答待ち」は、回答待ちのテストケースでしか通らないカバレッジアイテムの数。"
+        "回答待ちのテストケースは回答が来るまで実装も実行もされないので、テストベースから決められるのに回答待ちにしていないかを確かめる。</p>"
         + _table(["テスト条件", "テスト技法", "カバレッジ基準", "通る数 / 出した数", "カバレッジ", "うち回答待ち", "通していないカバレッジアイテム"], rows, row_ids)
         + "<h2>要求 → ハイレベルテストケース</h2>"
         + v.chain(_ids(p, "HTC"), ["REQ", "SPEC", "RISK", "COND", "CI", "HTC"], ["実施方法", "優先順位", "状態"])
@@ -420,9 +421,17 @@ def _results_table(v: View) -> str:
 
 
 def _bugs_table(v: View, bugs) -> str:
+    p = v.project
+
+    def affected(bug, type_key: str) -> str:
+        # 要求・リスクのカバレッジと同じ数え方にする(欠陥レポートに範囲が書かれていればそれに従う)
+        if tm_core.bug_scope(bug) == set():
+            return tm_core.OUT_OF_SCOPE
+        return v.refs([i for i in _ids(p, type_key) if tm_core.bug_affects(p, bug.id, i)], False)
+
     rows = [[v.ref(b.id), _badge(b.fields.get("重要度", "")), _badge(b.fields.get("状態", "")),
-             v.text(b.fields.get("見つけた日時", "")), v.refs(v.project.parents(b.id), False),
-             v.refs(v.related(b.id, "REQ"), False), v.refs(v.related(b.id, "RISK"), False)] for b in bugs]
+             v.text(b.fields.get("見つけた日時", "")), v.refs(p.parents(b.id), False),
+             affected(b, "REQ"), affected(b, "RISK")] for b in bugs]
     return _table(["欠陥レポート", "重要度", "状態", "見つけた日時", "見つけたテスト", "影響する要求", "影響するリスク"], rows) if rows else "<p>ありません。</p>"
 
 
@@ -577,17 +586,20 @@ def _more(items: list[str], limit: int, anchor: str) -> str:
 
 
 def _first_view(v: View, m: dict, judgments: dict[str, tuple[str, str]], lacking: str) -> str:
-    rows, bad = [], 0
+    # 満たしていない・未判定の終了条件を先に並べ、狭い画面でもファーストビューに入るようにする。
+    ok_rows, bad_rows, bad_ids = [], [], []
     for criterion in m["exit_criteria"]:
         verdict, reason = judgments.get(criterion["id"], (UNJUDGED, "判定が書かれていない"))
         if verdict != MET:
             verdict = verdict if verdict == NOT_MET else UNJUDGED
-            bad += 1
-        rows.append([v.ref(criterion["id"], False), v.text(criterion["text"]), _badge(verdict), v.text(reason)])
+            bad_ids.append(criterion["id"])
+        row = [v.ref(criterion["id"], False), v.text(criterion["text"]), _badge(verdict), v.text(reason)]
+        (ok_rows if verdict == MET else bad_rows).append(row)
+    rows, bad = bad_rows + ok_rows, len(bad_ids)
     if not m["exit_criteria"]:
         banner = '<div class="verdict ng">テスト計画に終了条件が無いので、判定できない</div>'
     elif bad:
-        banner = f'<div class="verdict ng">満たしていない終了条件が {bad} 件ある</div>'
+        banner = f'<div class="verdict ng">満たしていない終了条件が {bad} 件ある({v.text("、".join(bad_ids))})</div>'
     else:
         banner = '<div class="verdict ok">すべての終了条件を満たした</div>'
     t = m["testcases"]
@@ -625,8 +637,16 @@ def _first_view(v: View, m: dict, judgments: dict[str, tuple[str, str]], lacking
     return f'<section id="first-view">{banner}<div class="cols">{done}{problems}</div></section>'
 
 
-def _coverage_table(v: View, rows: list[dict], risk: bool) -> str:
-    headers = (["リスク", "リスクレベル", "区分"] if risk else ["要求"]) + ["テスト条件"] + COUNT_HEADERS
+def _charter_time_table(v: View, rows: list[dict]) -> str:
+    body = [[v.ref(r["id"]), f"{r['minutes']:g}", str(r["timebox"]) if r["timebox"] is not None else "-",
+             _badge("達した" if r["reached"] else "達していない"), v.refs(r["sessions"], False) if r["sessions"] else "なし"]
+            for r in rows]
+    return (_table(["テストチャーター", "セッションの時間(分)", "時間枠(分)", "判定", "セッション"], body,
+                   ["time-" + r["id"] for r in rows]) if rows else "<p>ありません。</p>")
+
+
+def _coverage_table(v: View, rows: list[dict], risk: bool, label: str = "要求") -> str:
+    headers = (["リスク", "リスクレベル", "区分"] if risk else [label]) + ["テスト条件"] + COUNT_HEADERS
     body = []
     for row in rows:
         cells = [v.ref(row["id"])] + ([str(row["level"]), _badge(row["class"])] if risk else [])
@@ -694,6 +714,11 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
         + _coverage_table(v, m["requirements"], risk=False)
         + '<h2 id="risk-coverage">リスクのカバレッジ</h2><p class="muted">リスクレベルの高い順。リスクに直接紐づくテスト条件のテストを数える。</p>'
         + _coverage_table(v, m["risks"], risk=True)
+        + '<h2 id="spec-coverage">仕様のカバレッジ</h2><p class="muted">仕様ごとに、その仕様を直接確かめるテスト条件のテストを数える。</p>'
+        + _coverage_table(v, m["specs"], risk=False, label="仕様")
+        + '<h2 id="charter-time">テストチャーターごとのセッションの時間</h2>'
+        "<p class=\"muted\">セッションシートの「かかった時間(分)」(中断を除いた時間)の合計を、テストチャーターの時間枠と比べる。</p>"
+        + _charter_time_table(v, m["charters"])
         + "<h2>テスト結果の内訳</h2>"
         f"<p>実行率 {t['execution_rate']}% = 実行した {t['executed']} 件(Pass + Fail) ÷ ローレベルテストケース {t['total']} 件。"
         f"未実装の {t['未実装']} 件は分母に入っていない。</p>"
