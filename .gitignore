@@ -1,0 +1,4 @@
+docs/行いたいこと.md
+__pycache__/
+.pytest_cache/
+テスト成果物/

@@ -1,0 +1,150 @@
+# ai-test-management
+
+AIが自律的にテストを作り、実行し、レポートを作るための、Claude Code のプラグイン(スキル群)です。
+
+大切にしているのは**説明責任**と**トレーサビリティ**です。どの要求・仕様から、どんなテストを行い、どんな結果になったかを、要求からテスト結果・証跡・欠陥レポートまでidでたどれる形で残します。
+
+- 対象はシステムテストです。自動テストはE2E自動テストだけを作ります(ユニットテストなどは作りません)。
+- 手動テストと探索的テストは、AIが実際にWebやアプリを操作して行います。
+- 工程の分け方と用語は JSTQB(ISTQB)のテストプロセスに合わせています。
+
+## 全体の流れ
+
+テストマネージャーが、工程ごとのエージェントに成果物を作らせ、自分でレビューし、人が見るHTMLを作ります。
+
+```mermaid
+flowchart LR
+    A[テストベース<br>仕様書など] --> B[1 要求仕様整理]
+    B --> C[2 リスク分析]
+    C --> D[3 テスト計画]
+    D --> E[4 テスト分析]
+    E --> F[5 テスト設計]
+    F --> G[6 テスト実装]
+    G --> H[7 E2E自動テスト<br>スクリプト作成]
+    H --> I[8 テスト実行]
+    I --> J[9 テストレポート]
+    I -. 後からわかったことは<br>決める工程まで戻る .-> B
+```
+
+各工程で、作成 → トレーサビリティの確認 → レビュー(P0・P1 が無くなるまで) → 視認性アップ → 質問をまとめて人に聞く、を行います。
+
+**後からわかったことの戻し方**: どの工程でも、前の工程で決めることが後からわかったら、見つけた工程で書き足さず、テストマネージャーがその工程まで戻ってやり直します。やり直すのは、idの紐づけから特定した、影響を受ける部分だけです。
+
+## 必要なもの
+
+| 必要なもの | 使うところ |
+|---|---|
+| [Claude Code](https://claude.com/claude-code) | 全体 |
+| Python 3.9 以上(標準ライブラリだけを使います) | トレーサビリティの確認、HTML、テストレポート |
+| Node.js と Playwright | E2E自動テスト(プロジェクトに別の仕組みがあれば、そちらを使います) |
+| ブラウザを操作できるツール(Claude in Chrome、Playwright MCP など) | 手動テスト、探索的テスト |
+
+## インストール
+
+Claude Code の中で、マーケットプレイスとしてこのリポジトリを追加し、プラグインを入れます。
+
+```
+/plugin marketplace add <このリポジトリの owner/repo または フォルダのパス>
+/plugin install ai-test-management@ai-test-management-skills
+```
+
+手元のフォルダのまま試すときは、次のように起動します。
+
+```bash
+claude --plugin-dir /path/to/ai_test_management_skills
+```
+
+## 使い方
+
+テストしたいプロジェクトのフォルダで Claude Code を開き、テストマネージャーに頼みます。
+
+```text
+/ai-test-management:test-manager
+docs/仕様書.md をもとに、http://localhost:3000 のアプリをテストしてください。
+テスト環境はこのローカル環境だけを使ってください。
+```
+
+テストマネージャーは、最初にテストベース・テスト対象・テスト環境を確かめ、要求仕様整理からテストレポートまでを順に進めます。途中で出た質問は、工程ごとにまとめて聞かれます。すぐに答えられない質問は、回答待ちのまま先へ進みます。あとで質問表に回答を書いて「質問表に回答したので反映して」と頼むと、関係する工程からやり直します。
+
+工程を1つだけ実行することもできます。
+
+```text
+/ai-test-management:create-test-plan
+/ai-test-management:review-test-plan
+```
+
+## スキルの一覧
+
+| 工程 | 作成 | レビュー |
+|---|---|---|
+| (全体の進行) | `test-manager` | |
+| 1 要求仕様整理 | `create-requirements` | `review-requirements` |
+| 2 リスク分析 | `create-risk-analysis` | `review-risk-analysis` |
+| 3 テスト計画 | `create-test-plan` | `review-test-plan` |
+| 4 テスト分析 | `create-test-analysis` | `review-test-analysis` |
+| 5 テスト設計 | `create-test-design` | `review-test-design` |
+| 6 テスト実装 | `create-test-implementation` | `review-test-implementation` |
+| 7 E2E自動テストスクリプト作成 | `create-e2e-scripts` | `review-e2e-scripts` |
+| 8 テスト実行 | `execute-tests` | `review-test-execution` |
+| 9 テストレポート | `create-test-report` | `review-test-report` |
+| 視認性アップ(1〜8 の全工程) | `visualize-test-artifacts` | |
+
+工程ごとに作るもの:
+
+| 工程 | 作るもの |
+|---|---|
+| 要求仕様整理 | 要求(REQ)、仕様(SPEC)、質問表 |
+| リスク分析 | リスク(RISK)。リスクレベル = 影響度 × 発生確率。15 以上が高 |
+| テスト計画 | テスト終了条件(EXIT。数字で判断できる形)、テストアプローチ(TA) |
+| テスト分析 | フィーチャー(FT)、テスト条件(COND)、テストオラクル |
+| テスト設計 | テスト技法とカバレッジ基準、カバレッジアイテム(CI)、ハイレベルテストケース(HTC)、テストチャーター(CH) |
+| テスト実装 | ローレベルテストケース(LTC)、テストデータ(TD)、テスト手順(PROC)、テストスイート、テスト環境 |
+| E2E自動テストスクリプト作成 | スクリプト(SCR)。テストの名前にローレベルテストケースのidを付ける |
+| テスト実行 | テストランごとのテスト結果・証跡、テストセッションシート(SES)、欠陥レポート(BUG) |
+| テストレポート | HTMLのレポートと、作った時点の成果物の写し |
+
+## 成果物
+
+成果物は、テストするプロジェクトの `テスト成果物/` に、Markdownで置かれます。
+
+```
+テスト成果物/
+├─ 進行状況.md / 質問表.md / 戻し記録.md
+├─ 01_要求仕様/ … 08_テスト実行/     工程ごとの成果物とレビュー結果
+├─ 09_テストレポート/<日時>/index.html  テストレポート
+└─ html/                               視認性アップで作るHTML(index.html から開く)
+```
+
+人が見るのは次の2つです。
+
+- **`テスト成果物/html/index.html`**: 工程ごとの追跡表と、ID索引。成果物1件ごとに、上流(要求の側)と下流(テスト結果の側)の両方にたどれます。
+- **`テスト成果物/09_テストレポート/<日時>/index.html`**: テストレポート。開いてすぐの範囲で「やるべきことをやったか(終了条件を満たしたか)」と「問題点は何か」がわかります。その下に、要求ごと・リスクごとのカバレッジがあります。
+
+成果物の決まり(置き場所、idと表の書き方、必須の紐づけ、質問表、レビューの進め方)は [shared/conventions.md](shared/conventions.md) にあります。
+
+## スクリプト
+
+確認・HTML・集計は、[scripts/tm.py](scripts/tm.py) で行います。スキルの中から呼ばれますが、手で実行することもできます。
+
+```bash
+python scripts/tm.py check                 # トレーサビリティと決まりの確認(エラーがあると終了コード 1)
+python scripts/tm.py impact SPEC-003       # このidを変えたときに影響を受ける下流
+python scripts/tm.py html                  # 視認性アップ(テスト成果物/html/)
+python scripts/tm.py metrics               # テストレポートに載せる数字を数え直す
+python scripts/tm.py report                # テストレポートを作る
+```
+
+成果物の場所が `./テスト成果物` でないときは `--root <フォルダ>` を付けます。
+
+## 開発
+
+```bash
+python -m pytest tests          # スクリプトのテスト
+claude plugin validate .        # プラグインの形の確認
+```
+
+- `skills/` … スキル(1フォルダに1つ、`SKILL.md`)
+- `shared/` … 全スキル共通のルールと、JSTQBのテスト技法の一覧
+- `scripts/` … 成果物を読むスクリプト(`tm.py` が入口、`tm_core.py` が読み取り・確認・集計、`tm_html.py` がHTML)
+- `tests/` … スクリプトのテスト
+- `sample_app/` … 試しにテストしてみるための小さなアプリ

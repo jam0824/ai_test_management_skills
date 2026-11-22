@@ -1,0 +1,14 @@
+{
+  "name": "ai-test-management-skills",
+  "description": "AIが自律的にテストを作り、実行し、説明責任を果たせるレポートを作るためのスキル群。",
+  "owner": {
+    "name": "Mineo Matsuya"
+  },
+  "plugins": [
+    {
+      "name": "ai-test-management",
+      "source": "./",
+      "description": "テストマネージャーが、要求仕様整理からテストレポートまでのテスト活動を自律的に進めるスキル群。"
+    }
+  ]
+}

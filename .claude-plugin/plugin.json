@@ -1,0 +1,17 @@
+{
+  "name": "ai-test-management",
+  "version": "0.1.0",
+  "description": "テストマネージャーが、要求仕様整理からテストレポートまでのテスト活動を自律的に進めるスキル群。要求からテスト結果・証跡まで追跡でき、テストの説明責任を果たせるレポートを作る。",
+  "author": {
+    "name": "Mineo Matsuya"
+  },
+  "keywords": [
+    "testing",
+    "qa",
+    "jstqb",
+    "test-management",
+    "e2e",
+    "exploratory-testing",
+    "traceability"
+  ]
+}
