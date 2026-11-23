@@ -703,7 +703,8 @@ def metrics(project: Project) -> dict:
             for b in open_bugs(project)
         ],
         "open_questions": [
-            {"id": q.id, "stage": q.fields.get("工程", ""), "question": q.fields.get("質問", "")}
+            {"id": q.id, "stage": q.fields.get("工程", ""), "question": q.fields.get("質問", ""),
+             "observed": q.fields.get("実機の動き", "").strip()}  # 実機確認スキルが書く、答える人のための情報
             for q in project.of_type("Q")
             if not q.fields.get("状態", "").strip().startswith(QUESTION_ANSWERED)
         ],

@@ -86,6 +86,7 @@ docs/仕様書.md をもとに、http://localhost:3000 のアプリをテスト�
 | 6 テスト実装 | `create-test-implementation` | `review-test-implementation` |
 | 7 E2E自動テストスクリプト作成 | `create-e2e-scripts` | `review-e2e-scripts` |
 | 8 テスト実行 | `execute-tests` | `review-test-execution` |
+| 実機確認(回答待ちの質問に、今の動きを添える) | `observe-actual-behavior` | |
 | 9 テストレポート | `create-test-report` | `review-test-report` |
 | 視認性アップ(1〜8 の全工程) | `visualize-test-artifacts` | |
 

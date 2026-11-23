@@ -270,6 +270,14 @@ class Test集計:
     def test_未回答の質問を数える(self, root):
         m = tm_core.metrics(tm_core.load_project(root))
         assert [q["id"] for q in m["open_questions"]] == ["Q-001"]
+        assert m["open_questions"][0]["observed"] == ""  # 実機の動きの列が無い質問表でも動く
+
+    def test_未回答の質問に実機の動きを持たせる(self, root):
+        replace_in(root, "質問表.md", "| 回答が必要な理由 | 状態 | 回答 |\n|---|---|---|---|---|---|---|---|",
+                   "| 回答が必要な理由 | 実機の動き | 状態 | 回答 |\n|---|---|---|---|---|---|---|---|---|")
+        replace_in(root, "質問表.md", "| 期待結果が決まらない | 未回答 |", "| 期待結果が決まらない | 17.5 を入れると 17 として登録される | 未回答 |")
+        m = tm_core.metrics(tm_core.load_project(root))
+        assert m["open_questions"][0]["observed"] == "17.5 を入れると 17 として登録される"
 
     def test_仕様ごとの状態を出す(self, root):
         m = tm_core.metrics(tm_core.load_project(root))

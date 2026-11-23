@@ -284,6 +284,24 @@ class Test視認性アップ:
         summary, kids = self._risk_block(html, "Q-001")
         assert "回答済み" in summary and "整数だけ扱う" in kids
 
+    OBSERVED = "17.5 を入れると 17 として登録される。証跡: RUN-20261101-100000/証跡/LTC-002.png"
+
+    def _add_observed(self, root):
+        """質問表に実機の動きの列を足し、Q-001 に実機確認の結果を書く。"""
+        path = root / "質問表.md"
+        text = path.read_text(encoding="utf-8")
+        text = text.replace("| 回答が必要な理由 | 状態 | 回答 |\n|---|---|---|---|---|---|---|---|",
+                            "| 回答が必要な理由 | 実機の動き | 状態 | 回答 |\n|---|---|---|---|---|---|---|---|---|")
+        text = text.replace("| 期待結果が決まらない | 未回答 |", f"| 期待結果が決まらない | {self.OBSERVED} | 未回答 |")
+        path.write_text(text, encoding="utf-8")
+
+    def test_質問を開くと実機の動きと証跡へのリンクが出る(self, root):
+        self._add_observed(root)
+        html = tm_html.render_stage(tm_core.load_project(root), "analysis")
+        _, kids = self._risk_block(html, "Q-001")
+        assert "実機の動き" in kids and "17 として登録される" in kids
+        assert 'href="../08_テスト実行/RUN-20261101-100000/証跡/LTC-002.png"' in kids
+
     def test_リスクのページはリスクを並べて開くと紐づく仕様と要求が出る(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "risk")
         summary, kids = self._risk_block(html, "RISK-001")
@@ -906,6 +924,15 @@ class Testテストレポート:
         record = self._report_pane(html, "rp-record", None)
         assert "境界値のテスト条件を最初から厚くする" in record and "RB-001" in record
         assert 'id="not-run"' in record and 'id="questions"' in record
+
+    def test_レポートの未回答の質問に実機の動きを出す(self, root):
+        Test視認性アップ._add_observed(Test視認性アップ(), root)
+        html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
+        questions = self._report_pane(html, "rp-record", None).split('id="questions"')[1].split("</table>")[0]
+        assert "<th>実機の動き</th>" in questions and "17 として登録される" in questions
+        assert 'href="snapshot/08_テスト実行/RUN-20261101-100000/証跡/LTC-002.png"' in questions
+        first = html.split('id="first-view"')[1].split('id="details"')[0]
+        assert "うち実機の動きあり <b>1</b> 件" in first
 
     def test_ページの中のリンクで別のタブの中へ飛ぶとそのタブを開く(self, root):
         html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")

@@ -1294,16 +1294,24 @@ _STAGE_BODIES = {
 }
 
 
+def _observed_evidence(v: View, observed: str) -> str:
+    """質問表の「実機の動き」に書かれた証跡(RUN-…/証跡/…)を、ファイルへのリンクの行にする。"""
+    if "/証跡/" not in observed:
+        return ""
+    return "".join(f'<div class="leaf"><span class="kind">証跡</span> {link}</div>' for link in _evidence_links(v, observed))
+
+
 def _questions(v: View, stage: str) -> str:
     name = tm_core.STAGE_NAMES[stage]
     cards = [
         _card(v, q.id, q.fields.get("質問", "") or q.title, badges=_badge(q.fields.get("状態", "")),
               notes=_other_fields(q, {"ID", "工程", "質問", "状態"}), sub_label="関連するもの",
-              leaves="".join(_leaf(v, link) for link in sorted(q.links, key=tm_core._id_key)))
+              leaves="".join(_leaf(v, link) for link in sorted(q.links, key=tm_core._id_key))
+              + _observed_evidence(v, q.fields.get("実機の動き", "")))
         for q in v.project.of_type("Q") if q.fields.get("工程", "").strip() in (name, name.replace("作成", ""))]
     if not cards:
         return ""
-    return ("<h2>この工程で出た質問</h2><p class=\"muted\">行をクリックすると、種類・回答が必要な理由・回答と、関連するものが開く。</p>"
+    return ("<h2>この工程で出た質問</h2><p class=\"muted\">行をクリックすると、種類・回答が必要な理由・実機の動き・回答と、関連するものが開く。</p>"
             f'<div class="tree">{"".join(cards)}</div>')
 
 
@@ -1463,7 +1471,8 @@ def _first_view(v: View, m: dict, judgments: dict[str, tuple[str, str]], lacking
         f"<h3>修正されていない不具合: {len(bugs)} 件</h3>" + _more(bugs, 4, "ex-bug")
         + gap("カバーできていない要求", untested_req, partial_req, "req-coverage")
         + gap("カバーできていない高いリスク", untested_risk, partial_risk, "risk-coverage")
-        + f"<p class=\"numbers\"><span><a href=\"#questions\">未回答の質問</a> <b>{len(m['open_questions'])}</b> 件</span>"
+        + f"<p class=\"numbers\"><span><a href=\"#questions\">未回答の質問</a> <b>{len(m['open_questions'])}</b> 件"
+        f"(うち実機の動きあり <b>{sum(1 for q in m['open_questions'] if q['observed'])}</b> 件)</span>"
         f"<span><a href=\"#not-run\">未実行</a> <b>{t['未実行']}</b> 件</span>"
         f"<span><a href=\"#not-run\">ブロック</a> <b>{t['ブロック']}</b> 件</span>"
         f"<span><a href=\"#not-run\">未実装</a> <b>{t['未実装']}</b> 件</span></p></div>"
@@ -1672,7 +1681,8 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
 
     not_run_rows = [[v.ref(r["id"]), _badge(r["status"]), v.text(r["reason"])] for r in m["not_run"]]
     not_run_rows += [[v.ref(r["id"]), _badge("未実装"), v.text(r["reason"])] for r in m["unimplemented"]]
-    question_rows = [[v.ref(q["id"], False), _escape(q["stage"]), v.text(q["question"])] for q in m["open_questions"]]
+    question_rows = [[v.ref(q["id"], False), _escape(q["stage"]), v.text(q["question"]),
+                      v.text(q["observed"]) + _observed_evidence(v, q["observed"])] for q in m["open_questions"]]
     rollback = project.root / "戻し記録.md"
     rollback_html = md_to_html(rollback.read_text(encoding="utf-8-sig"), v.known, v.id_href) if rollback.is_file() else "<p>記録はありません。</p>"
 
@@ -1705,7 +1715,7 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
         + '<h2 id="not-run">実行していないテストケース(未実行・ブロック・未実装)</h2>'
         + (_table(["テストケース", "状態", "理由"], not_run_rows) if not_run_rows else "<p>ありません。</p>")
         + '<h2 id="questions">未回答の質問</h2>'
-        + (_table(["ID", "工程", "質問"], question_rows) if question_rows else "<p>ありません。</p>")
+        + (_table(["ID", "工程", "質問", "実機の動き"], question_rows) if question_rows else "<p>ありません。</p>")
         + "<h2>「後からわかったことの戻し方」の記録</h2>" + rollback_html
         + "<h2>トレーサビリティ</h2>"
         f"<p>確認の結果: エラー {len(errors)} 件、警告 {len(warnings)} 件。"
