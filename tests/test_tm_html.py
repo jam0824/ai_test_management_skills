@@ -580,11 +580,66 @@ class Test視認性アップ:
         assert "LTC-003" not in pane  # 手動テストは出さない
         assert 'id="e2e-req-REQ-002"' not in pane  # E2E自動テストが無い要求は出さない
 
-    def test_テスト実行のページで結果と証跡と欠陥レポートをたどれる(self, root):
+    # ---- テスト実行: タブで切り替えるページ ----
+
+    @staticmethod
+    def _ex_card(html: str, pane: str, card_id: str) -> tuple[str, str]:
+        block = html.split(f'id="{pane}"')[1].split(f'id="{card_id}"')[1].split("</details>")[0]
+        summary, kids = block.split("</summary>")
+        return summary, kids
+
+    def test_テスト実行のページは7つのタブで切り替える(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "execution")
-        row = next(line for line in html.split("</tr>") if 'id="result-LTC-002"' in line)
-        assert "Fail" in row and "BUG-001" in row
-        assert "../08_テスト実行/RUN-20261101-100000/証跡/LTC-002.png" in row
+        main = html.split("<main>")[1]
+        labels = [l.split("</label>")[0] for l in main.split('<label for="tab-ex-')[1:8]]
+        names = [l.split('">')[1] for l in labels]
+        assert [n.split("(")[0] for n in names] == ["まとめ", "Fail", "E2E自動テスト", "手動テスト", "探索的テスト", "欠陥レポート", "質問・ドキュメント"]
+        assert "Fail(1)" in names and "E2E自動テスト(2)" in names and "手動テスト(1)" in names and "欠陥レポート(1)" in names
+        # 質問とドキュメントは最後のタブの中に入れ、ページの下には重ねて出さない
+        last = main.split('id="ex-docs"')[1]
+        assert "この工程のドキュメント" in last and main.count("この工程のドキュメント</h2>") == 1
+
+    def test_まとめのタブに件数と要求からたどれる一覧を出す(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "execution")
+        pane = html.split('id="ex-sum"')[1].split('id="ex-e2e"')[0]
+        assert "実施方法" in pane and "Pass" in pane and 'id="tree-REQ-001"' in pane
+
+    def test_まとめのタブに探索的テストの結果も出す(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "execution")
+        pane = html.split('id="ex-sum"')[1].split('id="ex-e2e"')[0]
+        assert "探索的テストのセッション <b>1</b>" in pane
+        table = pane.split("<h3>探索的テスト</h3>")[1].split("</table>")[0]
+        row = table.split("<tbody>")[1]
+        # テストチャーター / 探索した / セッション / 時間(合計 / 時間枠) / 時間枠に達した / 見つけた不具合
+        assert "<td>1</td><td>1</td><td>1</td><td>15 / 15</td><td>1 / 1</td><td>0件</td>" in row
+
+    def test_FailのタブにはFailのテストケースだけを出す(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "execution")
+        pane = html.split('id="ex-fail"')[1].split('id="ex-e2e"')[0]
+        assert 'id="ex-fail-ltc-LTC-002"' in pane and "BUG-001" in pane
+        assert "LTC-001" not in pane and "LTC-003" not in pane
+
+    def test_E2Eと手動のタブでテストケースごとの結果と証跡と欠陥レポートをたどれる(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "execution")
+        summary, kids = self._ex_card(html, "ex-e2e", "ex-ltc-LTC-002")
+        assert 'class="ng"' in summary and "Fail" in summary and "17歳で登録する" in summary
+        assert "../08_テスト実行/RUN-20261101-100000/証跡/LTC-002.png" in kids and "BUG-001" in kids
+        assert "LTC-003" not in html.split('id="ex-e2e"')[1].split('id="ex-manual"')[0]
+        summary3, _ = self._ex_card(html, "ex-manual", "ex-ltc-LTC-003")
+        assert 'class="ok"' in summary3 and "Pass" in summary3
+
+    def test_探索的テストのタブでセッションからチャーターとセッションシートをたどれる(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "execution")
+        summary, kids = self._ex_card(html, "ex-ses", "ex-ses-SES-001")
+        assert "15分" in summary
+        assert "CH-001" in kids and "セッションシート" in kids
+
+    def test_欠陥レポートのタブで詳しい節と見つけたテストと影響する要求が出る(self, root):
+        append_to(root, "08_テスト実行/欠陥レポート.md", "\n## BUG-001\n\n- 再現できる手順: 年齢に17を入れて登録する\n")
+        html = tm_html.render_stage(tm_core.load_project(root), "execution")
+        summary, kids = self._ex_card(html, "ex-bug", "ex-bug-BUG-001")
+        assert "17歳で登録できてしまう" in summary and "高" in summary and "未修正" in summary
+        assert "年齢に17を入れて登録する" in kids and "LTC-002" in kids and "REQ-001" in kids
 
     def test_ID索引で上流と下流の両方にたどれる(self, root):
         html = tm_html.render_ids(tm_core.load_project(root))
@@ -739,8 +794,9 @@ class Testテストレポート:
         text = text.replace("| LTC-002 |\n", "| LTC-002 | スコープ外 |\n")
         (root / "08_テスト実行/欠陥レポート.md").write_text(text, encoding="utf-8")
         html = tm_html.render_stage(tm_core.load_project(root), "execution")
-        row = next(line for line in html.split("</tr>") if "BUG-001" in line and "<td" in line and "高" in line)
-        assert "スコープ外" in row and "REQ-001" not in row
+        _, kids = Test視認性アップ._ex_card(html, "ex-bug", "ex-bug-BUG-001")
+        affected = kids.split("影響する要求")[1].split("</dd>")[0]
+        assert "スコープ外" in affected and "REQ-001" not in affected
 
     def test_判定に書いた文章と戻し記録を載せる(self, root):
         out = self._build(root)

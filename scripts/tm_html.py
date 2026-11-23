@@ -255,11 +255,6 @@ class View:
             blocks.append(f"<details><summary>{_escape(rel)}</summary><div class=\"doc\">{body}</div></details>")
         return "<h2>この工程のドキュメント</h2>" + ("".join(blocks) or "<p>まだありません。</p>")
 
-    def counts(self, record_id: str) -> list[str]:
-        row = tm_core.coverage(self.project, record_id)
-        return [str(row["testcases"]), str(row["Pass"]), str(row["Fail"]), str(row["ブロック"]),
-                str(row["未実行"]), str(row["未実装"]), str(row["sessions"]), str(row["bugs"]), _badge(row["state"])]
-
 
 COUNT_HEADERS = ["テストケース", "Pass", "Fail", "ブロック", "未実行", "未実装", "探索的テストのセッション", "見つけた不具合", "状態"]
 
@@ -298,7 +293,7 @@ details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 
 .tabs input:checked+label{background:var(--bg);font-weight:700}.tabs input:focus-visible+label{outline:2px solid var(--link)}
 .pane{display:none;border-top:1px solid var(--line)}
 #tab-req:checked~#req-coverage,#tab-risk:checked~#risk-coverage{display:block}
-.tabs>input:nth-of-type(1):checked~.pane:nth-of-type(1),.tabs>input:nth-of-type(2):checked~.pane:nth-of-type(2),.tabs>input:nth-of-type(3):checked~.pane:nth-of-type(3){display:block}
+.tabs>input:nth-of-type(1):checked~.pane:nth-of-type(1),.tabs>input:nth-of-type(2):checked~.pane:nth-of-type(2),.tabs>input:nth-of-type(3):checked~.pane:nth-of-type(3),.tabs>input:nth-of-type(4):checked~.pane:nth-of-type(4),.tabs>input:nth-of-type(5):checked~.pane:nth-of-type(5),.tabs>input:nth-of-type(6):checked~.pane:nth-of-type(6),.tabs>input:nth-of-type(7):checked~.pane:nth-of-type(7),.tabs>input:nth-of-type(8):checked~.pane:nth-of-type(8){display:block}
 .tree details{border:none;border-radius:0;margin:0;padding:0}
 .tree summary{font-weight:400;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:5px 8px;border-bottom:1px solid var(--line)}
 .tree summary:hover{background:var(--soft)}
@@ -310,8 +305,9 @@ details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 
 .bar{display:inline-flex;width:140px;height:10px;border-radius:5px;overflow:hidden;background:var(--notrun);flex:none}
 .bar i,.legend i{display:inline-block;height:100%}.pass{background:var(--pass)}.fail{background:var(--fail)}.block{background:var(--block)}
 .notrun{background:var(--notrun)}.unimpl{background:repeating-linear-gradient(45deg,var(--unimpl) 0 3px,transparent 3px 6px)}.explored{background:var(--explored)}
-.rate{font-size:12.5px;white-space:nowrap;min-width:120px}
-.flags b{font-size:11.5px;font-weight:600;margin-right:6px;white-space:nowrap}.flags .f{color:var(--fail)}.flags .w{color:var(--block)}
+/* 帯の頭を行ごとにそろえるため、帯の右の2つの欄は決まった幅にする */
+.rate{font-size:12.5px;white-space:nowrap;flex:none;width:130px}
+.flags{flex:none;width:240px}.flags b{font-size:11.5px;font-weight:600;margin-right:6px;white-space:nowrap}.flags .f{color:var(--fail)}.flags .w{color:var(--block)}
 .ci{font-size:11.5px;color:var(--muted);white-space:nowrap}
 .leaf{padding:4px 8px;border-bottom:1px solid var(--line);font-size:13px}.leaf .memo{color:var(--muted);font-size:12px;margin-left:8px}
 .card-note{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:6px 8px;padding:6px 10px;background:var(--soft);border-left:3px solid var(--line);font-size:13px}
@@ -1029,25 +1025,6 @@ def _script_coverage(v: View) -> str:
     )
 
 
-def _results_table(v: View) -> str:
-    p = v.project
-    final = p.final_results()
-    rows, row_ids = [], []
-    for ltc in p.of_type("LTC"):
-        result = final.get(ltc.id)
-        if result is None:
-            rows.append([v.ref(ltc.id), v.text(ltc.fields.get("実施方法", "")), _badge("未実行"), "", "", "", "テスト結果が無い"])
-        else:
-            evidence = "<br>".join(
-                e if re.match(r"^[a-z]+://", e) else f'<a href="{v.file_base}{tm_core.EXECUTION_DIR}/{result.run}/{html_lib.escape(e)}">{_escape(e)}</a>'
-                for e in result.evidence
-            )
-            rows.append([v.ref(ltc.id), v.text(result.method or ltc.fields.get("実施方法", "")), _badge(result.result),
-                         _escape(result.run), evidence, v.refs(result.bugs, False) if result.bugs else "", v.text(result.memo)])
-        row_ids.append("result-" + ltc.id)
-    return _table(["ローレベルテストケース", "実施方法", "結果", "テストラン", "証跡", "欠陥レポート", "メモ"], rows, row_ids)
-
-
 def _bugs_table(v: View, bugs) -> str:
     p = v.project
 
@@ -1074,24 +1051,127 @@ def _sessions_table(v: View) -> str:
     return _table(["セッション", "テストチャーター", "開始日時", "かかった時間(分)", "見つけた不具合", "セッションシート"], rows) if rows else "<p>ありません。</p>"
 
 
+_RESULT_COLOR = {"Pass": "ok", "Fail": "ng", "ブロック": "warn", "未実行": "ex"}
+
+
+def _result_cards(v: View, ltcs, prefix: str = "ex-ltc") -> str:
+    """ローレベルテストケースを1件1行にし、開くとメモ・テストラン・証跡・欠陥レポートが出る。
+    prefix: 行のidの頭。同じテストケースを別のタブにも出すときに、idが重ならないよう変える。"""
+    p = v.project
+    final = p.final_results()
+    cards = []
+    for ltc in ltcs:
+        result = final.get(ltc.id)
+        status = result.result if result else "未実行"
+        notes, leaves = [], ""
+        if result is None:
+            notes = [("メモ", "テスト結果が無い")]
+        else:
+            notes = [("テストラン", result.run), ("メモ", result.memo)]
+            leaves = "".join(
+                f'<div class="leaf"><span class="kind">証跡</span> '
+                + (_escape(e) if re.match(r"^[a-z]+://", e) else
+                   f'<a href="{v.file_base}{tm_core.EXECUTION_DIR}/{result.run}/{html_lib.escape(e)}">{_escape(e)}</a>')
+                + "</div>" for e in result.evidence)
+            leaves += "".join(_leaf(v, b) for b in result.bugs)
+        cards.append(_card(v, ltc.id, ltc.title, badges=_badge(status),
+                           meta=f'<span class="ci">{_escape((result.method if result else "") or ltc.fields.get("実施方法", ""))}</span>',
+                           notes=notes, sub_label="証跡と欠陥レポート", leaves=leaves,
+                           card_id=f"{prefix}-{ltc.id}", cls=_RESULT_COLOR.get(status, "")))
+    return f'<div class="tree">{"".join(cards)}</div>' if cards else "<p>ありません。</p>"
+
+
+def _session_cards(v: View) -> str:
+    p = v.project
+    cards = []
+    for ses in p.of_type("SES"):
+        f = ses.fields
+        charters = p.parents(ses.id)
+        bugs = [c for c in p.children(ses.id) if type_of(c) == "BUG"]
+        title = " / ".join(p.records[c].title for c in charters if c in p.records) or ses.title
+        cards.append(_card(
+            v, ses.id, title, badges=_badge(f"不具合 {len(bugs)}件") if bugs else "",
+            meta=f'<span class="ci">{_escape(f.get("かかった時間(分)", ""))}分</span>',
+            notes=[("開始日時", f.get("開始日時", "")), ("実施者", f.get("実施者", ""))],
+            sub_label="テストチャーター・見つけた不具合・セッションシート",
+            leaves="".join(_leaf(v, c) for c in charters) + "".join(_leaf(v, b) for b in bugs)
+            + f'<div class="leaf"><span class="kind">ファイル</span> {v.file_link(ses.file, "セッションシートを開く")}</div>',
+            card_id=f"ex-ses-{ses.id}", cls="warn" if bugs else "ok"))
+    return f'<div class="tree">{"".join(cards)}</div>' if cards else "<p>ありません。</p>"
+
+
+def _bug_cards(v: View) -> str:
+    """欠陥レポートを1件1行にし、開くと詳しい節(再現手順など)・見つけたテスト・影響する要求とリスクが出る。"""
+    p = v.project
+    path = p.root / tm_core.EXECUTION_DIR / "欠陥レポート.md"
+    details = _sections(path.read_text(encoding="utf-8-sig")) if path.is_file() else {}
+
+    def affected(bug, type_key: str) -> str:
+        # 要求・リスクのカバレッジと同じ数え方にする(欠陥レポートに範囲が書かれていればそれに従う)
+        if tm_core.bug_scope(bug) == set():
+            return tm_core.OUT_OF_SCOPE
+        return ", ".join(i for i in _ids(p, type_key) if tm_core.bug_affects(p, bug.id, i)) or "なし"
+
+    cards = []
+    for bug in tm_core.open_bugs(p) + [b for b in p.of_type("BUG") if b not in tm_core.open_bugs(p)]:
+        f = bug.fields
+        detail = next((body for title, body in details.items() if bug.id in tm_core.find_ids(title)), "")
+        state = f.get("状態", "").strip()
+        cards.append(_card(
+            v, bug.id, f.get("タイトル", "") or bug.title,
+            badges=_badge(f.get("重要度", "")) + " " + _badge(state),
+            meta=f'<span class="ci">{_escape(f.get("見つけた日時", ""))}</span>',
+            notes=[("影響する要求", affected(bug, "REQ")), ("影響するリスク", affected(bug, "RISK")),
+                   ("テスト対象・環境", f.get("テスト対象・環境", ""))],
+            sub_label="詳しい内容と見つけたテスト",
+            leaves=(f'<div class="doc leaf">{md_to_html(detail, v.known, v.id_href)}</div>' if detail.strip() else "")
+            + "".join(_leaf(v, t) for t in p.parents(bug.id)),
+            card_id=f"ex-bug-{bug.id}", cls="ok" if state in tm_core.BUG_CLOSED else "ng"))
+    return f'<div class="tree">{"".join(cards)}</div>' if cards else "<p>ありません。</p>"
+
+
 def _stage_execution(v: View) -> str:
     p = v.project
     m = tm_core.metrics(p)
     t = m["testcases"]
-    parts = [
+    method_rows = [[_escape(name)] + [str(counts[s]) for s in tm_core.RESULTS] for name, counts in m["by_method"].items()]
+    # 探索的テストは Pass・Fail を付けないので、チャーター・セッション・時間・見つけた不具合で別に出す
+    charters, sessions = m["charters"], p.of_type("SES")
+    found = {b for s in sessions for b in p.children(s.id) if type_of(b) == "BUG"}
+    still_open = found & {b.id for b in tm_core.open_bugs(p)}
+    timebox = sum(c["timebox"] or 0 for c in charters)
+    exploratory = _table(
+        ["テストチャーター", "探索した", "セッション", "時間(合計 / 時間枠、分)", "時間枠に達した", "セッションに紐づく不具合"],
+        [[str(len(charters)), str(sum(1 for c in charters if c["sessions"])), str(len(sessions)),
+          f"{sum(c['minutes'] for c in charters):g} / {timebox:g}",
+          f"{sum(1 for c in charters if c['reached'])} / {len(charters)}",
+          f"{len(found)}件" + (f"(うち未修正 {len(still_open)}件)" if still_open else "")]]) if charters else "<p>ありません。</p>"
+    summary = (
         f"<p class=\"numbers\"><span>テストケース <b>{t['total']}</b> 件</span><span>Pass <b>{t['Pass']}</b></span>"
         f"<span>Fail <b>{t['Fail']}</b></span><span>ブロック <b>{t['ブロック']}</b></span><span>未実行 <b>{t['未実行']}</b></span>"
+        f"<span>探索的テストのセッション <b>{len(sessions)}</b></span>"
         f"<span>テストラン: {_escape(', '.join(m['runs']) or 'なし')}</span></p>"
         "<p class=\"muted\">同じテストケースを何回か実行したときは、いちばん新しいテストランの結果を数える。</p>"
-    ]
-    for type_key in ["REQ", "SPEC", "RISK", "COND"]:
-        ids = _risk_order(p) if type_key == "RISK" else _ids(p, type_key)
-        rows = [[v.ref(i)] + v.counts(i) for i in ids]
-        parts.append(f"<h2>{TYPES[type_key]}ごとの結果</h2>" + _table([TYPES[type_key]] + COUNT_HEADERS, rows))
-    parts.append("<h2>テストケースごとの結果・証跡・欠陥レポート</h2>" + _results_table(v))
-    parts.append("<h2>欠陥レポート</h2>" + _bugs_table(v, p.of_type("BUG")))
-    parts.append("<h2>探索的テストのセッション</h2>" + _sessions_table(v))
-    return "".join(parts)
+        + "<h3>テストケース</h3>" + _table(["実施方法"] + tm_core.RESULTS, method_rows)
+        + "<h3>探索的テスト</h3>" + exploratory
+        + _trace_tree(v, m)
+    )
+    ltcs = p.of_type("LTC")
+    e2e = [l for l in ltcs if "E2E" in l.fields.get("実施方法", "")]
+    manual = [l for l in ltcs if l not in e2e]
+    final = p.final_results()
+    failed = [l for l in ltcs if l.id in final and final[l.id].result == "Fail"]
+    bugs = p.of_type("BUG")
+    docs = _questions(v, "execution") + v.documents(tm_core.STAGE_DIRS["execution"])
+    return _tabs("ex-tab", [
+        ("ex-sum", "まとめ", summary),
+        ("ex-fail", f"Fail({len(failed)})", _result_cards(v, failed, prefix="ex-fail-ltc")),
+        ("ex-e2e", f"E2E自動テスト({len(e2e)})", _result_cards(v, e2e)),
+        ("ex-manual", f"手動テスト({len(manual)})", _result_cards(v, manual)),
+        ("ex-ses", f"探索的テスト({len(p.of_type('SES'))})", _session_cards(v)),
+        ("ex-bug", f"欠陥レポート({len(bugs)})", _bug_cards(v)),
+        ("ex-docs", "質問・ドキュメント", docs),
+    ])
 
 
 _STAGE_BODIES = {
@@ -1117,7 +1197,9 @@ def render_stage(project: Project, stage: str, file_base: str = "../", hrefs: di
                  index_label: str = "目次") -> str:
     hrefs = hrefs or _hrefs()
     view = View(project, hrefs["ids"], file_base)
-    body = _STAGE_BODIES[stage](view) + _questions(view, stage) + view.documents(tm_core.STAGE_DIRS[stage])
+    body = _STAGE_BODIES[stage](view)
+    if stage != "execution":  # テスト実行のページは、質問とドキュメントをタブの中に入れる
+        body += _questions(view, stage) + view.documents(tm_core.STAGE_DIRS[stage])
     return _page(tm_core.STAGE_NAMES[stage], body, current=stage, hrefs=hrefs, index_label=index_label)
 
 
