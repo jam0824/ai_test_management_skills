@@ -1,0 +1,19 @@
+SES-009 の内蔵ブラウザのタブ(tab-6)のネットワーク要求の記録(read_network_requests。2026-11-23 09:33 JST)
+SES-008 からの通しの記録。SES-009 で増えたのは最後の3件(画面を開いた・読み込み直した・開き直した3回)
+[D97A720F2994925DCF644D16E2F30D1C] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[0C6C84B383C31284152CED732406BE1D] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[4E6B149DBB269E86902A166A563680CE] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[27C18231CAFBF41A1BE1400FC6BF4162] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[5065D5737BF3C1BA84B405ADB986C2A3] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[8BD8F6E2C7E94C7066AE2519E0937450] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[4C66298B32C5440C3CF9C1B7367ED0B8] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[A2BC44A1F6788C469F6636C604699401] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[3ABE40F0FB2564C534400B01B7ED089A] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[10DF7B4E01665936FC515877D9920187] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[328C85ED65C87416D1DDB96D690133AF] GET http://localhost:8000/retirement_simulator.html → 200 OK
+外部(localhost:8000 以外)への要求: なし
+コンソールのエラー: 読み込みごとの `gap income line` `gap expense line` だけ(22件 = 11回 × 2)
+
+追記(2026-11-23 09:37 JST。テストメモ27で画面を開き直した後に、もう一度記録を見た)
+[30062B4681049B60E691740154DEE112] GET http://localhost:8000/retirement_simulator.html → 200 OK
+SES-009 で増えたのは、上の3件とこの1件の、計4件。外部(localhost:8000 以外)への要求: なし

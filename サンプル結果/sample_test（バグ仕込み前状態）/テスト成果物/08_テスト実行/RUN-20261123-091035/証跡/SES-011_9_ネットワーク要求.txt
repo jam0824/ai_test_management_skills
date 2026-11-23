@@ -1,0 +1,10 @@
+SES-011 の内蔵ブラウザのタブ(tab-6)のネットワーク要求の記録(read_network_requests。2026-11-23 10:00 JST)
+SES-008 からの通しの記録(17件)。SES-011 で増えたのは最後の1件(画面を開いた1回)
+[A30B4DD29A4ED8FDF9ED8DA0766666DD] GET http://localhost:8000/retirement_simulator.html → 200 OK
+それより前の16件もすべて GET http://localhost:8000/retirement_simulator.html → 200 OK(証跡 SES-010_8)
+外部(localhost:8000 以外)への要求: なし。「開始」を数百回押しても、要求は増えていない
+
+追記(2026-11-23 10:06 JST。テストメモ23 で画面を2回開き直した後に、もう一度記録を見た)
+[C1C5D5421A2EB7251006B6392054DBA0] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[6D39C49BF1C25AD2DEF3E273A412DBEE] GET http://localhost:8000/retirement_simulator.html → 200 OK
+SES-011 で増えたのは計3件(19件の通しの記録の最後の3件)。外部(localhost:8000 以外)への要求: なし

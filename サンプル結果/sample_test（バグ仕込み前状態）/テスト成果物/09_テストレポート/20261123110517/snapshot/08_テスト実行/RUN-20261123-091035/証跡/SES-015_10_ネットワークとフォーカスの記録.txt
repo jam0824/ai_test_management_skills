@@ -1,0 +1,26 @@
+SES-015 のフォーカスの記録とネットワーク要求(2026-11-23 09:57〜10:03、内蔵ブラウザ tab-3)
+(操作はすべて computer の key / type。フォーカスの位置は javascript_tool で document.activeElement を読み取った)
+
+1. 画面を開いた直後の Tab の順(給与変更設定は閉じている):
+   startAge → retirementAge → pensionStartAge → gapIncome → salary → toggleSalaryChanges
+2. 給与変更設定を開き、1行を追加して値を入れた後の「削除」からの Tab の順:
+   addSalaryChange → monthlyPension → initialCash → initialInv → expenseCurrent → expenseGap → expenseRetired → investRate → interest → eventProb → runBtn
+   runBtn の次の Tab → output(結果の欄。tabindex の指定は無いが、フォーカスが入り枠が付く)
+3. 「➕ 給与変更を追加」で Enter / Space → 行が追加されるが、フォーカスは addSalaryChange のまま。追加した行はボタンより前(上)にある。
+4. 「削除」で Enter → 行が消え、document.activeElement は BODY。次の Tab で、消えた行の次の要素(addSalaryChange、または残った行の年齢の欄)に移る。
+5. 欄で Enter → 実行されない。document.forms.length = 0。
+6. 結果の欄 #output: role なし、aria-live なし。toggleSalaryChanges: aria-expanded なし。2つの行の「削除」ボタンの名前はどちらも「削除」。
+7. ページの CSS に focus / outline の決まりは無い。枠はブラウザの既定(この内蔵ブラウザではオレンジ rgb(229,151,0)、outline auto)。
+8. キーによるスクロール: 結果の欄にフォーカスがあるときも、「開始」にフォーカスがあるときも、↓・PageDown・End・Space・Ctrl+End・Home でスクロールしなかった(結果の欄の scrollTop も、ページの scrollY も変わらない)。マウスホイールではスクロールする。内蔵ブラウザ(画面が隠れた状態)の合成キー入力では既定のスクロールが起きないためと推測し、テスト対象の問題とはしていない。
+
+read_network_requests(10:02 ごろ): 24件、すべて http://localhost:8000/retirement_simulator.html への GET(このタブで開いた回数分と、SES-014 の fetch 1件)。SES-015 で開いたのは1回。外部への要求は無い。
+
+追加(10:04 ごろ):
+9. キーの名前を変えても(PageDown、ArrowDown)、結果の欄の scrollTop(300)もページの scrollY(714)も変わらない。
+10. 結果の欄で Ctrl+A → 選ばれたのはページ全体(95,619文字、先頭は「老後資金シミュレーター」)。結果の欄は95,277文字。
+11. html lang="ja"、title「老後資金シミュレーター」。見出しは H1 と H4 だけ。ランドマーク(main など、role 付き)は0。ボタンの type: toggleSalaryChanges=button、削除=button、addSalaryChange=button、runBtn=submit(form の中には無い)。
+12. 欄に入ると値が選ばれた状態になり、打てば置き換わる。Ctrl+A → Delete で空にできる。Backspace でも消せる。
+13. 「削除」は Space でも押せる。削除の後(フォーカスは BODY)に Shift+Tab → 前の行の「削除」に戻る。
+14. 開始年齢101で実行(結果の欄は空、scrollHeight = clientHeight = 20px)→ 「開始」の次の Tab は結果の欄に入らず、ページの先頭の startAge に戻った。結果があるとき(scrollHeight が数万px)は Tab で結果の欄に入る。
+セッションの最後(10:09 ごろ): read_network_requests は24件のまま(外部への要求なし)。コンソールに Uncaught の例外は無い。
+15. 年金月額の欄(145000 が選ばれた状態)で abc と打つ → 値は空(validity.valid=true、badInput=false)。145000 に打ち直した。

@@ -1,0 +1,13 @@
+{
+  "name": "retirement-simulator-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "retirement_simulator.html のE2E自動テスト(ローレベルテストケースのidごと)",
+  "scripts": {
+    "test": "playwright test",
+    "test:webkit": "playwright test --config=playwright.webkit.config.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1"
+  }
+}

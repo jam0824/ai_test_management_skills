@@ -1,0 +1,236 @@
+{
+  "テストデータID": "TD-012",
+  "説明": "条件のキーは入力欄の id(設定項目.json の「項目」)。書いていない項目は初期値のまま。乱数の名前は 乱数.json のもの",
+  "ローレベルテストケース": {
+    "LTC-090": {
+      "ハイレベルテストケースID": "HTC-074",
+      "テストケース": "http で開いて全部の操作をしても、外部への要求が出ない",
+      "事前条件": "ネットワークの要求(WebSocket を含む)をすべて記録している。`http://localhost:8000/retirement_simulator.html` で開く",
+      "条件": {
+        "startAge": 30,
+        "retirementAge": 60,
+        "pensionStartAge": 65,
+        "gapIncome": 50000,
+        "salary": 4000000,
+        "monthlyPension": 150000,
+        "initialCash": 0,
+        "initialInv": 3000000,
+        "expenseCurrent": 150000,
+        "expenseGap": 200000,
+        "expenseRetired": 220000,
+        "investRate": 20,
+        "interest": 4,
+        "eventProb": 10
+      },
+      "給与変更": [
+        [
+          40,
+          5000000
+        ],
+        [
+          50,
+          6000000
+        ]
+      ],
+      "乱数": {
+        "種類": "シード",
+        "シード": 74
+      },
+      "操作": [
+        "14項目に値を入れる",
+        "「📈 給与変更設定を表示/非表示」をクリック",
+        "「➕ 給与変更を追加」を2回クリックし、(40, 5000000)・(50, 6000000) を入れる",
+        "2つ目の「削除」をクリック",
+        "「📈 給与変更設定を表示/非表示」をクリック",
+        "「開始」",
+        "開始年齢を 35 にして「開始」"
+      ],
+      "期待値": "記録した要求が `http://localhost:8000/retirement_simulator.html` の1件と `http://localhost:8000/favicon.ico` だけで、localhost:8000 以外への要求が0件"
+    },
+    "LTC-091": {
+      "ハイレベルテストケースID": "HTC-075",
+      "テストケース": "file:// で開いて全部の操作をしても、http・https の要求が出ない",
+      "事前条件": "ネットワークの要求(WebSocket を含む)をすべて記録している。`file:///D:/codes/sample_test/retirement_simulator.html` で開く",
+      "条件": {
+        "startAge": 30,
+        "retirementAge": 60,
+        "pensionStartAge": 65,
+        "gapIncome": 50000,
+        "salary": 4000000,
+        "monthlyPension": 150000,
+        "initialCash": 0,
+        "initialInv": 3000000,
+        "expenseCurrent": 150000,
+        "expenseGap": 200000,
+        "expenseRetired": 220000,
+        "investRate": 20,
+        "interest": 4,
+        "eventProb": 10
+      },
+      "給与変更": [
+        [
+          40,
+          5000000
+        ],
+        [
+          50,
+          6000000
+        ]
+      ],
+      "乱数": {
+        "種類": "シード",
+        "シード": 74
+      },
+      "操作": [
+        "14項目に値を入れる",
+        "「📈 給与変更設定を表示/非表示」をクリック",
+        "「➕ 給与変更を追加」を2回クリックし、(40, 5000000)・(50, 6000000) を入れる",
+        "2つ目の「削除」をクリック",
+        "「📈 給与変更設定を表示/非表示」をクリック",
+        "「開始」",
+        "開始年齢を 35 にして「開始」"
+      ],
+      "期待値": "記録した要求のうち、http・https・ws・wss の要求が0件"
+    },
+    "LTC-093": {
+      "ハイレベルテストケースID": "HTC-077",
+      "テストケース": "file:// をオフラインの状態で開いても、表示から入力・開始・結果の表示までのすべての機能が動く",
+      "事前条件": "支出なし。オフラインの設定にしてから `file:///D:/codes/sample_test/retirement_simulator.html` を開く",
+      "条件": {
+        "startAge": 30,
+        "retirementAge": 60,
+        "pensionStartAge": 65,
+        "gapIncome": 50000,
+        "salary": 4000000,
+        "monthlyPension": 150000,
+        "initialCash": 0,
+        "initialInv": 3000000,
+        "expenseCurrent": 150000,
+        "expenseGap": 200000,
+        "expenseRetired": 220000,
+        "investRate": 20,
+        "interest": 4,
+        "eventProb": 10
+      },
+      "給与変更": [
+        [
+          40,
+          5000000
+        ],
+        [
+          50,
+          6000000
+        ]
+      ],
+      "乱数": "支出なし",
+      "操作": [
+        "14項目に値を入れる",
+        "「📈 給与変更設定を表示/非表示」をクリック",
+        "「➕ 給与変更を追加」を2回クリックし、(40, 5000000)・(50, 6000000) を入れる",
+        "2つ目の「削除」をクリック",
+        "「📈 給与変更設定を表示/非表示」をクリック",
+        "「開始」"
+      ],
+      "比較用の実行": [
+        {
+          "条件": {
+            "startAge": 30,
+            "retirementAge": 60,
+            "pensionStartAge": 65,
+            "gapIncome": 50000,
+            "salary": 4000000,
+            "monthlyPension": 150000,
+            "initialCash": 0,
+            "initialInv": 3000000,
+            "expenseCurrent": 150000,
+            "expenseGap": 200000,
+            "expenseRetired": 220000,
+            "investRate": 20,
+            "interest": 4,
+            "eventProb": 10
+          },
+          "説明": "オンラインのまま file:// で同じ操作"
+        }
+      ],
+      "期待値": "(1) 画面に14項目の入力欄と「開始」が表示される (2) 結果の欄の内容が、比較用の実行(オンラインのまま file:// で同じ操作)と一致する"
+    },
+    "LTC-094": {
+      "ハイレベルテストケースID": "HTC-078",
+      "テストケース": "http で開いた後にオフラインにしても、入力・開始・結果の表示が動く",
+      "事前条件": "支出なし。`http://localhost:8000/retirement_simulator.html` を開いた後、オフラインの設定にする",
+      "条件": {
+        "startAge": 30,
+        "retirementAge": 60,
+        "pensionStartAge": 65,
+        "gapIncome": 50000,
+        "salary": 4000000,
+        "monthlyPension": 150000,
+        "initialCash": 0,
+        "initialInv": 3000000,
+        "expenseCurrent": 150000,
+        "expenseGap": 200000,
+        "expenseRetired": 220000,
+        "investRate": 20,
+        "interest": 4,
+        "eventProb": 10
+      },
+      "給与変更": [
+        [
+          40,
+          5000000
+        ],
+        [
+          50,
+          6000000
+        ]
+      ],
+      "乱数": "支出なし",
+      "操作": [
+        "14項目に値を入れる",
+        "「📈 給与変更設定を表示/非表示」をクリック",
+        "「➕ 給与変更を追加」を2回クリックし、(40, 5000000)・(50, 6000000) を入れる",
+        "2つ目の「削除」をクリック",
+        "「📈 給与変更設定を表示/非表示」をクリック",
+        "「開始」"
+      ],
+      "比較用の実行": [
+        {
+          "条件": {
+            "startAge": 30,
+            "retirementAge": 60,
+            "pensionStartAge": 65,
+            "gapIncome": 50000,
+            "salary": 4000000,
+            "monthlyPension": 150000,
+            "initialCash": 0,
+            "initialInv": 3000000,
+            "expenseCurrent": 150000,
+            "expenseGap": 200000,
+            "expenseRetired": 220000,
+            "investRate": 20,
+            "interest": 4,
+            "eventProb": 10
+          },
+          "説明": "オンラインのまま http で同じ操作"
+        }
+      ],
+      "期待値": "結果の欄の内容が、比較用の実行(オンラインのまま http で同じ操作)と一致する"
+    },
+    "LTC-095": {
+      "ハイレベルテストケースID": "HTC-079",
+      "テストケース": "HTMLファイルを file:// で直接開いて、使い始められる",
+      "事前条件": "支出なし。`file:///D:/codes/sample_test/retirement_simulator.html` を開く",
+      "乱数": "支出なし",
+      "操作": [
+        "初期値のまま「開始」"
+      ],
+      "比較用の実行": [
+        {
+          "条件": {},
+          "説明": "http で開いて初期値のまま「開始」"
+        }
+      ],
+      "期待値": "(1) 14項目の入力欄と「開始」が表示される (2) 結果の欄の内容が、比較用の実行(http で開いて初期値のまま「開始」)と一致する"
+    }
+  }
+}

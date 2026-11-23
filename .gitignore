@@ -1,4 +1,12 @@
 docs/行いたいこと.md
 __pycache__/
 .pytest_cache/
-テスト成果物/
+node_modules/
+*.stackdump
+# リポジトリの直下でスキルを試したときの成果物(サンプル結果の中のテスト成果物は上げる)
+/テスト成果物/
+# Playwright のトレースは1つで数十〜100MBあり、GitHub に上げられないので、サンプル結果には入れない
+サンプル結果/**/*trace.zip
+# Playwright がテストのたびに出す生の出力(必要なものはテストランの証跡に取り込み済み)
+サンプル結果/**/test-results/
+サンプル結果/**/test-results-webkit/

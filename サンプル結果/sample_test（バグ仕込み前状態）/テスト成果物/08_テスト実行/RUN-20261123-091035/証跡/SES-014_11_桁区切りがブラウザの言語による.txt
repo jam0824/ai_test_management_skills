@@ -1,0 +1,15 @@
+SES-014 候補-SES-014-5 の証跡(2026-11-23 09:47 ごろ、内蔵ブラウザ tab-3)
+(javascript_tool で読み取ったもの。テスト対象のファイルは変えていない。ページのHTMLは同じ localhost の URL から fetch で読み取っただけ)
+
+1. 内蔵ブラウザの言語と、既定の数値の書式
+   navigator.language: "ja"、navigator.languages: ["ja","ko"]、Intl.NumberFormat().resolvedOptions().locale: "ja"
+   (1234567.891).toLocaleString()        → "1,234,567.891"
+   (1234567.891).toLocaleString('de-DE') → "1.234.567,891"
+
+2. テスト対象のHTMLの中の数値の書式の呼び出し
+   toLocaleString / Intl.NumberFormat の呼び出し: 14か所、すべて `toLocaleString()`(言語の指定なし)
+
+3. 結果の欄の小数の額は最大で小数3桁(例: `¥25,566.667`、`¥441,167,011,021.568`)で、toLocaleString() の既定(小数は最大3桁)と同じ形
+
+推測: 結果の額の桁区切りと小数点は、利用者のブラウザの言語設定で変わる。ドイツ語などの設定なら `¥1.032.525` のように「.」で区切られ、小数点と読み違えうる。
+ブラウザの言語設定を変えるのはこのセッションの範囲外としたので、画面での確認はしていない。

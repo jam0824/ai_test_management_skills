@@ -1,0 +1,4 @@
+# Q-004 画面を開いた直後(何も操作しない)の入力欄の値
+現役時生活費の欄のラベル: 現役時生活費(月額):
+#expenseCurrent の value: 155600
+すべての欄: startAge="30" retirementAge="65" pensionStartAge="65" gapIncome="0" salary="3000000" monthlyPension="145000" initialCash="1000000" initialInv="0" expenseCurrent="155600" expenseGap="228000" expenseRetired="228000" investRate="20" interest="4" eventProb="1"

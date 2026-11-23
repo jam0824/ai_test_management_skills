@@ -1,0 +1,23 @@
+SES-012 のネットワーク要求とコンソール(2026-11-23 09:16 ごろ、内蔵ブラウザ tab-3)
+
+read_network_requests:
+[49AB3C57CDDBF82928706BF6C82E616F] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[148246CA92AAA8625FB7854435579550] GET http://localhost:8000/retirement_simulator.html → 200 OK
+(画面を2回開いた分だけ。localhost 以外への要求は無い。「開始」を何度押しても要求は増えない)
+
+read_console_messages:
+[error] gap income line
+[error] gap expense line
+[error] gap income line
+[error] gap expense line
+(テスト環境.md に書かれた、画面を開くたびに出る2つのエラー。2回開いたので4件)
+
+セッションの終わり(09:21 ごろ)にもう一度 read_network_requests:
+[49AB3C57CDDBF82928706BF6C82E616F] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[148246CA92AAA8625FB7854435579550] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[8E6019130AC76A51820F0CB5E7512226] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[94F445FC6F20DF8C7243CEAA7BA99954] GET http://localhost:8000/retirement_simulator.html → 200 OK
+(画面を4回開いた分だけ。外部への要求は無い)
+
+セッションの最後(09:25 ごろ)の read_network_requests: http://localhost:8000/retirement_simulator.html への GET が8件(画面を8回開いた分)だけ。外部への要求は無い。
+read_console_messages: [error] gap income line / [error] gap expense line の組が、開いた回数だけ出ている(既知のもの)。ほかのエラーは無い。

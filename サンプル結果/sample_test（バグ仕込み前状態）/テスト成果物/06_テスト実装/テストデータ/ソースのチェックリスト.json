@@ -1,0 +1,59 @@
+{
+  "テストデータID": "TD-013",
+  "説明": "条件のキーは入力欄の id(設定項目.json の「項目」)。書いていない項目は初期値のまま。乱数の名前は 乱数.json のもの",
+  "チェックリスト": {
+    "1 外部へ送る呼び出し": [
+      "fetch",
+      "XMLHttpRequest",
+      "WebSocket",
+      "sendBeacon",
+      "EventSource",
+      "<form",
+      "\\.submit\\(",
+      "location",
+      "window\\.open",
+      "navigator\\."
+    ],
+    "2 外部のURLを指す src・href・action": [
+      "src=",
+      "href=",
+      "action=",
+      "url\\(",
+      "@import",
+      "http:",
+      "https:",
+      "//"
+    ],
+    "3 外部のURLを持つ要素を後から作る処理": [
+      "createElement",
+      "innerHTML",
+      "outerHTML",
+      "insertAdjacentHTML",
+      "document\\.write",
+      "setAttribute",
+      "\\.src",
+      "\\.href",
+      "appendChild",
+      "append\\("
+    ],
+    "4 外部のライブラリを読み込む書き方": [
+      "<script",
+      "import",
+      "require\\(",
+      "<link"
+    ]
+  },
+  "チェックリスト_備考": "検索語は正規表現(大文字小文字を区別しない)。見落としを減らすための手がかり。当たった行は読んで、外部のURLや外部への送信に当たるかを判断する。検索語に当たらない行も、全行を読んで確かめる",
+  "SHA-256": "87eaeced1e0c3a2a68f4d034d8d11cd6a57eb08db37aeb78cd1f444bfdf22741",
+  "ローレベルテストケース": {
+    "LTC-092": {
+      "ハイレベルテストケースID": "HTC-076",
+      "テストケース": "ソースに、外部へ送る書き方と外部のものを読み込む書き方が無い",
+      "事前条件": "テスト対象のファイルの SHA-256 が `87eaeced1e0c3a2a68f4d034d8d11cd6a57eb08db37aeb78cd1f444bfdf22741`(テスト計画と同じ)",
+      "操作": [
+        "PROC-001 のとおり"
+      ],
+      "期待値": "チェックリスト(TD-013)の4項目 (1) 外部へ送る呼び出し (2) 外部のURLを指す src・href・action(CSS の url() と @import を含む) (3) 外部のURLを持つ要素を後から作る処理 (4) 外部のライブラリを読み込む書き方 のどれにも当たる書き方が、ソースの全行のどこにも無い"
+    }
+  }
+}

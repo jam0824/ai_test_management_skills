@@ -1,0 +1,10 @@
+SES-008 の内蔵ブラウザのタブ(tab-6)のネットワーク要求の記録(read_network_requests。2026-11-23 09:24 JST)
+[D97A720F2994925DCF644D16E2F30D1C] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[0C6C84B383C31284152CED732406BE1D] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[4E6B149DBB269E86902A166A563680CE] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[27C18231CAFBF41A1BE1400FC6BF4162] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[5065D5737BF3C1BA84B405ADB986C2A3] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[8BD8F6E2C7E94C7066AE2519E0937450] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[4C66298B32C5440C3CF9C1B7367ED0B8] GET http://localhost:8000/retirement_simulator.html → 200 OK
+[A2BC44A1F6788C469F6636C604699401] GET http://localhost:8000/retirement_simulator.html → 200 OK
+外部(localhost:8000 以外)への要求: なし

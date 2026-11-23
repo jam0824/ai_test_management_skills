@@ -1,0 +1,15 @@
+SES-006 周22・周23 開始・退職・年金開始がすべて同じ年齢 / 各期間が1年ずつの組み合わせ
+取得: 2026-11-23 09:53 JST、内蔵ブラウザ tab-5、http://localhost:8000/retirement_simulator.html(周21 の画面のまま値を変えた)
+
+共通の値: 周20 と同じ(gapIncome=70000 salary=5000000 monthlyPension=145000 initialCash=1000000000 expenseCurrent=155600
+expenseGap=228000 expenseRetired=228000 investRate=20 interest=4 eventProb=30)
+
+■ 周22 startAge=60 retirementAge=60 pensionStartAge=60、給与変更: 60歳 8,000,000円
+60歳1月〜100歳12月 年金: ¥145,000
+読み取り: 最初の月から年金。給与変更は使われない(知らせる表示は無い)
+
+■ 周23 startAge=59 retirementAge=60 pensionStartAge=61、給与変更: 59歳 8,000,000円
+59歳1月〜59歳12月 給与: ¥448,958 (投資: ¥89,792) [年収: ¥8,000,000]
+60歳1月〜60歳12月 退職後収入: ¥70,000
+61歳1月〜100歳12月 年金: ¥145,000
+読み取り: 3つの期間が1年ずつ、順に一度ずつ進む。開始年齢と同じ59歳の給与変更は59歳1月から使われる

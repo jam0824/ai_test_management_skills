@@ -1,0 +1,6 @@
+SES-014 のネットワーク要求(2026-11-23 09:49 ごろ、内蔵ブラウザ tab-3)
+read_network_requests: http://localhost:8000/retirement_simulator.html への GET が21件(このタブで開いた回数分。SES-014 で開いたのは8回)。
+そのうち [44112.18] は、メモ14で javascript_tool から同じ URL を fetch で読んだもの。
+localhost 以外への要求は無い。
+read_console_messages(エラーのみ): [error] gap income line / [error] gap expense line の組だけ(既知のもの)。
+セッションの最後(09:55 ごろ)の read_network_requests: 23件、すべて http://localhost:8000/retirement_simulator.html への GET(SES-014 で開いた10回と、メモ14の fetch 1件を含む)。外部への要求は無い。

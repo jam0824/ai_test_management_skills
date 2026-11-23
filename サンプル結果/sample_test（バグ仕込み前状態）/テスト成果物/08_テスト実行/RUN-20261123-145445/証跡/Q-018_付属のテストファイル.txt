@@ -1,0 +1,2 @@
+# Q-018 配信中の場所に README の付属ファイルを要求した
+GET http://localhost:8000/test_retirement_simulator.html → HTTP 404

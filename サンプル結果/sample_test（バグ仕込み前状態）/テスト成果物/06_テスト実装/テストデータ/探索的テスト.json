@@ -1,0 +1,79 @@
+{
+  "テストデータID": "TD-014",
+  "説明": "テストチャーターごとに、探索で使える値の手がかり。ここに無い値を試してもよい。キーは入力欄の id(設定項目.json の「項目」)。乱数は差し替えない(内蔵ブラウザで開いたまま使う)",
+  "チャーター": {
+    "CH-001": {
+      "空欄にする項目": ["startAge", "retirementAge", "pensionStartAge", "gapIncome", "salary", "monthlyPension", "initialCash", "initialInv", "expenseCurrent", "expenseGap", "expenseRetired", "investRate", "interest", "eventProb"],
+      "やり方": "1項目ずつ空欄にして「開始」。2項目以上を同時に空欄にする組み合わせも試す"
+    },
+    "CH-002": {
+      "負の値": { "金額": [-1, -100000, -10000000], "割合": [-1, -0.1], "年齢": [-1] },
+      "上限を超える値": { "investRate": [101, 150], "eventProb": [100.1, 150], "interest": [101, 1000] },
+      "テスト設計で範囲の外とした値": { "CI-081": { "investRate": -1 }, "CI-082": { "investRate": 101 }, "CI-148": { "eventProb": -0.1 }, "CI-149": { "eventProb": 100.1 } }
+    },
+    "CH-003": {
+      "整数でない年齢": [30.5, 60.5, 64.9, 65.1],
+      "数字でない文字": ["abc", "１２３", "3,000,000", "1e3", " 300 ", "三百万"],
+      "やり方": "数字の入力欄なので、キーボードで打って入るかどうかから見る。貼り付けでも試す"
+    },
+    "CH-004": {
+      "年齢の組": [
+        { "startAge": 70, "retirementAge": 65, "pensionStartAge": 60 },
+        { "startAge": 65, "retirementAge": 65, "pensionStartAge": 65 },
+        { "startAge": 30, "retirementAge": 20, "pensionStartAge": 25 },
+        { "startAge": 101, "retirementAge": 65, "pensionStartAge": 65 },
+        { "startAge": 30, "retirementAge": 120, "pensionStartAge": 110 }
+      ]
+    },
+    "CH-005": {
+      "自分の条件に見立てる条件": "使用例.json の LTC-015〜LTC-019 の条件(ケース1〜4)",
+      "やり方": "ケース1で実行 → 条件を変えて実行し直して比べる。給与変更を使う流れ、画面を開き直す流れも試す"
+    },
+    "CH-006": {
+      "取り崩しが長く続く": { "salary": 0, "initialCash": 0, "initialInv": 50000000, "investRate": 0 },
+      "資金が尽きる": { "salary": 2000000, "initialCash": 0, "initialInv": 1000000, "expenseCurrent": 300000 },
+      "尽きた後に収入が生活費を上回る": { "salary": 0, "initialCash": 0, "initialInv": 1000000, "retirementAge": 40, "pensionStartAge": 70, "monthlyPension": 300000, "expenseRetired": 150000 },
+      "参考": "取り崩しと総資産.json の条件も使ってよい"
+    },
+    "CH-007": {
+      "給与変更の年齢": [-5, 0, 40.5, 101, "abc"],
+      "給与変更の年収": [-1, -4000000, 0.5, "abc"],
+      "テスト設計で範囲の外とした値": { "CI-128": { "給与変更の年収": -1 } }
+    },
+    "CH-008": {
+      "組み合わせ": [
+        { "retirementAge": 50, "pensionStartAge": 45, "給与変更": [[48, 6000000]] },
+        { "retirementAge": 60, "pensionStartAge": 60, "給与変更": [[59, 6000000], [61, 7000000]] },
+        { "retirementAge": 40, "pensionStartAge": 70, "給与変更": [[30, 5000000], [39, 0]] },
+        { "startAge": 50, "retirementAge": 55, "pensionStartAge": 52, "給与変更": [[45, 6000000], [53, 4000000]] }
+      ],
+      "参考": "期間.json の「項目を別々の額に」の額を使うと、どの項目が使われたかを額で見分けられる"
+    },
+    "CH-009": {
+      "月数が最も多くなる条件": { "startAge": 0 },
+      "時間の計り方": "テスト環境.md の「探索的テストの環境」のとおり"
+    },
+    "CH-010": {
+      "資金が尽きる条件": { "salary": 2000000, "initialCash": 0, "initialInv": 0, "expenseCurrent": 300000 },
+      "退職後に尽きる条件": { "retirementAge": 60, "monthlyPension": 100000, "expenseRetired": 300000, "initialInv": 5000000 }
+    },
+    "CH-011": {
+      "READMEの万円の数字をそのまま入れる": { "salary": 300, "monthlyPension": 14.5, "initialCash": 100, "expenseCurrent": 15.6, "expenseGap": 22.8, "expenseRetired": 22.8 }
+    },
+    "CH-012": {
+      "条件": "初期値のまま",
+      "やり方": "同じ条件で「開始」を何度も押し、結果が変わることが画面からわかるかを見る"
+    },
+    "CH-013": {
+      "給与変更": [[40, 6000000]],
+      "やり方": "入れてから非表示にし、「開始」して結果を見る"
+    },
+    "CH-014": {
+      "大きな金額": { "salary": 1000000000000, "initialCash": 100000000000, "initialInv": 100000000000, "monthlyPension": 100000000 },
+      "長い結果": { "startAge": 0 }
+    },
+    "CH-015": {
+      "条件": "初期値のまま。給与変更を1つ追加・入力・削除するところまでキーボードだけで操作する"
+    }
+  }
+}

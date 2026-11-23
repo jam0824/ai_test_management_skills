@@ -1,0 +1,25 @@
+SES-002 証跡(内蔵ブラウザの道具が返した文をそのまま写した。スクリーンショットはページが失われたため撮れなかった)
+
+条件: http://localhost:8000/retirement_simulator.html、イベント発生率0、開始年齢以外は初期値
+
+開始年齢 -1000  → JavaScript で「開始」をクリックした時間 442.3 ミリ秒。結果の欄 2,158,399 文字、13,212 か月(先頭「-- -1000歳1月 --」)
+開始年齢 -10000 → 4,300.9 ミリ秒(この間ページは応答しない)。結果の欄 46,868,066 文字(先頭「-- -10000歳1月 --」)
+
+開始年齢 -100000 → 09:31:25 ごろ「開始」をクリック
+  computer(left_click) の返事:
+    "computer timed out after 30s. The Browser pane is currently hidden. Part of this action had already been sent to the page, ..."
+  09:32:21 に javascript_tool / screenshot / get_page_text を実行した返事(3つとも同じ):
+    "The last page load in this tab failed, so there is no page to act on. Use `navigate` (pass this tabId) to retry or go elsewhere."
+  → タブのページが失われた(読み込み直すまで何も操作できない)
+
+2回目(再現の確認): 読み込み直した初期値の画面(イベント発生率1のまま)で、開始年齢 -100000 にして 09:32:50 ごろ「開始」をクリック
+  computer(left_click) の返事: 1回目と同じく 30秒で時間切れ
+  09:34:02 に javascript_tool を実行した返事:
+    "The last page load in this tab failed, so there is no page to act on. Use `navigate` (pass this tabId) to retry or go elsewhere."
+  → 2回とも同じ結果(再現した)
+
+3回目(手前の値の確認): 読み込み直した初期値の画面で、開始年齢 -50000 にして 09:41:15 ごろ「開始」(JavaScript の setTimeout で runBtn をクリック)
+  09:41:48〜09:44:44 の間に javascript_tool を3回、get_page_text を1回実行した返事:
+    "javascript_tool timed out after 45s. ... The script did not finish ..."(3回とも)
+    "get_page_text timed out after 30s. ... The page may be stuck (modal dialog, navigation hang, or unresponsive renderer). ..."
+  → 3分半たっても応答が戻らなかった(ページは失われず、応答しないまま)。09:44:50 ごろ navigate(force)で読み込み直して戻した

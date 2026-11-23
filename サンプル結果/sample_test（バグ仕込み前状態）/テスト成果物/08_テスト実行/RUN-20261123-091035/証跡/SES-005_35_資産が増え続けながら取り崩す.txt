@@ -1,0 +1,12 @@
+SES-005 周34 投資が利息で増え続けながら、退職後・年金期間に取り崩しが続く条件(利回り5%、発生率5%)
+取得: 2026-11-23 09:40 JST、内蔵ブラウザ tab-5、http://localhost:8000/retirement_simulator.html(開き直してから入力)
+
+入力した値: startAge=30 retirementAge=55 pensionStartAge=62 gapIncome=120000 salary=4000000 monthlyPension=180000
+initialCash=2000000 initialInv=3000000 expenseCurrent=155600 expenseGap=228000 expenseRetired=228000
+investRate=30 interest=5 eventProb=5
+
+集計: 852か月。取り崩しのある月 508(最初は 58歳9月)。投資が0未満の月 0。現金<0かつ投資>0の月 0。
+総資産 ≠ 現金+投資 の月 0。前の月からの増減が、表示された収入・投資額・生活費・支出・補填・税金・利息で説明できない月 0。
+最後の月の残高の行: 現金: ¥0 投資: ¥362,292,316 総資産: ¥362,292,316
+
+読み取り: 投資が十分にあるあいだの取り崩しは、508か月続いても、つじつまが合い、現金は0で止まる(おかしなところは見つからなかった)。

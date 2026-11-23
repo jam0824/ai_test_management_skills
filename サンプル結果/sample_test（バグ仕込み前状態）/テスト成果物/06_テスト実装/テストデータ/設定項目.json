@@ -1,0 +1,66 @@
+{
+  "テストデータID": "TD-001",
+  "説明": "条件のキーは入力欄の id(設定項目.json の「項目」)。書いていない項目は初期値のまま。乱数の名前は 乱数.json のもの",
+  "項目": {
+    "startAge": "シミュレーション開始年齢",
+    "retirementAge": "退職年齢",
+    "pensionStartAge": "年金開始年齢",
+    "gapIncome": "退職後収入(月額)",
+    "salary": "給与(年収)",
+    "monthlyPension": "年金月額",
+    "initialCash": "開始時貯金",
+    "initialInv": "開始時投資残高",
+    "expenseCurrent": "現役時生活費(月額)",
+    "expenseGap": "退職～年金開始期間の生活費(月額)",
+    "expenseRetired": "老後生活費(月額)",
+    "investRate": "投資率(%)",
+    "interest": "利回り(年%)",
+    "eventProb": "イベント発生率(月%)"
+  },
+  "READMEの初期値": {
+    "startAge": 30,
+    "retirementAge": 65,
+    "pensionStartAge": 65,
+    "gapIncome": 0,
+    "salary": 3000000,
+    "monthlyPension": 145000,
+    "initialCash": 1000000,
+    "initialInv": 0,
+    "expenseGap": 228000,
+    "expenseRetired": 228000,
+    "investRate": 20,
+    "interest": 4,
+    "eventProb": 1
+  },
+  "READMEの初期値_備考": "README の設定項目の表を円・%・歳の数に直した値。現役時生活費(15.6万円)は Q-004 の回答待ちなので入れていない",
+  "略記": {
+    "取り崩しなし": {
+      "initialCash": 1000000000,
+      "前提": "結果が1,200か月以下、どの生活費も300,000円以下"
+    },
+    "利息なし": {
+      "interest": 0
+    },
+    "項目を別々の額に": {
+      "gapIncome": 70000,
+      "salary": 5000000,
+      "monthlyPension": 130000,
+      "initialCash": 1000000000,
+      "expenseCurrent": 150000,
+      "expenseGap": 210000,
+      "expenseRetired": 270000
+    }
+  },
+  "ローレベルテストケース": {
+    "LTC-014": {
+      "ハイレベルテストケースID": "HTC-011",
+      "テストケース": "画面を開いたときの13項目の初期値が、README の表と同じ",
+      "事前条件": "画面を開いた直後(何も操作しない)",
+      "乱数": "差し替えない",
+      "操作": [
+        "何もしないで入力欄の値を読む"
+      ],
+      "期待値": "入力欄の値が次のとおり: 開始年齢 30、退職年齢 65、年金開始年齢 65、退職後収入 0、給与(年収) 3000000、年金月額 145000、開始時貯金 1000000、開始時投資残高 0、退職～年金開始期間の生活費 228000、老後生活費 228000、投資率 20、利回り 4、イベント発生率 1"
+    }
+  }
+}

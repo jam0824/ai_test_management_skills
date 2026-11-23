@@ -1,0 +1,40 @@
+# (1) 幅375×高さ812で開き、初期値で「開始」
+{"innerWidth":375,"scrollWidth":375,"outputWidth":319,"outputRight":347}
+
+# (2) 開いた直後から Tab を20回押したときに、フォーカスが移った順
+startAge → retirementAge → pensionStartAge → gapIncome → salary → toggleSalaryChanges → monthlyPension → initialCash → initialInv → expenseCurrent → expenseGap → expenseRetired → investRate → interest → eventProb → runBtn → BODY → startAge → retirementAge → pensionStartAge
+「開始」にフォーカスして Enter → 結果の欄の文字数 105547
+「給与変更設定を表示/非表示」にフォーカスして Space → 給与変更設定の欄が 見えた
+
+# (3) 結果の欄(#output)の属性: id=output / role=null aria-live=null
+# 入力欄と「開始」のアクセシビリティツリー(Playwright の ariaSnapshot)
+- text: "シミュレーション開始年齢:"
+- spinbutton "シミュレーション開始年齢:": "30"
+- text: "退職年齢:"
+- spinbutton "退職年齢:": "65"
+- text: "年金開始年齢:"
+- spinbutton "年金開始年齢:": "65"
+- text: "退職後収入(月額):"
+- spinbutton "退職後収入(月額):": "0"
+- text: "給与(年収):"
+- spinbutton "給与(年収):": "3000000"
+- button "📈 給与変更設定を表示/非表示"
+- text: "年金月額:"
+- spinbutton "年金月額:": "145000"
+- text: "開始時貯金:"
+- spinbutton "開始時貯金:": "1000000"
+- text: "開始時投資残高:"
+- spinbutton "開始時投資残高:": "0"
+- text: "現役時生活費(月額):"
+- spinbutton "現役時生活費(月額):": "155600"
+- text: "退職～年金開始期間の生活費(月額):"
+- spinbutton "退職～年金開始期間の生活費(月額):": "228000"
+- text: "老後生活費(月額):"
+- spinbutton "老後生活費(月額):": "228000"
+- text: "投資率(%):"
+- spinbutton "投資率(%):": "20"
+- text: "利回り(年%):"
+- spinbutton "利回り(年%):": "4"
+- text: "イベント発生率(月%):"
+- spinbutton "イベント発生率(月%):": "1"
+- button "開始"
