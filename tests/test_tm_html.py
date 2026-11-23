@@ -231,6 +231,12 @@ class Testテストレポート:
         out = self._build(root, timestamp="20261102120000")
         assert not (out / "snapshot/テストレポート.html").exists()
 
+    def test_レポートを作ると目次にも最新のレポートへのリンクが出る(self, root):
+        tm_html.build_html(tm_core.load_project(root))  # テスト実行までの工程で目次ができている
+        self._build(root)
+        index = (root / "結果まとめ/目次.html").read_text(encoding="utf-8")
+        assert 'href="../09_テストレポート/20261101120000/テストレポート.html"' in index
+
     def test_目次のいちばん上に最新のレポートへのリンクを出す(self, root):
         self._build(root)
         (root / "テストレポート.html").unlink()

@@ -998,4 +998,7 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
             render_stage(project, stage, file_base="snapshot/", hrefs=hrefs, index_label="テストレポート"),
             encoding="utf-8")
     write_report_entries(project)
+    summary = project.root / SUMMARY_DIR
+    if summary.is_dir():  # テストレポートの工程では視認性アップをしないので、目次のレポートへのリンクをここで更新する
+        (summary / INDEX_PAGE).write_text(_render_index(project), encoding="utf-8")
     return out
