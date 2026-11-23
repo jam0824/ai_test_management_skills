@@ -631,6 +631,8 @@ def coverage(project: Project, record_id: str) -> dict:
     })
     total = len(ltcs) + row["未実装"] + len(charters)
     executed = row["Pass"] + row["Fail"] + row["charters_done"]
+    # 状態は Fail が先に立つので、Fail があっても実行していないテストが残っていることは、ここで別に数える
+    row["remaining"] = total - executed
     if executed == 0:
         row["state"] = "まったくテストしていない"
     elif row["Fail"] or row["open_bugs"]:

@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import tm_core  # noqa: E402
 import tm_html  # noqa: E402
-from sample_project import append_to, make_project  # noqa: E402
+from sample_project import append_to, make_project, replace_in  # noqa: E402
 
 JUDGMENT = """# テストレポートの判定
 
@@ -910,6 +910,16 @@ class Testテストレポート:
         first = html.split('id="first-view"')[1].split('id="details"')[0]
         assert 'class="cols"' not in first
         assert first.index("満たしていない終了条件が 1 件") < first.index("問題点は何か") < first.index("やるべきことをやったか")
+
+    def test_判定のタブの問題点はFailがあっても実行していないテストが残る高いリスクを出す(self, root):
+        replace_in(root, "05_テスト設計/テスト設計.md", "| 手動テスト | 低 | 設計済み |\n",
+                   "| 手動テスト | 低 | 設計済み |\n| HTC-004 | 上限の境界値のとき登録できる | COND-001 | CI-001 | 登録できる | E2E自動テスト | 高 | 回答待ち(Q-001) |\n")
+        html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
+        problems = self._report_pane(html, "rp-judge", "ex-sum").split("問題点は何か")[1].split("やるべきことをやったか")[0]
+        risk = problems.split("カバーできていない高いリスク")[1].split("<h3>")[0]
+        assert "一部しか実行していない 1 件" in risk and "RISK-001" in risk
+        req = problems.split("カバーできていない要求")[1].split("カバーできていない高いリスク")[0]
+        assert "一部しか実行していない 1 件" in req and "REQ-001" in req
 
     def test_判定のタブにファーストビューを出す(self, root):
         html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")

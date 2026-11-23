@@ -308,6 +308,15 @@ class Test集計:
         by_id = {r["id"]: r for r in m["requirements"]}
         assert by_id["REQ-001"]["未実装"] == 1
 
+    def test_Failがあっても実行していないテストの残りを数える(self, root):
+        replace_in(root, "05_テスト設計/テスト設計.md", "| 手動テスト | 低 | 設計済み |\n",
+                   "| 手動テスト | 低 | 設計済み |\n| HTC-004 | 上限の境界値のとき登録できる | COND-001 | CI-001 | 登録できる | E2E自動テスト | 高 | 回答待ち(Q-001) |\n")
+        m = tm_core.metrics(tm_core.load_project(root))
+        risk = {r["id"]: r for r in m["risks"]}["RISK-001"]
+        assert risk["state"] == "実行したがFailあり"
+        assert risk["remaining"] == 1  # 状態は Fail が先に立つが、未実装の1件は残りとして数える
+        assert {r["id"]: r for r in m["requirements"]}["REQ-002"]["remaining"] == 0
+
 
 RUN1 = "08_テスト実行/RUN-20261101-100000"
 RUN2 = "08_テスト実行/RUN-20261102-090000"

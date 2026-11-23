@@ -1485,11 +1485,12 @@ def _first_view(v: View, m: dict, judgments: dict[str, tuple[str, str]], lacking
             + numbers + "</div>")
 
     bugs = [f"{_badge(b['severity'])} {v.ref(b['id'])}" for b in m["open_bugs"]]
+    # 「一部しか実行していない」は状態ではなく残りの数で選ぶ。状態は Fail が先に立ち、Fail があると未実装が残っていても数えられないため
     untested_req = [r for r in m["requirements"] if r["state"] == "まったくテストしていない"]
-    partial_req = [r for r in m["requirements"] if r["state"] == "一部しか実行していない"]
+    partial_req = [r for r in m["requirements"] if r["state"] != "まったくテストしていない" and r["remaining"]]
     high = [r for r in m["risks"] if r["class"] == "高"]
     untested_risk = [r for r in high if r["state"] == "まったくテストしていない"]
-    partial_risk = [r for r in high if r["state"] == "一部しか実行していない"]
+    partial_risk = [r for r in high if r["state"] != "まったくテストしていない" and r["remaining"]]
 
     def gap(label: str, untested: list, partial: list, anchor: str) -> str:
         text = f"<h3>{label}: まったくテストしていない {len(untested)} 件、一部しか実行していない {len(partial)} 件</h3>"
