@@ -106,7 +106,9 @@ ID_RE = re.compile(
 _SEPARATOR_CELL = re.compile(r"^:?-+:?$")
 # 成果物の名前に使わない列(誰が・いつ・どれだけ、を書く列)
 _NOT_TITLE = {"実施者", "日時", "開始日時", "終了日時", "見つけた日時", "かかった時間(分)"}
-_EXCLUDED_DIRS = {"html", "結果まとめ", REPORT_DIR, "snapshot"}
+# テストベースの写し: 変わったところを比べるために置く、テストベースそのもの。成果物ではない
+TEST_BASE_COPY_DIR = "テストベースの写し"
+_EXCLUDED_DIRS = {"html", "結果まとめ", REPORT_DIR, "snapshot", TEST_BASE_COPY_DIR}
 
 
 def find_ids(text: str) -> list[str]:

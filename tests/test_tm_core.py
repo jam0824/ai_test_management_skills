@@ -33,6 +33,13 @@ class Test表の読み取り:
         # セッションシートは実施者・日時・時間しか無いので、紐づけの列(テストチャーター)を名前にする
         assert project.records["SES-001"].title == "CH-001"
 
+    def test_テストベースの写しの中の表は成果物として読まない(self, root):
+        copy = root / "テストベースの写し" / "仕様書.md"
+        copy.parent.mkdir()
+        copy.write_text("| ID | 仕様 |\n|---|---|\n| SPEC-999 | 仕様書の中にある表 |\n", encoding="utf-8")
+        project = tm_core.load_project(root)
+        assert "SPEC-999" not in project.records
+
     def test_エスケープした縦棒を含むセルを読める(self):
         text = "| ID | 要求 |\n|---|---|\n| REQ-001 | A \\| B |\n"
         table = tm_core.parse_tables(text)[0]
