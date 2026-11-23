@@ -112,6 +112,33 @@ def _link(match: re.Match) -> str:
     return f'<a href="{match.group(2)}">{match.group(1)}</a>'
 
 
+_LIST_ITEM = re.compile(r"^(\s*)([*\-]|\d+\.)\s+(.*)$")
+
+
+def _list_html(lines: list[str], i: int) -> tuple[str, int]:
+    """lines[i] から始まる箇条書きをHTMLにする。字下げが深い行は、直前の項目の中の入れ子にする。"""
+    first = _LIST_ITEM.match(lines[i])
+    base, ordered = len(first.group(1)), first.group(2)[0].isdigit()
+    items: list[str] = []
+    while i < len(lines):
+        m = _LIST_ITEM.match(lines[i])
+        if not m or len(m.group(1)) < base:
+            break
+        if len(m.group(1)) > base:
+            nested, i = _list_html(lines, i)
+            if items:
+                items[-1] += nested
+            else:
+                items.append(nested)
+            continue
+        if m.group(2)[0].isdigit() != ordered:
+            break
+        items.append(_inline(m.group(3)))
+        i += 1
+    tag = "ol" if ordered else "ul"
+    return f"<{tag}>" + "".join(f"<li>{x}</li>" for x in items) + f"</{tag}>", i
+
+
 def md_to_html(text: str, known_ids=None, id_href: str = IDS_PAGE) -> str:
     """成果物で使う範囲のMarkdown(見出し・段落・リスト・表・コード)をHTMLにする。"""
     lines = text.splitlines()
@@ -155,19 +182,10 @@ def md_to_html(text: str, known_ids=None, id_href: str = IDS_PAGE) -> str:
                 i += 1
             out.append(_table([_inline(h) for h in headers], [[_inline(c) for c in r] for r in rows]))
             continue
-        item = re.match(r"^(\s*)([*\-]|\d+\.)\s+(.*)$", line)
-        if item:
+        if _LIST_ITEM.match(line):
             flush()
-            ordered = item.group(2)[0].isdigit()
-            tag = "ol" if ordered else "ul"
-            items = []
-            while i < len(lines):
-                m = re.match(r"^(\s*)([*\-]|\d+\.)\s+(.*)$", lines[i])
-                if not m or m.group(2)[0].isdigit() != ordered:
-                    break
-                items.append(f"<li>{_inline(m.group(3))}</li>")
-                i += 1
-            out.append(f"<{tag}>" + "".join(items) + f"</{tag}>")
+            html, i = _list_html(lines, i)
+            out.append(html)
             continue
         if not stripped:
             flush()
@@ -317,6 +335,7 @@ details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 
 .latest-report .muted{font-size:13px;font-weight:400}
 .nowrap{white-space:nowrap}
 details.reasons{border:none;margin:0;padding:0}details.reasons summary{font-weight:400;color:var(--link)}
+.bug-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px}.bug-compare>div{border:1px solid var(--line);border-radius:6px;padding:6px 10px}.bug-compare .exp{border-left:4px solid var(--pass)}.bug-compare .act{border-left:4px solid var(--fail)}.bug-compare p,.bug-compare ul,.bug-steps ol,.bug-steps p{margin:4px 0}.bug-steps{margin:8px;padding:0 2px}@media (max-width:700px){.bug-compare{grid-template-columns:1fr}}details.fold{border:none;border-top:1px solid var(--line);border-radius:0;margin:0 8px;padding:4px 2px}details.fold summary{font-weight:400;color:var(--link)}details.fold .doc{padding:2px 0 6px}
 .pct{font-weight:700}.pct.ok{color:var(--ok)}.pct.warn{color:var(--warn)}.pct.ng{color:var(--ng)}
 .legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;margin:6px 0}.legend i{width:12px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
 """
@@ -348,7 +367,7 @@ def _card(v: View, record_id: str, title: str, badges: str = "", meta: str = "",
     """1件をたためる行にする。開くと、notes(項目名と値)を囲みで、その下に sub_label の見出しと leaves を出す。"""
     note = "".join(f"<dt>{_escape(name)}</dt><dd>{v.text(value)}</dd>" for name, value in notes if value.strip())
     inner = ((f'<dl class="card-note">{note}</dl>' if note else "")
-             + (f'<div class="sub">{sub_label}</div>{leaves}' if leaves else ""))
+             + ((f'<div class="sub">{sub_label}</div>' if sub_label else "") + leaves if leaves else ""))
     summary_cls = f' class="{cls}"' if cls else ""
     return (f'<details class="card" id="{card_id or "row-" + record_id}"><summary{summary_cls}>'
             f'<span class="kind">{TYPES[type_of(record_id)]}</span>'
@@ -1100,11 +1119,71 @@ def _session_cards(v: View) -> str:
     return f'<div class="tree">{"".join(cards)}</div>' if cards else "<p>ありません。</p>"
 
 
+_BUG_ITEM = re.compile(r"^[-*]\s+([^:：]{1,40}?)[:：]\s*(.*)$")
+
+
+def _bug_items(text: str) -> tuple[list[tuple[str, str, str]], str]:
+    """欠陥レポートの節を「- 項目名: 内容」ごとに分ける。(項目名, 1行目の内容, 字下げした続き) の並びと、
+    項目にならなかった行を返す。"""
+    items: list[tuple[str, str, list[str]]] = []
+    rest: list[str] = []
+    for line in text.splitlines():
+        m = _BUG_ITEM.match(line)
+        if m:
+            items.append((m.group(1).strip(), m.group(2).strip(), []))
+        elif items and (line.startswith((" ", "\t")) or not line.strip()):
+            items[-1][2].append(line)
+        elif line.strip():
+            rest.append(line)
+    dedented = [(name, head, "\n".join(l[2:] if l.startswith("  ") else l.lstrip() for l in body).strip())
+                for name, head, body in items]
+    return dedented, "\n".join(rest)
+
+
+def _evidence_links(v: View, text: str) -> list[str]:
+    """証跡の欄の「RUN-…/証跡/ファイル」を、テストランのフォルダのファイルへのリンクにする。
+    フォルダを省いて続けて書いたファイルは、直前と同じフォルダのものとする。"""
+    # ファイル名に「、」「。」などが入ることがあるので、まず証跡フォルダにある実際のファイル名を文の中から探す
+    found = []
+    for run in dict.fromkeys(re.findall(r"(RUN-[\w-]+)/証跡/", text)):
+        base = v.project.root / tm_core.EXECUTION_DIR / run / "証跡"
+        for f in (base.rglob("*") if base.is_dir() else []):
+            name = f.relative_to(base).as_posix()
+            for m in re.finditer(re.escape(name), text):
+                if f.is_file() and (m.start() == 0 or not re.match(r"[\w.-]", text[m.start() - 1])):
+                    found.append((m.start(), f"{run}/証跡/{name}"))
+    if found:
+        paths = list(dict.fromkeys(path for _, path in sorted(found)))
+        return [f'<a href="{v.file_base}{tm_core.EXECUTION_DIR}/{html_lib.escape(path)}">{_escape(path)}</a>' for path in paths]
+    links, folder = [], ""
+    for token in re.split(r"[、,。]\s*", text):
+        token = re.split(r"\s*[(（]", token.strip())[0].strip()  # ファイル名のあとの注記「(…」は外す
+        if not token or token.endswith(("）", ")")):  # 注記の続き(括弧の中で「、」で区切られた残り)
+            continue
+        m = re.search(r"(RUN-[\w-]+/証跡/)(.*)$", token)
+        if m:
+            folder, path = m.group(1), m.group(1) + m.group(2)
+        elif folder and re.search(r"\.\w+$", token) and "/" not in token and " " not in token:
+            path = folder + token
+        else:
+            links.append(v.text(token))
+            continue
+        links.append(f'<a href="{v.file_base}{tm_core.EXECUTION_DIR}/{html_lib.escape(path)}">{_escape(path)}</a>')
+    return links
+
+
 def _bug_cards(v: View) -> str:
-    """欠陥レポートを1件1行にし、開くと詳しい節(再現手順など)・見つけたテスト・影響する要求とリスクが出る。"""
+    """欠陥レポートを1件1行にする。開くと、期待値と実際の結果を並べ、その下に再現手順を出す。
+    ほかの項目(原因・証跡・見つけたテスト・影響など)は、たたんでおく。"""
     p = v.project
     path = p.root / tm_core.EXECUTION_DIR / "欠陥レポート.md"
     details = _sections(path.read_text(encoding="utf-8-sig")) if path.is_file() else {}
+
+    def md(text: str) -> str:
+        return md_to_html(text, v.known, v.id_href)
+
+    def fold(title: str, body: str) -> str:
+        return f'<details class="fold"><summary>{title}</summary><div class="doc">{body}</div></details>'
 
     def affected(bug, type_key: str) -> str:
         # 要求・リスクのカバレッジと同じ数え方にする(欠陥レポートに範囲が書かれていればそれに従う)
@@ -1113,20 +1192,65 @@ def _bug_cards(v: View) -> str:
         return ", ".join(i for i in _ids(p, type_key) if tm_core.bug_affects(p, bug.id, i)) or "なし"
 
     cards = []
-    for bug in tm_core.open_bugs(p) + [b for b in p.of_type("BUG") if b not in tm_core.open_bugs(p)]:
+    open_ids = {b.id for b in tm_core.open_bugs(p)}
+    for bug in tm_core.open_bugs(p) + [b for b in p.of_type("BUG") if b.id not in open_ids]:
         f = bug.fields
         detail = next((body for title, body in details.items() if bug.id in tm_core.find_ids(title)), "")
+        items, rest = _bug_items(detail)
+        named = {"steps": None, "expected": None, "actual": None}
+        others = []
+        for name, head, body in items:
+            key = ("steps" if name.startswith("再現できる手順") else "expected" if name.startswith("期待値")
+                   else "actual" if name.startswith("実際の結果") else None)
+            if key and named[key] is None:
+                named[key] = (name, head, body)
+            else:
+                others.append((name, head, body))
+
+        inner = ""
+        if named["expected"] or named["actual"]:
+            def box(cls: str, entry) -> str:
+                if entry is None:
+                    return f'<div class="{cls}"><b>{"期待値" if cls == "exp" else "実際の結果"}</b><p class="muted">記載なし</p></div>'
+                name, head, body = entry
+                shown = head if cls == "act" else "\n".join(x for x in (head, body) if x)
+                return f'<div class="{cls}"><b>{_escape(name)}</b>{md(shown)}</div>'
+            inner += f'<div class="bug-compare">{box("exp", named["expected"])}{box("act", named["actual"])}</div>'
+        if named["steps"]:
+            name, head, body = named["steps"]
+            inner += f'<div class="bug-steps"><b>{_escape(name)}</b>{md(chr(10).join(x for x in (head, body) if x))}</div>'
+        if named["actual"] and named["actual"][2]:
+            count = sum(1 for line in named["actual"][2].splitlines() if _LIST_ITEM.match(line))
+            inner += fold(f"実際の結果の詳しい内容({count}件)", md(named["actual"][2]))
+
+        evidence = [o for o in others if o[0].startswith("証跡")]
+        memo = [o for o in others if o[0].startswith("メモ")]
+        rest_items = [o for o in others if o not in evidence and o not in memo]
+        for name, head, body in rest_items:  # 原因の見立て・手がかり・重要度の理由など、書いてある順に
+            inner += fold(_escape(name), md("\n".join(x for x in (head, body) if x)))
+        for name, head, body in evidence:
+            links = _evidence_links(v, " ".join(x for x in (head, body) if x))
+            inner += fold(f"{_escape(name)}({len(links)}件)", "<ul>" + "".join(f"<li>{l}</li>" for l in links) + "</ul>")
+        found = p.parents(bug.id)
+        ltcs = [t for t in found if type_of(t) == "LTC"]
+        sessions = [t for t in found if type_of(t) == "SES"]
+        inner += fold(f"見つけたテスト(LTC {len(ltcs)}件・セッション {len(sessions)}件)",
+                      "".join(_leaf(v, t) for t in found) or '<p class="muted">なし</p>')
+        impact = [("影響する要求", affected(bug, "REQ")), ("影響するリスク", affected(bug, "RISK")),
+                  ("テスト対象・環境", f.get("テスト対象・環境", ""))]
+        inner += fold("影響する要求・リスク・テスト対象と環境",
+                      '<dl class="card-note">' + "".join(f"<dt>{k}</dt><dd>{v.text(val)}</dd>" for k, val in impact if val) + "</dl>")
+        for name, head, body in memo:
+            inner += fold(_escape(name), md("\n".join(x for x in (head, body) if x)))
+        if rest.strip():
+            inner += fold("そのほかの記載", md(rest))
+
         state = f.get("状態", "").strip()
         cards.append(_card(
             v, bug.id, f.get("タイトル", "") or bug.title,
             badges=_badge(f.get("重要度", "")) + " " + _badge(state),
             meta=f'<span class="ci">{_escape(f.get("見つけた日時", ""))}</span>',
-            notes=[("影響する要求", affected(bug, "REQ")), ("影響するリスク", affected(bug, "RISK")),
-                   ("テスト対象・環境", f.get("テスト対象・環境", ""))],
-            sub_label="詳しい内容と見つけたテスト",
-            leaves=(f'<div class="doc leaf">{md_to_html(detail, v.known, v.id_href)}</div>' if detail.strip() else "")
-            + "".join(_leaf(v, t) for t in p.parents(bug.id)),
-            card_id=f"ex-bug-{bug.id}", cls="ok" if state in tm_core.BUG_CLOSED else "ng"))
+            leaves=inner, card_id=f"ex-bug-{bug.id}", cls="ok" if state in tm_core.BUG_CLOSED else "ng"))
     return f'<div class="tree">{"".join(cards)}</div>' if cards else "<p>ありません。</p>"
 
 

@@ -70,6 +70,14 @@ class TestMarkdownからHTML:
         assert "#REQ-999" not in html
 
 
+    def test_字下げした箇条書きは入れ子のまま出す(self):
+        html = tm_html.md_to_html("- a\n  - b\n- c\n")
+        assert html == "<ul><li>a<ul><li>b</li></ul></li><li>c</li></ul>"
+
+    def test_箇条書きの下の番号付きリストも入れ子にする(self):
+        html = tm_html.md_to_html("- 手順:\n  1. 開く\n  2. 押す\n- 期待値: 出る\n")
+        assert html == "<ul><li>手順:<ol><li>開く</li><li>押す</li></ol></li><li>期待値: 出る</li></ul>"
+
     def test_危ないリンクはリンクにしない(self):
         html = tm_html.md_to_html('[a](javascript:alert(1)) と [b](x"onmouseover="alert(1)) と [c](https://example.com/a) と [d](証跡/a.png)')
         assert "javascript:" not in html.replace("[a](javascript:alert(1))", "")
@@ -584,9 +592,9 @@ class Test視認性アップ:
 
     @staticmethod
     def _ex_card(html: str, pane: str, card_id: str) -> tuple[str, str]:
-        block = html.split(f'id="{pane}"')[1].split(f'id="{card_id}"')[1].split("</details>")[0]
-        summary, kids = block.split("</summary>")
-        return summary, kids
+        block = html.split(f'id="{pane}"')[1].split(f'id="{card_id}"')[1]
+        summary, rest = block.split("</summary>", 1)
+        return summary, rest.split('<details class="card"')[0]  # 中にたたみが入れ子になるので、次のカードの手前まで
 
     def test_テスト実行のページは7つのタブで切り替える(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "execution")
@@ -640,6 +648,61 @@ class Test視認性アップ:
         summary, kids = self._ex_card(html, "ex-bug", "ex-bug-BUG-001")
         assert "17歳で登録できてしまう" in summary and "高" in summary and "未修正" in summary
         assert "年齢に17を入れて登録する" in kids and "LTC-002" in kids and "REQ-001" in kids
+
+    BUG_DETAIL = (
+        "\n## BUG-001\n\n"
+        "- 再現できる手順:\n  1. 登録画面を開く\n  2. 年齢に17を入れて登録する\n"
+        "- 期待値: エラーを表示する\n"
+        "- 実際の結果: 登録が完了する\n  - 17歳: 登録完了\n  - 16歳: 登録完了\n"
+        "- 原因の見立て(推測): 下限の比較が逆\n"
+        "- 証跡: RUN-20261101-100000/証跡/LTC-002.png、LTC-003.png(どれも同じフォルダ)\n"
+        "- 重要度: 年齢の確認は法令に関わるので高\n"
+        "- メモ: 18歳は正しく通る\n"
+    )
+
+    def _bug_kids(self, root) -> str:
+        append_to(root, "08_テスト実行/欠陥レポート.md", self.BUG_DETAIL)
+        html = tm_html.render_stage(tm_core.load_project(root), "execution")
+        return self._ex_card(html, "ex-bug", "ex-bug-BUG-001")[1]
+
+    def test_欠陥レポートは期待値と実際の結果を並べ再現手順をその下に出す(self, root):
+        kids = self._bug_kids(root)
+        compare = kids.split('<div class="bug-compare">')[1].split('<div class="bug-steps">')[0]
+        assert "期待値" in compare and "エラーを表示する" in compare
+        assert "実際の結果" in compare and "登録が完了する" in compare and "16歳" not in compare
+        steps = kids.split('<div class="bug-steps">')[1].split("</div>")[0]
+        assert "<ol><li>登録画面を開く</li><li>年齢に17を入れて登録する</li></ol>" in steps
+
+    def test_欠陥レポートのほかの項目はたたんでおく(self, root):
+        kids = self._bug_kids(root)
+        folds = [f.split("</summary>")[0] for f in kids.split('<details class="fold"><summary>')[1:]]
+        assert folds[0] == "実際の結果の詳しい内容(2件)"
+        for name in ("原因の見立て(推測)", "重要度", "証跡(2件)", "見つけたテスト(LTC 1件・セッション 0件)",
+                     "影響する要求・リスク・テスト対象と環境", "メモ"):
+            assert name in folds, name
+        assert "16歳: 登録完了" in kids.split("実際の結果の詳しい内容(2件)</summary>")[1].split("</details>")[0]
+
+    def test_欠陥レポートの証跡はテストランのフォルダのファイルへのリンクにする(self, root):
+        evidence = self._bug_kids(root).split("証跡(2件)</summary>")[1].split("</details>")[0]
+        assert 'href="../08_テスト実行/RUN-20261101-100000/証跡/LTC-002.png"' in evidence
+        assert 'href="../08_テスト実行/RUN-20261101-100000/証跡/LTC-003.png"' in evidence  # 同じフォルダのファイル
+
+    def test_証跡の欄に文や注記が続いてもファイルごとにリンクにする(self):
+        v = tm_html.View(tm_core.Project(Path(".")))
+        text = ("RUN-1/証跡/a.png。探索的テストの証跡: RUN-1/証跡/b.txt(画面が無いので、文字で残した)、c.jpg、"
+                "RUN-2/証跡/d.png(どれも同じフォルダ)")
+        hrefs = [l.split('href="')[1].split('"')[0] for l in tm_html._evidence_links(v, text) if 'href="' in l]
+        assert hrefs == ["../08_テスト実行/RUN-1/証跡/a.png", "../08_テスト実行/RUN-1/証跡/b.txt",
+                         "../08_テスト実行/RUN-1/証跡/c.jpg", "../08_テスト実行/RUN-2/証跡/d.png"]
+
+    def test_証跡はフォルダにある実際のファイル名を探してリンクにする(self, root):
+        evidence = root / "08_テスト実行/RUN-20261101-100000/証跡"
+        (evidence / "SES-001_退職60,5と65。5.jpg").write_bytes(b"x")
+        v = tm_html.View(tm_core.load_project(root))
+        text = "RUN-20261101-100000/証跡/LTC-002.png、SES-001_退職60,5と65。5.jpg(区切りの記号を含む名前)"
+        hrefs = [l.split('href="')[1].split('"')[0] for l in tm_html._evidence_links(v, text) if 'href="' in l]
+        assert hrefs == ["../08_テスト実行/RUN-20261101-100000/証跡/LTC-002.png",
+                         "../08_テスト実行/RUN-20261101-100000/証跡/SES-001_退職60,5と65。5.jpg"]
 
     def test_ID索引で上流と下流の両方にたどれる(self, root):
         html = tm_html.render_ids(tm_core.load_project(root))
@@ -795,7 +858,7 @@ class Testテストレポート:
         (root / "08_テスト実行/欠陥レポート.md").write_text(text, encoding="utf-8")
         html = tm_html.render_stage(tm_core.load_project(root), "execution")
         _, kids = Test視認性アップ._ex_card(html, "ex-bug", "ex-bug-BUG-001")
-        affected = kids.split("影響する要求")[1].split("</dd>")[0]
+        affected = kids.split("<dt>影響する要求</dt>")[1].split("</dd>")[0]
         assert "スコープ外" in affected and "REQ-001" not in affected
 
     def test_判定に書いた文章と戻し記録を載せる(self, root):
