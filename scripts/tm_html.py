@@ -369,7 +369,7 @@ def _stage_requirements(v: View) -> str:
     for r in p.of_type("REQ"):
         specs = sorted((c for c in p.children(r.id) if type_of(c) == "SPEC"), key=tm_core._id_key)
         cards.append(_card(
-            v, r.id, r.title, meta=f'<span class="ci">仕様 {len(specs)}件</span>',
+            v, r.id, r.title, meta=f'<span class="ci">紐づく仕様 {len(specs)}件</span>',
             notes=_other_fields(r, {"ID", "要求"}), sub_label="紐づく仕様",
             leaves="".join(_leaf(v, s) for s in specs)))
     asked = {link for q in p.of_type("Q") for link in q.links}
@@ -404,7 +404,7 @@ def _stage_risk(v: View) -> str:
                  f' = {_escape(f.get("リスクレベル", ""))}</span>')
         blocks.append(_card(
             v, risk_id, record.title, badges=_badge(f.get("区分", "")),
-            meta=f'{level}<span class="ci">仕様 {len(specs)}件</span>',
+            meta=f'{level}<span class="ci">紐づく仕様 {len(specs)}件</span>',
             notes=[(name, f.get(name, "")) for name in ("根拠", "備考")], sub_label="紐づく仕様",
             leaves="".join(_leaf(v, s, f'{TYPES["REQ"]}: {v.refs(v.related(s, "REQ"), False)}') for s in specs)))
     return ("<h2>リスクと紐づく仕様</h2><p class=\"muted\">リスクレベルの高い順。行をクリックすると、根拠・備考と、紐づく仕様とその要求が開く。"

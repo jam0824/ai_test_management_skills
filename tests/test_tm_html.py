@@ -123,7 +123,7 @@ class Test視認性アップ:
     def test_要求仕様整理のページは要求を並べて開くと紐づく仕様が出る(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "requirements")
         summary, kids = self._risk_block(html, "REQ-001")
-        assert "REQ-001" in summary and "年齢を入力して登録できる" in summary and "仕様 2件" in summary
+        assert "REQ-001" in summary and "年齢を入力して登録できる" in summary and "紐づく仕様 2件" in summary
         assert "SPEC-001" not in summary
         assert "SPEC-001" in kids and "SPEC-002" in kids and "SPEC-003" not in kids
         assert "サービスを使うため" in kids  # 要求のほかの欄(誰が・何のために など)も出る
@@ -146,7 +146,7 @@ class Test視認性アップ:
     def test_リスクのページはリスクを並べて開くと紐づく仕様と要求が出る(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "risk")
         summary, kids = self._risk_block(html, "RISK-001")
-        assert "RISK-001" in summary and "年齢の境界を誤って登録を通す" in summary
+        assert "RISK-001" in summary and "年齢の境界を誤って登録を通す" in summary and "紐づく仕様 1件" in summary
         assert "SPEC-001" not in summary
         assert "SPEC-001" in kids and "REQ-001" in kids
         assert "SPEC-003" not in kids
