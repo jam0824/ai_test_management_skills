@@ -1,0 +1,45 @@
+# サンプル結果のテスト成果物(HTML)を GitHub Pages に出す。
+# サイトのトップを開くと、最新のテストレポートへ飛ぶ。
+name: サンプル結果を GitHub Pages に出す
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "サンプル結果/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 出すフォルダを作る
+        run: |
+          mkdir -p _site
+          cp -r "サンプル結果/sample_test（バグ仕込み前状態）/テスト成果物/." _site/
+          # テスト成果物の直下の入口(最新のテストレポートへ飛ぶページ)を、サイトのトップにする
+          cp "_site/テストレポート.html" _site/index.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
