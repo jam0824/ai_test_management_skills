@@ -163,14 +163,30 @@ class Test視認性アップ:
         html = tm_html.render_stage(tm_core.load_project(root), "plan")
         main = html.split("<main>")[1]
         assert main.index("<h2>テスト終了条件</h2>") < main.index("満たしている割合</h2>") < main.index("<h2>テストアプローチ</h2>")
-        assert "<td>2 / 2</td><td>100%</td>" in self._coverage_row(html, "要求")
-        assert "<td>3 / 3</td><td>100%</td>" in self._coverage_row(html, "仕様")
-        assert "<td>2 / 2</td><td>100%</td>" in self._coverage_row(html, "リスク")
+        assert "<td>2 / 2</td><td><span class=\"pct ok\">100%</span></td>" in self._coverage_row(html, "要求")
+        assert "<td>3 / 3</td><td><span class=\"pct ok\">100%</span></td>" in self._coverage_row(html, "仕様")
+        assert "<td>2 / 2</td><td><span class=\"pct ok\">100%</span></td>" in self._coverage_row(html, "リスク")
 
     def test_テストアプローチが無い仕様があれば割合とIDと理由を出す(self, root):
         append_to(root, "01_要求仕様/仕様.md", "| SPEC-004 | 確認画面に戻るボタンがある | REQ-002 | 仕様書 2.3 |\n")
         row = self._coverage_row(tm_html.render_stage(tm_core.load_project(root), "plan"), "仕様")
-        assert "<td>3 / 4</td><td>75%</td>" in row and "SPEC-004" in row and "テストアプローチが無い" in row
+        assert "<td>3 / 4</td><td><span class=\"pct warn\">75%</span></td>" in row and "SPEC-004" in row and "テストアプローチが無い" in row
+
+    def test_押さえていないものと理由は件数だけ見せてたたんでおく(self, root):
+        append_to(root, "01_要求仕様/仕様.md", "| SPEC-004 | 確認画面に戻るボタンがある | REQ-002 | 仕様書 2.3 |\n")
+        html = tm_html.render_stage(tm_core.load_project(root), "plan")
+        row = self._coverage_row(html, "仕様")
+        reasons = row.split('<details class="reasons"><summary>')[1]
+        assert reasons.startswith("1件")
+        assert "SPEC-004" in reasons.split("</summary>")[1] and "テストアプローチが無い" in reasons.split("</summary>")[1]
+        assert "<details" not in self._coverage_row(html, "要求")  # 無いときは「なし」だけ
+
+    def test_どれも押さえていない種類の割合は赤くする(self, root):
+        path = root / "03_テスト計画/テスト計画.md"
+        text = path.read_text(encoding="utf-8")
+        path.write_text(text.split("| TA-001 |")[0], encoding="utf-8")  # テストアプローチの行を消す
+        row = self._coverage_row(tm_html.render_stage(tm_core.load_project(root), "plan"), "要求")
+        assert '<td>0 / 2</td><td><span class="pct ng">0%</span></td>' in row
 
     def test_テスト計画で対象外にしたものは対象外の理由を出す(self, root):
         append_to(root, "01_要求仕様/仕様.md", "| SPEC-004 | 確認画面に戻るボタンがある | REQ-002 | 仕様書 2.3 |\n")
@@ -208,11 +224,11 @@ class Test視認性アップ:
         table = html.split("<h2>テスト条件のカバレッジ</h2>")[1].split("</table>")[0]
         rows = {kind: next(r for r in table.split("</tr>") if f">{kind}</span></td>" in r)
                 for kind in ("要求", "仕様", "リスク", "テストアプローチ")}
-        assert "<td>2 / 2</td><td>100%</td>" in rows["要求"]
-        assert "<td>2 / 3</td><td>66%</td>" in rows["仕様"] and "SPEC-002" in rows["仕様"]
+        assert "<td>2 / 2</td><td><span class=\"pct ok\">100%</span></td>" in rows["要求"]
+        assert "<td>2 / 3</td><td><span class=\"pct warn\">66%</span></td>" in rows["仕様"] and "SPEC-002" in rows["仕様"]
         assert "テスト条件が無い" in rows["仕様"]
-        assert "<td>2 / 2</td><td>100%</td>" in rows["リスク"]
-        assert "<td>3 / 3</td><td>100%</td>" in rows["テストアプローチ"]
+        assert "<td>2 / 2</td><td><span class=\"pct ok\">100%</span></td>" in rows["リスク"]
+        assert "<td>3 / 3</td><td><span class=\"pct ok\">100%</span></td>" in rows["テストアプローチ"]
 
     def test_要求からたどると仕様の下にテスト条件が出て無い仕様は赤くなる(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "analysis")
@@ -315,12 +331,12 @@ class Test視認性アップ:
         table = html.split("<h2>テストケースのカバレッジ</h2>")[1].split("</table>")[0]
         rows = {kind: next(r for r in table.split("</tr>") if f">{kind}</span></td>" in r)
                 for kind in ("要求", "仕様", "リスク", "テスト条件", "カバレッジアイテム")}
-        assert "<td>2 / 2</td><td>100%</td>" in rows["要求"]
-        assert "<td>2 / 3</td><td>66%</td>" in rows["仕様"] and "SPEC-002" in rows["仕様"]
+        assert "<td>2 / 2</td><td><span class=\"pct ok\">100%</span></td>" in rows["要求"]
+        assert "<td>2 / 3</td><td><span class=\"pct warn\">66%</span></td>" in rows["仕様"] and "SPEC-002" in rows["仕様"]
         assert "テストケース・テストチャーターが無い" in rows["仕様"]
-        assert "<td>2 / 2</td><td>100%</td>" in rows["リスク"]
-        assert "<td>3 / 3</td><td>100%</td>" in rows["テスト条件"]
-        assert "<td>3 / 3</td><td>100%</td>" in rows["カバレッジアイテム"]
+        assert "<td>2 / 2</td><td><span class=\"pct ok\">100%</span></td>" in rows["リスク"]
+        assert "<td>3 / 3</td><td><span class=\"pct ok\">100%</span></td>" in rows["テスト条件"]
+        assert "<td>3 / 3</td><td><span class=\"pct ok\">100%</span></td>" in rows["カバレッジアイテム"]
 
     def test_通さない理由があるカバレッジアイテムは理由を出し灰色にする(self, root):
         path = root / "05_テスト設計/テスト設計.md"
@@ -333,7 +349,7 @@ class Test視認性アップ:
         html = tm_html.render_stage(tm_core.load_project(root), "design")
         table = html.split("<h2>テストケースのカバレッジ</h2>")[1].split("</table>")[0]
         row = next(r for r in table.split("</tr>") if ">カバレッジアイテム</span></td>" in r)
-        assert "<td>3 / 4</td><td>75%</td>" in row and "CI-004" in row and "同値の代表で足りる" in row
+        assert "<td>3 / 4</td><td><span class=\"pct warn\">75%</span></td>" in row and "CI-004" in row and "同値の代表で足りる" in row
         ci4 = self._pane(html, "ds-cond").split('id="ds-cond-CI-004"')[1].split("</summary>")[0]
         assert 'class="ex"' in ci4
 
@@ -403,15 +419,102 @@ class Test視認性アップ:
         assert "<td>2 / 2</td>" in row      # テストケースで通る数 / 出した数
         assert "<td>1</td>" in row          # そのうち、回答待ちのテストケースでしか通らない数
 
-    def test_テスト実装のページでカバレッジアイテムをどこまで通せているかがわかる(self, root):
-        text = (root / "05_テスト設計/テスト設計.md").read_text(encoding="utf-8")
+    # ---- テスト実装: ローレベルテストケースのカバレッジ ----
+
+    @staticmethod
+    def _add_htc4(root, unimplemented_reason: str = ""):
+        """ローレベルテストケースの無い HTC-004(CI-004)を足す。理由を渡すと未実装.md に書く。"""
+        path = root / "05_テスト設計/テスト設計.md"
+        text = path.read_text(encoding="utf-8")
         text = text.replace("| CI-003 | 確認画面が表示される | COND-002 |", "| CI-003 | 確認画面が表示される | COND-002 |\n| CI-004 | 上限の境界値 65 | COND-001 |")
         text = text.replace("| 手動テスト | 低 | 設計済み |\n", "| 手動テスト | 低 | 設計済み |\n| HTC-004 | 上限の境界値のとき登録できる | COND-001 | CI-004 | 登録できる | E2E自動テスト | 高 | 設計済み |\n")
-        (root / "05_テスト設計/テスト設計.md").write_text(text, encoding="utf-8")
+        path.write_text(text, encoding="utf-8")
+        if unimplemented_reason:
+            (root / "06_テスト実装/未実装.md").write_text(
+                f"# 未実装\n\n| ハイレベルテストケースID | 理由 |\n|---|---|\n| HTC-004 | {unimplemented_reason} |\n", encoding="utf-8")
+
+    @staticmethod
+    def _impl_rows(html: str) -> dict[str, str]:
+        table = html.split("<h2>ローレベルテストケースのカバレッジ</h2>")[1].split("</table>")[0]
+        return {kind: next(r for r in table.split("</tr>") if f">{kind}</span></td>" in r)
+                for kind in ("要求", "仕様", "リスク", "テスト条件", "カバレッジアイテム", "ハイレベルテストケース")}
+
+    def test_テスト実装のページはいちばん上にローレベルテストケースのカバレッジを出し古い表は出さない(self, root):
+        main = tm_html.render_stage(tm_core.load_project(root), "implementation").split("<main>")[1]
+        assert main.split("<h2>")[1].startswith("ローレベルテストケースのカバレッジ")
+        assert main.index("<h2>ローレベルテストケース</h2>") < main.index("<h2>未実装のテストケースと理由</h2>")
+        assert "要求 → ローレベルテストケース → テスト手順" not in main
+        assert "ローレベルテストケースでどこまで通せているか" not in main
+
+    def test_ローレベルテストケースが押さえている割合を種類ごとに出す(self, root):
+        rows = self._impl_rows(tm_html.render_stage(tm_core.load_project(root), "implementation"))
+        assert "<td>2 / 2</td><td><span class=\"pct ok\">100%</span></td>" in rows["要求"]
+        assert "<td>2 / 3</td><td><span class=\"pct warn\">66%</span></td>" in rows["仕様"] and "SPEC-002" in rows["仕様"]
+        assert "<td>2 / 2</td><td><span class=\"pct ok\">100%</span></td>" in rows["リスク"]
+        assert "<td>3 / 3</td><td><span class=\"pct ok\">100%</span></td>" in rows["テスト条件"]  # 探索的テストの COND-003 はチャーターで押さえる
+        assert "<td>3 / 3</td><td><span class=\"pct ok\">100%</span></td>" in rows["カバレッジアイテム"]
+        assert "<td>3 / 3</td><td><span class=\"pct ok\">100%</span></td>" in rows["ハイレベルテストケース"]
+
+    def test_未実装のハイレベルテストケースは未実装の理由を出し赤くする(self, root):
+        self._add_htc4(root, "上限の入力欄がまだ無い")
         html = tm_html.render_stage(tm_core.load_project(root), "implementation")
-        row = next(line for line in html.split("</tr>") if 'id="impl-cov-COND-001"' in line)
-        assert "<td>2 / 3</td>" in row      # ローレベルテストケースで通せている数 / 出した数
-        assert "CI-004" in row              # 通せていないカバレッジアイテム
+        rows = self._impl_rows(html)
+        assert "<td>3 / 4</td><td><span class=\"pct warn\">75%</span></td>" in rows["ハイレベルテストケース"]
+        assert "HTC-004" in rows["ハイレベルテストケース"] and "上限の入力欄がまだ無い" in rows["ハイレベルテストケース"]
+        assert "<td>3 / 4</td><td><span class=\"pct warn\">75%</span></td>" in rows["カバレッジアイテム"] and "上限の入力欄がまだ無い" in rows["カバレッジアイテム"]
+        htc4 = self._pane(html, "im-cond").split('id="im-cond-COND-001-HTC-004"')[1].split("</details>")[0]
+        assert 'class="ng"' in htc4.split("</summary>")[0] and "上限の入力欄がまだ無い" in htc4
+        assert 'class="warn"' in self._pane(html, "im-cond").split('id="im-cond-COND-001"')[1].split("</summary>")[0]
+
+    def test_テスト実装のカバレッジは開く一覧を割合の表より上に出す(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "implementation")
+        section = html.split("<h2>ローレベルテストケースのカバレッジ</h2>")[1].split("<h2>")[0]
+        assert section.index('<div class="tabs">') < section.index("<table>")
+
+    def test_一覧の件数の横に実装したハイレベルテストケースの割合を出す(self, root):
+        self._add_htc4(root, "上限の入力欄がまだ無い")
+        html = tm_html.render_stage(tm_core.load_project(root), "implementation")
+        cond1 = self._pane(html, "im-cond").split('id="im-cond-COND-001"')[1].split("</summary>")[0]
+        assert "実装したハイレベル 2 / 3 (66%)" in cond1
+        req = self._pane(html, "im-req")
+        assert "実装したハイレベル 2 / 3 (66%)" in req.split('id="im-req-REQ-001-SPEC-001"')[1].split("</summary>")[0]
+        assert "実装したハイレベル 1 / 1 (100%)" in req.split('id="im-req-REQ-002"')[1].split("</summary>")[0]
+        cond3 = req.split('id="im-req-REQ-001-COND-003"')[1].split("</summary>")[0]
+        assert "実装したハイレベル" not in cond3  # チャーターしかないテスト条件には割合を出さない
+
+    def test_未実装で止まっているテスト条件と仕様は止まっている理由をたどって出す(self, root):
+        path = root / "06_テスト実装/ローレベルテストケース.md"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "| LTC-003 | HTC-003 | 登録後の画面を確かめる | 30 | 確認画面を表示 | 手動テスト | 低 |\n", ""), encoding="utf-8")
+        (root / "06_テスト実装/未実装.md").write_text(
+            "# 未実装\n\n| ハイレベルテストケースID | 理由 |\n|---|---|\n| HTC-003 | 確認画面の文言が回答待ち |\n", encoding="utf-8")
+        rows = self._impl_rows(tm_html.render_stage(tm_core.load_project(root), "implementation"))
+        assert "COND-002" in rows["テスト条件"] and "確認画面の文言が回答待ち" in rows["テスト条件"]
+        assert "SPEC-003" in rows["仕様"] and "COND-002" in rows["仕様"]
+
+    def test_未実装に書いていないハイレベルテストケースはローレベルテストケースが無いと出す(self, root):
+        self._add_htc4(root)
+        rows = self._impl_rows(tm_html.render_stage(tm_core.load_project(root), "implementation"))
+        assert "ローレベルテストケースが無い" in rows["ハイレベルテストケース"]
+
+    def test_テスト条件からハイレベルとローレベルのテストケースをたどれる(self, root):
+        pane = self._pane(tm_html.render_stage(tm_core.load_project(root), "implementation"), "im-cond")
+        cond1 = pane.split('id="im-cond-COND-001"')[1]
+        assert 'class="ok"' in cond1.split("</summary>")[0]
+        assert "LTC-001" in cond1.split('id="im-cond-COND-001-HTC-001"')[1].split("</details>")[0]
+        assert "CH-001" in pane.split('id="im-cond-COND-003"')[1].split("</details>")[0]
+
+    def test_要求からテスト条件の下のローレベルテストケースまでたどれる(self, root):
+        pane = self._pane(tm_html.render_stage(tm_core.load_project(root), "implementation"), "im-req")
+        cond1 = pane.split('id="im-req-REQ-001-SPEC-001-COND-001"')[1].split("</details>")[0]
+        assert "LTC-001" in cond1 and "LTC-002" in cond1 and "HTC-001" in cond1
+
+    def test_ローレベルテストケースは開くと入力と期待値ともとのテストケースと手順が出る(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "implementation")
+        section = html.split("<h2>ローレベルテストケース</h2>")[1]
+        summary, kids = section.split('id="ltc-LTC-003"')[1].split("</details>")[0].split("</summary>")
+        assert "登録後の画面を確かめる" in summary
+        assert "確認画面を表示" in kids and "30" in kids and "HTC-003" in kids and "PROC-001" in kids
 
     def test_テスト実行のページで結果と証跡と欠陥レポートをたどれる(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "execution")

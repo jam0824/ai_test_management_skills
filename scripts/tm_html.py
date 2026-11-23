@@ -320,6 +320,8 @@ details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 
 .latest-report{font-size:18px;font-weight:700;border:2px solid var(--link);border-radius:6px;padding:10px 14px;margin:8px 0 14px}
 .latest-report .muted{font-size:13px;font-weight:400}
 .nowrap{white-space:nowrap}
+details.reasons{border:none;margin:0;padding:0}details.reasons summary{font-weight:400;color:var(--link)}
+.pct{font-weight:700}.pct.ok{color:var(--ok)}.pct.warn{color:var(--warn)}.pct.ng{color:var(--ng)}
 .legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;margin:6px 0}.legend i{width:12px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
 """
 
@@ -450,16 +452,27 @@ def _plan_sections(p: Project) -> dict[str, str]:
     return _sections(plan_file.read_text(encoding="utf-8-sig")) if plan_file.is_file() else {}
 
 
-def _coverage_rows(v: View, covered: dict[str, set[str]], excluded: dict[str, str], by: str) -> list[list[str]]:
-    """種類ごとに、押さえている数・割合・押さえていないものと理由の行を作る。割合は切り捨て(全部そろうまで100%にしない)。"""
+def _coverage_rows(v: View, covered: dict[str, set[str]], excluded: dict[str, str], by: str,
+                   reason=None) -> list[list[str]]:
+    """種類ごとに、押さえている数・割合・押さえていないものと理由の行を作る。割合は切り捨て(全部そろうまで100%にしない)。
+    reason: ID → 理由のHTML(その工程だけの理由)。None を返したものは共通の理由にする。"""
     rows = []
     for type_key, done in covered.items():
         all_ids = _ids(v.project, type_key)
         missing = [i for i in all_ids if i not in done]
-        rate = f"{100 * (len(all_ids) - len(missing)) // len(all_ids)}%" if all_ids else "-"
-        reasons = "<br>".join(f"{v.ref(i, False)} {_not_covered_reason(v, i, excluded, by)}" for i in missing)
+        if all_ids:
+            percent = 100 * (len(all_ids) - len(missing)) // len(all_ids)
+            level = "ok" if not missing else ("ng" if len(missing) == len(all_ids) else "warn")
+            rate = f'<span class="pct {level}">{percent}%</span>'  # 色はカードの線とそろえる(緑・黄・赤)
+        else:
+            rate = "-"
+        reasons = "<br>".join(
+            f"{v.ref(i, False)} {(reason(i) if reason else None) or _not_covered_reason(v, i, excluded, by)}" for i in missing)
+        # 理由は長くなるので、件数だけ見せてたたんでおく
+        folded = (f'<details class="reasons"><summary>{len(missing)}件(開くと理由が出る)</summary>{reasons}</details>'
+                  if missing else '<span class="none-text">なし</span>')
         rows.append([f'<span class="nowrap">{TYPES[type_key]}</span>', f"{len(all_ids) - len(missing)} / {len(all_ids)}",
-                     rate, reasons or '<span class="none-text">なし</span>'])
+                     rate, folded])
     return rows
 
 
@@ -754,33 +767,165 @@ def _unimplemented_table(v: View, type_key: str) -> str:
 
 def _stage_implementation(v: View) -> str:
     p = v.project
-    rows = []
-    for ltc in p.of_type("LTC"):
-        rows.append([v.refs(v.related(ltc.id, "REQ"), False), v.refs(v.related(ltc.id, "COND"), False),
-                     v.refs(v.related(ltc.id, "HTC")), v.ref(ltc.id), v.text(ltc.fields.get("実施方法", "")),
-                     v.text(ltc.fields.get("期待値", "")), v.refs((c for c in p.children(ltc.id) if type_of(c) == "PROC"), False)])
     missing = [h for h in tm_core.unimplemented_htcs(p) if h not in p.unimplemented]
-    coverage_rows, coverage_ids = [], []
-    for condition in p.of_type("COND"):
-        items = [c for c in p.children(condition.id) if type_of(c) == "CI"]
-        if not items:
-            continue
-        done = [i for i in items
-                if any(type_of(c) == "LTC" for h in _htcs_of(p, i) for c in p.children(h))]
-        coverage_rows.append([v.ref(condition.id), f"{len(done)} / {len(items)}", f"{round(100 * len(done) / len(items))}%",
-                              v.refs((i for i in items if i not in done), True) if len(done) < len(items) else ""])
-        coverage_ids.append("impl-cov-" + condition.id)
+    # どこまで実装したかを先に読めるよう、ローレベルテストケースのカバレッジをいちばん上に出す
     return (
-        "<h2>要求 → ローレベルテストケース → テスト手順</h2>"
-        + _table(["要求", "テスト条件", "ハイレベルテストケース", "ローレベルテストケース", "実施方法", "期待値", "テスト手順"], rows,
-                 ["row-" + r.id for r in p.of_type("LTC")])
-        + "<h2>カバレッジアイテムを、ローレベルテストケースでどこまで通せているか</h2>"
-        "<p class=\"muted\">テスト設計で出したカバレッジアイテムのうち、ローレベルテストケースがあるテストケースで通るものの数。"
-        "未実装のテストケースでしか通らないものは、通せていない。</p>"
-        + _table(["テスト条件", "通せている数 / 出した数", "割合", "通せていないカバレッジアイテム"], coverage_rows, coverage_ids)
+        _ltc_coverage(v) + _ltc_cards(v)
         + "<h2>未実装のテストケースと理由</h2>" + _unimplemented_table(v, "HTC")
         + ("<p class=\"missing\">ローレベルテストケースが無いのに、未実装に記録されていない: " + v.refs(missing) + "</p>" if missing else "")
     )
+
+
+def _ltc_coverage(v: View) -> str:
+    """ローレベルテストケースが、要求からハイレベルテストケースまでをどこまで押さえているか。
+    探索的テストのテスト条件は、ローレベルテストケースにしないので、テストチャーターがあれば押さえていると数える。"""
+    p = v.project
+    excluded = _excluded_in_plan(_plan_sections(p).get("対象外/制約", ""))
+
+    def kids(record_id: str, type_key: str) -> list[str]:
+        return [c for c in p.children(record_id) if type_of(c) == type_key]
+
+    def htcs_of_cond(cond: str) -> list[str]:
+        return sorted(set(kids(cond, "HTC")) | {h for ci in kids(cond, "CI") for h in kids(ci, "HTC")}, key=tm_core._id_key)
+
+    def ltcs_of(htcs) -> list[str]:
+        return sorted({l for h in htcs for l in kids(h, "LTC")}, key=tm_core._id_key)
+
+    def cond_done(cond: str) -> bool:
+        return bool(ltcs_of(htcs_of_cond(cond)) or kids(cond, "CH"))
+
+    covered = {
+        "REQ": {r for r in _ids(p, "REQ") if any(cond_done(c) for c in _req_conds(p, r))},
+        "SPEC": {s for s in _ids(p, "SPEC") if any(cond_done(c) for c in _conds_of(p, s))},
+        "RISK": {r for r in _ids(p, "RISK") if any(cond_done(c) for c in _conds_of(p, r))},
+        "COND": {c for c in _ids(p, "COND") if cond_done(c)},
+        "CI": {i for i in _ids(p, "CI") if ltcs_of(kids(i, "HTC"))},
+        "HTC": {h for h in _ids(p, "HTC") if kids(h, "LTC")},
+    }
+
+    def htc_reason(h: str) -> str:
+        if h in p.unimplemented:
+            return f"未実装: {v.text(p.unimplemented[h].reason)}"
+        state = p.records[h].fields.get("状態", "")
+        return f"回答待ち: {v.text(state)}" if "回答待ち" in state else ""
+
+    def reason(record_id: str) -> str | None:
+        """ハイレベルテストケースとカバレッジアイテムは、未実装・回答待ちの理由を出す。ほかは共通の理由。"""
+        t = type_of(record_id)
+        if t == "HTC":
+            why = htc_reason(record_id)
+        elif t == "CI" and not p.records[record_id].fields.get("通さない理由", "").strip():
+            why = "、".join(f"{v.ref(h, False)} {htc_reason(h)}" for h in kids(record_id, "HTC") if htc_reason(h))
+        elif t == "COND":  # どのハイレベルテストケースが、なぜ実装されていないか
+            why = "、".join(f"{v.ref(h, False)} {htc_reason(h)}" for h in htcs_of_cond(record_id) if htc_reason(h))
+        elif t in ("SPEC", "RISK", "REQ") and record_id not in excluded:  # どのテスト条件で止まっているか
+            conds = [c for c in (_req_conds(p, record_id) if t == "REQ" else _conds_of(p, record_id)) if htcs_of_cond(c)]
+            why = (f"テスト条件 {v.refs(sorted(conds, key=tm_core._id_key), False).replace('<br>', '、')} の"
+                   "ハイレベルテストケースが未実装・回答待ち") if conds else ""
+        else:
+            return None
+        return f'<span class="muted">{why}</span>' if why else None
+
+    def ltc_leaf(l: str, with_htc: bool = False) -> str:
+        f = p.records[l].fields
+        origin = f' {v.refs(parents_of(l, "HTC"), False)} から' if with_htc else ""
+        return _leaf(v, l, f'{_escape(f.get("実施方法", ""))} {_badge(f.get("優先順位", ""))}{origin}')
+
+    def parents_of(record_id: str, type_key: str) -> list[str]:
+        return [x for x in p.parents(record_id) if type_of(x) == type_key]
+
+    def impl_rate(htcs) -> str:
+        """その行の下のハイレベルテストケースのうち、ローレベルテストケースまで実装した数と割合(切り捨て)。"""
+        htcs = set(htcs)
+        if not htcs:
+            return ""
+        done = sum(1 for h in htcs if kids(h, "LTC"))
+        return f'<span class="ci">実装したハイレベル {done} / {len(htcs)} ({100 * done // len(htcs)}%)</span>'
+
+    def htc_card(path: str, h: str) -> str:
+        ltcs = kids(h, "LTC")
+        why = htc_reason(h)
+        color = "ok" if ltcs else ("warn" if "回答待ち" in why and h not in p.unimplemented else "ng")
+        return _card(v, h, p.records[h].title, meta=f'<span class="ci">ローレベル {len(ltcs)}件</span>',
+                     notes=[("理由", why)] if not ltcs else [], sub_label="ローレベルテストケース",
+                     leaves="".join(ltc_leaf(l) for l in ltcs), card_id=f"im-cond-{path}-{h}", cls=color)
+
+    # テスト条件からたどる: テスト条件 → ハイレベルテストケース → ローレベルテストケース(探索的テストはチャーター)
+    cond_cards = []
+    for cond in p.of_type("COND"):
+        htcs, chs = htcs_of_cond(cond.id), kids(cond.id, "CH")
+        done = [h for h in htcs if kids(h, "LTC")]
+        if htcs:
+            color = "ok" if len(done) == len(htcs) else ("warn" if done or chs else "ng")
+            meta = impl_rate(htcs)
+        else:
+            color, meta = ("ok" if chs else "ng"), ""
+        meta += f'<span class="ci">チャーター {len(chs)}件</span>' if chs else ""
+        cond_cards.append(_card(
+            v, cond.id, cond.title, meta=meta, sub_label="ハイレベルテストケース・チャーター",
+            leaves="".join(htc_card(cond.id, h) for h in htcs) + "".join(_leaf(v, c) for c in chs),
+            card_id=f"im-cond-{cond.id}", cls=color))
+
+    # 要求からたどる: 要求 → 仕様 → テスト条件 → ローレベルテストケース(もとのハイレベルテストケースを添える)
+    def cond_card(parent: str, c: str) -> str:
+        htcs, chs = htcs_of_cond(c), kids(c, "CH")
+        ltcs = ltcs_of(htcs)
+        lost = [h for h in htcs if not kids(h, "LTC")]
+        leaves = ("".join(ltc_leaf(l, with_htc=True) for l in ltcs)
+                  + "".join(_leaf(v, h, f'<span class="missing">ローレベルテストケースが無い{"。" + htc_reason(h) if htc_reason(h) else ""}</span>')
+                            for h in lost)
+                  + "".join(_leaf(v, ch) for ch in chs))
+        color = "ok" if (ltcs or chs) and not lost else ("warn" if ltcs or chs else "ng")
+        return _card(v, c, p.records[c].title,
+                     meta=impl_rate(htcs) + f'<span class="ci">ローレベル {len(ltcs)}件・チャーター {len(chs)}件</span>',
+                     sub_label="ローレベルテストケース・チャーター", leaves=leaves, card_id=f"im-req-{parent}-{c}", cls=color)
+
+    def req_card(record_id: str, conds, shown, children: str = "", parent: str = "") -> str:
+        path = f"{parent}-{record_id}" if parent else record_id
+        htcs = {h for c in conds for h in htcs_of_cond(c)}
+        ltcs = ltcs_of(htcs)
+        chs = {ch for c in conds for ch in kids(c, "CH")}
+        color = "ok" if ltcs or chs else ("ex" if record_id in excluded else "ng")
+        return _card(v, record_id, p.records[record_id].title,
+                     meta=impl_rate(htcs) + f'<span class="ci">ローレベル {len(ltcs)}件・チャーター {len(chs)}件</span>',
+                     sub_label="仕様とテスト条件" if children else "テスト条件",
+                     leaves="".join(cond_card(path, c) for c in shown) + children, card_id=f"im-req-{path}", cls=color)
+
+    req_pane = "".join(
+        req_card(r.id, _req_conds(p, r.id), _conds_of(p, r.id), "".join(
+            req_card(s, _conds_of(p, s), _conds_of(p, s), parent=r.id) for s in _specs_of(p, r.id)))
+        for r in p.of_type("REQ"))
+    return (
+        "<h2>ローレベルテストケースのカバレッジ</h2>"
+        "<p class=\"muted\">ローレベルテストケースが押さえているものを数える。探索的テストのテスト条件は、ローレベルテストケースに"
+        "しないので、テストチャーターがあれば押さえていると数える。要求・仕様・リスクは、直接紐づくテスト条件で数える。"
+        "行の「実装したハイレベル」は、その下のハイレベルテストケースのうち、ローレベルテストケースまで実装した数と割合。</p>"
+        "<p class=\"muted\">行をクリックすると、下の成果物が開く。左の線は、緑 = 押さえている、"
+        "黄 = 一部だけ・回答待ち、赤 = 無い(未実装を含む)、灰色 = テスト計画で対象外にした。</p>"
+        + _tabs("im-tab", [("im-cond", "テスト条件からたどる", "".join(cond_cards)),
+                           ("im-req", "要求からたどる", req_pane)])
+        + "<h3>種類ごとの割合</h3>"
+        + _table(["", "押さえている数", "割合", "押さえていないものと理由"],
+                 _coverage_rows(v, covered, excluded, "ローレベルテストケース", reason))
+    )
+
+
+def _ltc_cards(v: View) -> str:
+    p = v.project
+    cards = []
+    for ltc in p.of_type("LTC"):
+        f = ltc.fields
+        origin = [x for x in p.parents(ltc.id) if type_of(x) == "HTC"]
+        procs = [c for c in p.children(ltc.id) if type_of(c) == "PROC"]
+        cards.append(_card(
+            v, ltc.id, f.get("テストケース", "") or ltc.title, badges=_badge(f.get("優先順位", "")),
+            meta=f'<span class="ci">{_escape(f.get("実施方法", ""))}</span>',
+            notes=_other_fields(ltc, {"ID", "テストケース", "実施方法", "優先順位"}),
+            sub_label="もとのハイレベルテストケースとテスト手順",
+            leaves="".join(_leaf(v, x) for x in origin + procs), card_id=f"ltc-{ltc.id}"))
+    return ("<h2>ローレベルテストケース</h2><p class=\"muted\">行をクリックすると、事前条件・入力データ・期待値などと、"
+            "もとのハイレベルテストケース・テスト手順が開く。</p>"
+            + (f'<div class="tree">{"".join(cards)}</div>' if cards else "<p>ありません。</p>"))
 
 
 def _stage_e2e(v: View) -> str:
