@@ -1294,6 +1294,11 @@ _STAGE_BODIES = {
 }
 
 
+def _observed_text(observed: str) -> str:
+    """「実機の動き」の文から、末尾の「証跡: …」を省く(証跡はリンクの行に別に出すため)。"""
+    return re.split(r"[。\s]*証跡[:：]", observed, maxsplit=1)[0].strip() + ("。" if re.search(r"証跡[:：]", observed) else "")
+
+
 def _observed_evidence(v: View, observed: str) -> str:
     """質問表の「実機の動き」に書かれた証跡(RUN-…/証跡/…)を、ファイルへのリンクの行にする。"""
     if "/証跡/" not in observed:
@@ -1305,7 +1310,8 @@ def _questions(v: View, stage: str) -> str:
     name = tm_core.STAGE_NAMES[stage]
     cards = [
         _card(v, q.id, q.fields.get("質問", "") or q.title, badges=_badge(q.fields.get("状態", "")),
-              notes=_other_fields(q, {"ID", "工程", "質問", "状態"}), sub_label="関連するもの",
+              notes=[(k, _observed_text(val) if k == "実機の動き" else val)
+                     for k, val in _other_fields(q, {"ID", "工程", "質問", "状態"})], sub_label="関連するもの",
               leaves="".join(_leaf(v, link) for link in sorted(q.links, key=tm_core._id_key))
               + _observed_evidence(v, q.fields.get("実機の動き", "")))
         for q in v.project.of_type("Q") if q.fields.get("工程", "").strip() in (name, name.replace("作成", ""))]
@@ -1682,7 +1688,7 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
     not_run_rows = [[v.ref(r["id"]), _badge(r["status"]), v.text(r["reason"])] for r in m["not_run"]]
     not_run_rows += [[v.ref(r["id"]), _badge("未実装"), v.text(r["reason"])] for r in m["unimplemented"]]
     question_rows = [[v.ref(q["id"], False), _escape(q["stage"]), v.text(q["question"]),
-                      v.text(q["observed"]) + _observed_evidence(v, q["observed"])] for q in m["open_questions"]]
+                      v.text(_observed_text(q["observed"])) + _observed_evidence(v, q["observed"])] for q in m["open_questions"]]
     rollback = project.root / "戻し記録.md"
     rollback_html = md_to_html(rollback.read_text(encoding="utf-8-sig"), v.known, v.id_href) if rollback.is_file() else "<p>記録はありません。</p>"
 

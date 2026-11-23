@@ -301,6 +301,8 @@ class Test視認性アップ:
         _, kids = self._risk_block(html, "Q-001")
         assert "実機の動き" in kids and "17 として登録される" in kids
         assert 'href="../08_テスト実行/RUN-20261101-100000/証跡/LTC-002.png"' in kids
+        note = kids.split("<dt>実機の動き</dt><dd>")[1].split("</dd>")[0]
+        assert "証跡:" not in note  # 証跡はリンクの行に出すので、文の中のパスは省く
 
     def test_リスクのページはリスクを並べて開くと紐づく仕様と要求が出る(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "risk")
@@ -930,6 +932,7 @@ class Testテストレポート:
         html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
         questions = self._report_pane(html, "rp-record", None).split('id="questions"')[1].split("</table>")[0]
         assert "<th>実機の動き</th>" in questions and "17 として登録される" in questions
+        assert "証跡: RUN-" not in questions
         assert 'href="snapshot/08_テスト実行/RUN-20261101-100000/証跡/LTC-002.png"' in questions
         first = html.split('id="first-view"')[1].split('id="details"')[0]
         assert "うち実機の動きあり <b>1</b> 件" in first
