@@ -25,6 +25,14 @@ class Test表の読み取り:
         assert spec.links == {"REQ-001"}
         assert spec.file == "01_要求仕様/仕様.md"
 
+    def test_名前には紐づけの列を使わずその次の中身の列を使う(self, root):
+        project = tm_core.load_project(root)
+        # ローレベルテストケースの表は、IDの次がハイレベルテストケースIDの列
+        assert project.records["LTC-001"].title == "18歳で登録する"
+        assert project.records["SPEC-001"].title == "年齢は18〜65の整数だけ登録できる"
+        # セッションシートは実施者・日時・時間しか無いので、紐づけの列(テストチャーター)を名前にする
+        assert project.records["SES-001"].title == "CH-001"
+
     def test_エスケープした縦棒を含むセルを読める(self):
         text = "| ID | 要求 |\n|---|---|\n| REQ-001 | A \\| B |\n"
         table = tm_core.parse_tables(text)[0]

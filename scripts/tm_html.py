@@ -453,12 +453,12 @@ def _plan_sections(p: Project) -> dict[str, str]:
 
 
 def _coverage_rows(v: View, covered: dict[str, set[str]], excluded: dict[str, str], by: str,
-                   reason=None) -> list[list[str]]:
+                   reason=None, universe: dict[str, list[str]] | None = None) -> list[list[str]]:
     """種類ごとに、押さえている数・割合・押さえていないものと理由の行を作る。割合は切り捨て(全部そろうまで100%にしない)。
     reason: ID → 理由のHTML(その工程だけの理由)。None を返したものは共通の理由にする。"""
     rows = []
     for type_key, done in covered.items():
-        all_ids = _ids(v.project, type_key)
+        all_ids = universe[type_key] if universe else _ids(v.project, type_key)  # universe: 数える対象を絞るとき
         missing = [i for i in all_ids if i not in done]
         if all_ids:
             percent = 100 * (len(all_ids) - len(missing)) // len(all_ids)
@@ -928,11 +928,104 @@ def _ltc_cards(v: View) -> str:
 
 
 def _stage_e2e(v: View) -> str:
-    p = v.project
+    # どこまで自動化したかを先に読めるよう、スクリプトのカバレッジをいちばん上に出す
     return (
-        "<h2>要求 → E2E自動テストスクリプト</h2>"
-        + v.chain(_ids(p, "SCR"), ["REQ", "COND", "LTC", "SCR"], ["ファイル", "テスト名"])
+        _script_coverage(v)
         + "<h2>自動化できなかったテストケースと理由</h2>" + _unimplemented_table(v, "LTC")
+    )
+
+
+def _script_coverage(v: View) -> str:
+    """E2E自動テストのローレベルテストケースに、スクリプトがどこまでそろったか。
+    要求・仕様・テスト条件は、E2E自動テストのローレベルテストケースを持つものだけを数え、その全部にスクリプトがあればそろったとする。"""
+    p = v.project
+
+    def kids(record_id: str, type_key: str) -> list[str]:
+        return [c for c in p.children(record_id) if type_of(c) == type_key]
+
+    def e2e_ltcs_of_cond(cond: str) -> list[str]:
+        htcs = set(kids(cond, "HTC")) | {h for ci in kids(cond, "CI") for h in kids(ci, "HTC")}
+        return sorted({l for h in htcs for l in kids(h, "LTC") if "E2E" in p.records[l].fields.get("実施方法", "")},
+                      key=tm_core._id_key)
+
+    def e2e_ltcs(conds) -> list[str]:
+        return sorted({l for c in conds for l in e2e_ltcs_of_cond(c)}, key=tm_core._id_key)
+
+    def scripted(l: str) -> bool:
+        return bool(kids(l, "SCR"))
+
+    conds_of = {"REQ": lambda r: _req_conds(p, r), "SPEC": lambda s: _conds_of(p, s), "COND": lambda c: [c]}
+    universe = {t: [i for i in _ids(p, t) if e2e_ltcs(conds_of[t](i))] for t in conds_of}
+    universe["LTC"] = [l.id for l in p.of_type("LTC") if "E2E" in l.fields.get("実施方法", "")]
+    covered = {t: {i for i in ids if all(scripted(l) for l in e2e_ltcs(conds_of[t](i)))}
+               for t, ids in universe.items() if t != "LTC"}
+    covered["LTC"] = {l for l in universe["LTC"] if scripted(l)}
+
+    def ltc_reason(l: str) -> str:
+        if l in p.unimplemented:
+            return f"自動化できなかった: {v.text(p.unimplemented[l].reason)}"
+        return "スクリプトが無い"
+
+    def reason(record_id: str) -> str:
+        if type_of(record_id) == "LTC":
+            why = ltc_reason(record_id)
+        else:
+            lost = [l for l in e2e_ltcs(conds_of[type_of(record_id)](record_id)) if not scripted(l)]
+            why = "、".join(f"{v.ref(l, False)} {ltc_reason(l)}" for l in lost)
+        cls = "muted" if record_id in p.unimplemented else "missing"
+        return f'<span class="{cls}">{why}</span>'
+
+    def color(ltcs) -> str:
+        done = sum(1 for l in ltcs if scripted(l))
+        return "ok" if done == len(ltcs) else ("warn" if done else "ng")
+
+    def rate(ltcs) -> str:
+        done = sum(1 for l in ltcs if scripted(l))
+        return f'<span class="ci">スクリプトのあるE2E {done} / {len(ltcs)} ({100 * done // len(ltcs)}%)</span>' if ltcs else ""
+
+    # テスト名からたどる: テスト(スクリプト) → ローレベル → ハイレベル → テスト条件 → 仕様 → 要求(出どころを上へ)
+    test_cards = []
+    for s in p.of_type("SCR"):
+        f = s.fields
+        upstream = [i for t in ("LTC", "HTC", "COND", "SPEC", "REQ") for i in v.related(s.id, t)]
+        test_cards.append(_card(
+            v, s.id, f.get("テスト名", "") or s.title, notes=[("ファイル", f.get("ファイル", ""))],
+            sub_label="出どころ(ローレベル → ハイレベル → テスト条件 → 仕様 → 要求)",
+            leaves="".join(_leaf(v, i) for i in upstream), card_id=f"e2e-test-{s.id}", cls="ok"))
+
+    # 要求からたどる: 要求 → 仕様 → テスト条件 → E2E自動テストのローレベルテストケース → スクリプト
+    def ltc_leaf(l: str) -> str:
+        scrs = kids(l, "SCR")
+        f = p.records[l].fields
+        if scrs:
+            memo = " ".join(f'{v.ref(s, False)} {_escape(p.records[s].fields.get("ファイル", ""))}' for s in scrs)
+        else:
+            memo = f'<span class="{"muted" if l in p.unimplemented else "missing"}">{ltc_reason(l)}</span>'
+        return _leaf(v, l, f'{_badge(f.get("優先順位", ""))} {memo}')
+
+    def card(record_id: str, conds, shown, children: str = "", parent: str = "") -> str:
+        path = f"{parent}-{record_id}" if parent else record_id
+        ltcs = e2e_ltcs(conds)
+        leaves = "".join(ltc_leaf(l) for l in ltcs) if type_of(record_id) == "COND" else \
+            "".join(card(c, [c], [c], parent=path) for c in shown if e2e_ltcs([c])) + children
+        label = "E2E自動テストのローレベルテストケース" if type_of(record_id) == "COND" else (
+            "仕様とテスト条件" if children else "テスト条件")
+        return _card(v, record_id, p.records[record_id].title, meta=rate(ltcs), sub_label=label, leaves=leaves,
+                     card_id=f"e2e-req-{path}", cls=color(ltcs))
+
+    req_pane = "".join(
+        card(r, _req_conds(p, r), _conds_of(p, r), "".join(
+            card(s, _conds_of(p, s), _conds_of(p, s), parent=r) for s in _specs_of(p, r) if s in universe["SPEC"]))
+        for r in universe["REQ"])
+    return (
+        "<h2>E2E自動テストスクリプトのカバレッジ</h2>"
+        "<p class=\"muted\">実施方法がE2E自動テストのローレベルテストケースに、スクリプトがあるかを数える。"
+        "要求・仕様・テスト条件は、E2E自動テストのローレベルテストケースを持つものだけを数え、その全部にスクリプトがあればそろったとする。</p>"
+        + _table(["", "そろった数", "割合", "そろっていないものと理由"],
+                 _coverage_rows(v, covered, {}, "スクリプト", reason, universe))
+        + "<p class=\"muted\">行をクリックすると、下の成果物が開く。左の線は、緑 = 全部にスクリプトがある、"
+        "黄 = 一部だけ、赤 = 無い。</p>"
+        + _tabs("e2e-tab", [("e2e-test", "テスト名からたどる", "".join(test_cards)), ("e2e-req", "要求からたどる", req_pane)])
     )
 
 

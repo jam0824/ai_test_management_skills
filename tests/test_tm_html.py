@@ -516,6 +516,70 @@ class Test視認性アップ:
         assert "登録後の画面を確かめる" in summary
         assert "確認画面を表示" in kids and "30" in kids and "HTC-003" in kids and "PROC-001" in kids
 
+    # ---- E2E自動テストスクリプト作成: スクリプトのカバレッジ ----
+
+    @staticmethod
+    def _drop_scr2(root, unautomated_reason: str = ""):
+        """SCR-002 を消して、LTC-002 をスクリプトの無い状態にする。理由を渡すと 07 の未実装.md に書く。"""
+        path = root / "07_E2E自動テストスクリプト/スクリプト一覧.md"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "| SCR-002 | LTC-002 | tests/e2e/register.spec.js | LTC-002 17歳で登録する |\n", ""), encoding="utf-8")
+        if unautomated_reason:
+            (root / "07_E2E自動テストスクリプト/未実装.md").write_text(
+                f"# 未実装\n\n| ローレベルテストケースID | 理由 |\n|---|---|\n| LTC-002 | {unautomated_reason} |\n", encoding="utf-8")
+
+    @staticmethod
+    def _e2e_rows(html: str) -> dict[str, str]:
+        table = html.split("<h2>E2E自動テストスクリプトのカバレッジ</h2>")[1].split("</table>")[0]
+        return {kind: next(r for r in table.split("</tr>") if f">{kind}</span></td>" in r)
+                for kind in ("要求", "仕様", "テスト条件", "ローレベルテストケース")}
+
+    def test_E2Eのページはいちばん上にスクリプトのカバレッジを出し古い追跡表は出さない(self, root):
+        main = tm_html.render_stage(tm_core.load_project(root), "e2e").split("<main>")[1]
+        assert main.split("<h2>")[1].startswith("E2E自動テストスクリプトのカバレッジ")
+        assert "<h2>自動化できなかったテストケースと理由</h2>" in main
+        assert "要求 → E2E自動テストスクリプト" not in main
+
+    def test_E2E自動テストのローレベルテストケースのうちスクリプトがある割合を出す(self, root):
+        rows = self._e2e_rows(tm_html.render_stage(tm_core.load_project(root), "e2e"))
+        ok = '<td><span class=\"pct ok\">100%</span></td>'
+        assert "<td>2 / 2</td>" + ok in rows["ローレベルテストケース"]  # 手動テストの LTC-003 は数えない
+        assert "<td>1 / 1</td>" + ok in rows["テスト条件"]
+        assert "<td>1 / 1</td>" + ok in rows["仕様"]
+        assert "<td>1 / 1</td>" + ok in rows["要求"]
+
+    def test_スクリプトが無いものは理由とともに出す(self, root):
+        self._drop_scr2(root)
+        rows = self._e2e_rows(tm_html.render_stage(tm_core.load_project(root), "e2e"))
+        assert "<td>1 / 2</td>" in rows["ローレベルテストケース"] and "LTC-002" in rows["ローレベルテストケース"]
+        assert "スクリプトが無い" in rows["ローレベルテストケース"]
+        assert "<td>0 / 1</td>" in rows["テスト条件"] and "LTC-002" in rows["テスト条件"]
+
+    def test_自動化できなかったものは理由を出す(self, root):
+        self._drop_scr2(root, "画面の外の操作が要る")
+        html = tm_html.render_stage(tm_core.load_project(root), "e2e")
+        assert "画面の外の操作が要る" in self._e2e_rows(html)["ローレベルテストケース"]
+        ltc2 = self._pane(html, "e2e-req").split('id="e2e-req-REQ-001-SPEC-001-COND-001"')[1].split("</details>")[0]
+        assert "LTC-002" in ltc2 and "画面の外の操作が要る" in ltc2
+        assert 'class="warn"' in self._pane(html, "e2e-req").split('id="e2e-req-REQ-001-SPEC-001-COND-001"')[1].split("</summary>")[0]
+
+    def test_テスト名から出どころの成果物を上にたどれる(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "e2e")
+        assert "ファイルからたどる" not in html
+        summary, kids = self._pane(html, "e2e-test").split('id="e2e-test-SCR-001"')[1].split("</details>")[0].split("</summary>")
+        assert "LTC-001 18歳で登録する" in summary
+        assert "tests/e2e/register.spec.js" in kids
+        for upstream in ("LTC-001", "HTC-001", "COND-001", "SPEC-001", "REQ-001"):
+            assert f'href="ID索引.html#{upstream}"' in kids, upstream
+        assert kids.index("LTC-001") < kids.index("HTC-001") < kids.index("COND-001") < kids.index("SPEC-001") < kids.index("REQ-001")
+
+    def test_要求からE2Eのローレベルテストケースとスクリプトまでたどれる(self, root):
+        pane = self._pane(tm_html.render_stage(tm_core.load_project(root), "e2e"), "e2e-req")
+        cond1 = pane.split('id="e2e-req-REQ-001-SPEC-001-COND-001"')[1].split("</details>")[0]
+        assert "LTC-001" in cond1 and "SCR-001" in cond1 and "register.spec.js" in cond1
+        assert "LTC-003" not in pane  # 手動テストは出さない
+        assert 'id="e2e-req-REQ-002"' not in pane  # E2E自動テストが無い要求は出さない
+
     def test_テスト実行のページで結果と証跡と欠陥レポートをたどれる(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "execution")
         row = next(line for line in html.split("</tr>") if 'id="result-LTC-002"' in line)

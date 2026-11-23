@@ -104,6 +104,8 @@ ID_RE = re.compile(
     r"(?<![A-Za-z0-9])(" + "|".join(sorted(TYPES, key=len, reverse=True)) + r")-(\d+)(?![0-9])"
 )
 _SEPARATOR_CELL = re.compile(r"^:?-+:?$")
+# 成果物の名前に使わない列(誰が・いつ・どれだけ、を書く列)
+_NOT_TITLE = {"実施者", "日時", "開始日時", "終了日時", "見つけた日時", "かかった時間(分)"}
 _EXCLUDED_DIRS = {"html", "結果まとめ", REPORT_DIR, "snapshot"}
 
 
@@ -198,7 +200,12 @@ class Record:
 
     @property
     def title(self) -> str:
+        """その成果物の名前。紐づけの列(見出しが ID で終わる列)と、実施者・日時・時間の列は飛ばし、最初の中身の列を使う。"""
         for key, value in self.fields.items():
+            name = key.strip()
+            if not name.endswith("ID") and name not in _NOT_TITLE and value:
+                return value
+        for key, value in self.fields.items():  # 紐づけの列しか無いときは、その値を使う
             if key != "ID" and value:
                 return value
         return ""
