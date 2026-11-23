@@ -218,13 +218,13 @@ class Test視認性アップ:
         html = tm_html.render_stage(tm_core.load_project(root), "analysis")
         pane = self._pane(html, "an-req")
         req1 = pane.split('id="an-req-REQ-001"')[1]
-        assert "COND-003" in req1.split('id="an-req-SPEC-001"')[0]  # 要求に直接紐づくテスト条件(利用の流れ)
-        assert "COND-001" not in req1.split('id="an-req-SPEC-001"')[0]  # 仕様のテスト条件は要求の直下に重ねて出さない
+        assert "COND-003" in req1.split('id="an-req-REQ-001-SPEC-001"')[0]  # 要求に直接紐づくテスト条件(利用の流れ)
+        assert "COND-001" not in req1.split('id="an-req-REQ-001-SPEC-001"')[0]  # 仕様のテスト条件は要求の直下に重ねて出さない
         assert "テスト条件 2件" in req1.split("</summary>")[0]
-        assert "COND-001" in req1.split('id="an-req-SPEC-001"')[1].split("</details>")[0]
-        spec2 = pane.split('id="an-req-SPEC-002"')[1].split("</summary>")[0]
+        assert "COND-001" in req1.split('id="an-req-REQ-001-SPEC-001"')[1].split("</details>")[0]
+        spec2 = pane.split('id="an-req-REQ-001-SPEC-002"')[1].split("</summary>")[0]
         assert 'class="ng"' in spec2 and "テスト条件 0件" in spec2
-        assert 'class="ok"' in pane.split('id="an-req-SPEC-001"')[1].split("</summary>")[0]
+        assert 'class="ok"' in pane.split('id="an-req-REQ-001-SPEC-001"')[1].split("</summary>")[0]
 
     def test_リスクとテストアプローチからもテスト条件をたどれる(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "analysis")
@@ -240,7 +240,7 @@ class Test視認性アップ:
             "## 対象外/制約\n\n### 対象外\n\n| 対象外にするもの | 理由 |\n|---|---|\n| エラー表示(SPEC-002) | 次の版で作る |\n\n## テスト終了条件"),
             encoding="utf-8")
         html = tm_html.render_stage(tm_core.load_project(root), "analysis")
-        spec2 = self._pane(html, "an-req").split('id="an-req-SPEC-002"')[1].split("</summary>")[0]
+        spec2 = self._pane(html, "an-req").split('id="an-req-REQ-001-SPEC-002"')[1].split("</summary>")[0]
         assert 'class="ex"' in spec2
         table = html.split("<h2>テスト条件のカバレッジ</h2>")[1].split("</table>")[0]
         assert "次の版で作る" in table
@@ -300,6 +300,90 @@ class Test視認性アップ:
         html = tm_html.render_stage(tm_core.load_project(root), "requirements")
         section = html.split("仕様が無い要求")[1]
         assert "REQ-003" in section
+
+    # ---- テスト設計: テストケースのカバレッジ ----
+
+    def test_テスト設計のページはいちばん上にテストケースのカバレッジを出し古い追跡表は出さない(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "design")
+        main = html.split("<main>")[1]
+        assert main.split("<h2>")[1].startswith("テストケースのカバレッジ")
+        assert main.index("<h2>テスト条件ごとの技法とカバレッジ</h2>") < main.index("<h2>テストチャーター</h2>")
+        assert "要求 → ハイレベルテストケース" not in main and "要求 → テストチャーター" not in main
+
+    def test_テストケースとチャーターが押さえている割合を種類ごとに出す(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "design")
+        table = html.split("<h2>テストケースのカバレッジ</h2>")[1].split("</table>")[0]
+        rows = {kind: next(r for r in table.split("</tr>") if f">{kind}</span></td>" in r)
+                for kind in ("要求", "仕様", "リスク", "テスト条件", "カバレッジアイテム")}
+        assert "<td>2 / 2</td><td>100%</td>" in rows["要求"]
+        assert "<td>2 / 3</td><td>66%</td>" in rows["仕様"] and "SPEC-002" in rows["仕様"]
+        assert "テストケース・テストチャーターが無い" in rows["仕様"]
+        assert "<td>2 / 2</td><td>100%</td>" in rows["リスク"]
+        assert "<td>3 / 3</td><td>100%</td>" in rows["テスト条件"]
+        assert "<td>3 / 3</td><td>100%</td>" in rows["カバレッジアイテム"]
+
+    def test_通さない理由があるカバレッジアイテムは理由を出し灰色にする(self, root):
+        path = root / "05_テスト設計/テスト設計.md"
+        text = path.read_text(encoding="utf-8").replace(
+            "| ID | カバレッジアイテム | テスト条件ID |\n|---|---|---|",
+            "| ID | カバレッジアイテム | テスト条件ID | 通さない理由 |\n|---|---|---|---|").replace(
+            "| CI-003 | 確認画面が表示される | COND-002 |",
+            "| CI-003 | 確認画面が表示される | COND-002 |\n| CI-004 | 上限の外 66 | COND-001 | 同値の代表で足りる |")
+        path.write_text(text, encoding="utf-8")
+        html = tm_html.render_stage(tm_core.load_project(root), "design")
+        table = html.split("<h2>テストケースのカバレッジ</h2>")[1].split("</table>")[0]
+        row = next(r for r in table.split("</tr>") if ">カバレッジアイテム</span></td>" in r)
+        assert "<td>3 / 4</td><td>75%</td>" in row and "CI-004" in row and "同値の代表で足りる" in row
+        ci4 = self._pane(html, "ds-cond").split('id="ds-cond-CI-004"')[1].split("</summary>")[0]
+        assert 'class="ex"' in ci4
+
+    def test_テスト条件からカバレッジアイテムとテストケースとチャーターをたどれる(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "design")
+        pane = self._pane(html, "ds-cond")
+        cond1 = pane.split('id="ds-cond-COND-001"')[1]
+        assert 'class="ok"' in cond1.split("</summary>")[0] and "カバレッジアイテム 2 / 2" in cond1.split("</summary>")[0]
+        assert "HTC-001" in cond1.split('id="ds-cond-CI-001"')[1].split("</details>")[0]
+        cond3 = pane.split('id="ds-cond-COND-003"')[1].split("</details>")[0]
+        assert "CH-001" in cond3
+
+    def test_回答待ちのテストケースでしか通らないものは黄色にする(self, root):
+        path = root / "05_テスト設計/テスト設計.md"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "| エラーを表示 | E2E自動テスト | 高 | 設計済み |", "| エラーを表示 | E2E自動テスト | 高 | 回答待ち(Q-001) |"),
+            encoding="utf-8")
+        pane = self._pane(tm_html.render_stage(tm_core.load_project(root), "design"), "ds-cond")
+        assert 'class="warn"' in pane.split('id="ds-cond-CI-002"')[1].split("</summary>")[0]
+        assert 'class="warn"' in pane.split('id="ds-cond-COND-001"')[1].split("</summary>")[0]
+
+    def test_要求から仕様とテスト条件をたどれてテストケースの無い仕様は赤くなる(self, root):
+        pane = self._pane(tm_html.render_stage(tm_core.load_project(root), "design"), "ds-req")
+        req1 = pane.split('id="ds-req-REQ-001"')[1]
+        assert "COND-003" in req1.split('id="ds-req-REQ-001-SPEC-001"')[0]
+        assert "COND-001" in req1.split('id="ds-req-REQ-001-SPEC-001"')[1].split("</details>")[0]
+        assert 'class="ng"' in pane.split('id="ds-req-REQ-001-SPEC-002"')[1].split("</summary>")[0]
+
+    def test_要求からたどるとテスト条件の下にテストケースとチャーターが出る(self, root):
+        pane = self._pane(tm_html.render_stage(tm_core.load_project(root), "design"), "ds-req")
+        cond1 = pane.split('id="ds-req-REQ-001-SPEC-001-COND-001"')[1].split("</details>")[0]
+        assert "HTC-001" in cond1 and "HTC-002" in cond1 and "テストケース 2件" in cond1.split("</summary>")[0]
+        cond3 = pane.split('id="ds-req-REQ-001-COND-003"')[1].split("</details>")[0]
+        assert "CH-001" in cond3
+
+    def test_開いた中の行は長い文を途中で切らない(self, root):
+        long_goal = "登録画面を不正な値で探索し入力チェックの漏れを見つける。" * 4  # 100文字を超える
+        path = root / "05_テスト設計/テスト設計.md"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "| CH-001 | 登録画面を不正な値で探索し入力チェックの漏れを見つける |", f"| CH-001 | {long_goal} |"), encoding="utf-8")
+        pane = self._pane(tm_html.render_stage(tm_core.load_project(root), "design"), "ds-cond")
+        cond3 = pane.split('id="ds-cond-COND-003"')[1].split("</details>")[0]
+        assert long_goal in cond3
+
+    def test_テストチャーターは開くと対象の領域と時間枠とテスト条件が出る(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "design")
+        section = html.split("<h2>テストチャーター</h2>")[1]
+        summary, kids = section.split('id="ch-CH-001"')[1].split("</details>")[0].split("</summary>")
+        assert "登録画面を不正な値で探索し入力チェックの漏れを見つける" in summary
+        assert "登録画面" in kids and "15" in kids and "COND-003" in kids
 
     def test_テスト設計のページでテスト条件ごとのカバレッジがわかる(self, root):
         append_to(root, "05_テスト設計/テスト設計.md", "")

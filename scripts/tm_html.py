@@ -298,7 +298,7 @@ details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 
 .tabs input:checked+label{background:var(--bg);font-weight:700}.tabs input:focus-visible+label{outline:2px solid var(--link)}
 .pane{display:none;border-top:1px solid var(--line)}
 #tab-req:checked~#req-coverage,#tab-risk:checked~#risk-coverage{display:block}
-#tab-an-req:checked~#an-req,#tab-an-risk:checked~#an-risk,#tab-an-ta:checked~#an-ta{display:block}
+.tabs>input:nth-of-type(1):checked~.pane:nth-of-type(1),.tabs>input:nth-of-type(2):checked~.pane:nth-of-type(2),.tabs>input:nth-of-type(3):checked~.pane:nth-of-type(3){display:block}
 .tree details{border:none;border-radius:0;margin:0;padding:0}
 .tree summary{font-weight:400;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:5px 8px;border-bottom:1px solid var(--line)}
 .tree summary:hover{background:var(--soft)}
@@ -359,8 +359,12 @@ def _card(v: View, record_id: str, title: str, badges: str = "", meta: str = "",
 
 
 def _leaf(v: View, record_id: str, memo: str = "") -> str:
+    """開いた中に並べる1行。文は途中で切らずに全部出す(表のIDのリンクは60文字で切るが、ここでは読みたいので)。"""
     memo_html = f' <span class="memo">{memo}</span>' if memo else ""
-    return f'<div class="leaf"><span class="kind">{TYPES[type_of(record_id)]}</span>{v.ref(record_id)}{memo_html}</div>'
+    record = v.project.records.get(record_id)
+    text = f" {_escape(record.title)}" if record else ""
+    return (f'<div class="leaf"><span class="kind">{TYPES[type_of(record_id)]}</span>{v.ref(record_id, False)}'
+            f'{text}{memo_html}</div>')
 
 
 def _other_fields(record, skip: set[str]) -> list[tuple[str, str]]:
@@ -484,6 +488,9 @@ def _not_covered_reason(v: View, record_id: str, excluded: dict[str, str], by: s
     if record_id in excluded:
         return f'<span class="muted">対象外: {v.text(excluded[record_id])}</span>'
     p = v.project
+    skip = p.records[record_id].fields.get("通さない理由", "").strip() if record_id in p.records else ""
+    if skip:  # テスト設計で、このカバレッジアイテムは通さないと決めたもの
+        return f'<span class="muted">通さない理由: {v.text(skip)}</span>'
     if type_of(record_id) == "REQ" and not any(type_of(c) == "SPEC" for c in p.children(record_id)):
         risks = sorted((r.id for r in p.of_type("RISK") if record_id in r.links | r.mentions), key=tm_core._id_key)
         tas = sorted({ta.id for ta in p.of_type("TA") if set(risks) & set(v.related(ta.id, "RISK"))}, key=tm_core._id_key)
@@ -510,22 +517,39 @@ def _stage_analysis(v: View) -> str:
     return "".join(parts)
 
 
+def _conds_of(p: Project, record_id: str) -> list[str]:
+    """そのIDに直接紐づくテスト条件。"""
+    return [c for c in p.children(record_id) if type_of(c) == "COND"]
+
+
+def _specs_of(p: Project, req_id: str) -> list[str]:
+    return [c for c in p.children(req_id) if type_of(c) == "SPEC"]
+
+
+def _req_conds(p: Project, req_id: str) -> set[str]:
+    """要求に直接と、その仕様を通して紐づくテスト条件。"""
+    return set(_conds_of(p, req_id)) | {c for s in _specs_of(p, req_id) for c in _conds_of(p, s)}
+
+
+def _tabs(name: str, panes: list[tuple[str, str, str]]) -> str:
+    """タブで切り替える一覧。panes は (pane の id, タブの名前, 中身)。最初のタブを開いておく。"""
+    inputs = "".join(
+        f'<input type="radio" name="{name}" id="tab-{pane_id}"{" checked" if n == 0 else ""}><label for="tab-{pane_id}">{label}</label>'
+        for n, (pane_id, label, _) in enumerate(panes))
+    return f'<div class="tabs">{inputs}' + "".join(
+        f'<div class="pane tree" id="{pane_id}">{body}</div>' for pane_id, _, body in panes) + "</div>"
+
+
 def _condition_coverage(v: View) -> str:
     """テスト条件が、要求・仕様・リスク・テストアプローチをどこまで押さえているか。割合の表と、たどれる一覧。"""
     p = v.project
     excluded = _excluded_in_plan(_plan_sections(p).get("対象外/制約", ""))
 
-    def conds(record_id: str) -> list[str]:  # そのIDに直接紐づくテスト条件
-        return [c for c in p.children(record_id) if type_of(c) == "COND"]
-
-    def specs(req_id: str) -> list[str]:
-        return [c for c in p.children(req_id) if type_of(c) == "SPEC"]
-
-    def req_conds(req_id: str) -> set[str]:  # 要求に直接と、その仕様を通して紐づくテスト条件
-        return set(conds(req_id)) | {c for s in specs(req_id) for c in conds(s)}
+    def conds(record_id: str) -> list[str]:
+        return _conds_of(p, record_id)
 
     covered = {
-        "REQ": {r for r in _ids(p, "REQ") if req_conds(r)},
+        "REQ": {r for r in _ids(p, "REQ") if _req_conds(p, r)},
         "SPEC": {s for s in _ids(p, "SPEC") if conds(s)},
         "RISK": {r for r in _ids(p, "RISK") if conds(r)},
         "TA": {t for t in _ids(p, "TA") if conds(t)},
@@ -537,16 +561,17 @@ def _condition_coverage(v: View) -> str:
     def cond_leaves(ids) -> str:
         return "".join(_leaf(v, c, _badge(p.records[c].fields.get("優先順位", ""))) for c in sorted(ids, key=tm_core._id_key))
 
-    def card(pane: str, record_id: str, title: str, counted, shown, children: str = "") -> str:
+    def card(pane: str, record_id: str, title: str, counted, shown, children: str = "", parent: str = "") -> str:
         """counted: 件数に数えるテスト条件。shown: この行の直下に出すテスト条件(仕様の下に出るものは children に入る)。"""
         n = len(set(counted))
         return _card(v, record_id, title, meta=f'<span class="ci">テスト条件 {n}件</span>',
                      sub_label="仕様とテスト条件" if children else "テスト条件",
-                     leaves=cond_leaves(shown) + children, card_id=f"{pane}-{record_id}", cls=color(record_id, n))
+                     leaves=cond_leaves(shown) + children,
+                     card_id=f"{pane}-{parent + '-' if parent else ''}{record_id}", cls=color(record_id, n))
 
     req_pane = "".join(
-        card("an-req", r.id, r.title, req_conds(r.id), conds(r.id), children="".join(
-            card("an-req", s, p.records[s].title, conds(s), conds(s)) for s in specs(r.id)))
+        card("an-req", r.id, r.title, _req_conds(p, r.id), conds(r.id), children="".join(
+            card("an-req", s, p.records[s].title, conds(s), conds(s), parent=r.id) for s in _specs_of(p, r.id)))
         for r in p.of_type("REQ"))
     risk_pane = "".join(card("an-risk", r, p.records[r].title, conds(r), conds(r)) for r in _risk_order(p))
     ta_pane = "".join(card("an-ta", t.id, t.fields.get("内容", "") or t.title, conds(t.id), conds(t.id))
@@ -558,13 +583,8 @@ def _condition_coverage(v: View) -> str:
         + _table(["", "押さえている数", "割合", "押さえていないものと理由"], _coverage_rows(v, covered, excluded, "テスト条件"))
         + "<p class=\"muted\">行をクリックすると、紐づくテスト条件が開く。左の線は、緑 = テスト条件がある、"
         "赤 = テスト条件が無い、灰色 = テスト計画で対象外にした。</p>"
-        '<div class="tabs">'
-        '<input type="radio" name="an-tab" id="tab-an-req" checked><label for="tab-an-req">要求からたどる</label>'
-        '<input type="radio" name="an-tab" id="tab-an-risk"><label for="tab-an-risk">リスクからたどる</label>'
-        '<input type="radio" name="an-tab" id="tab-an-ta"><label for="tab-an-ta">テストアプローチからたどる</label>'
-        f'<div class="pane tree" id="an-req">{req_pane}</div>'
-        f'<div class="pane tree" id="an-risk">{risk_pane}</div>'
-        f'<div class="pane tree" id="an-ta">{ta_pane}</div></div>'
+        + _tabs("an-tab", [("an-req", "要求からたどる", req_pane), ("an-risk", "リスクからたどる", risk_pane),
+                           ("an-ta", "テストアプローチからたどる", ta_pane)])
     )
 
 
@@ -573,6 +593,119 @@ def _htcs_of(project: Project, coverage_item: str) -> list[str]:
 
 
 def _stage_design(v: View) -> str:
+    # どこまで押さえたかを先に読めるよう、テストケースのカバレッジをいちばん上に出す
+    return _testcase_coverage(v) + _technique_table(v) + _charter_cards(v)
+
+
+def _testcase_coverage(v: View) -> str:
+    """テストケース(ハイレベル)とテストチャーターが、要求からカバレッジアイテムまでをどこまで押さえているか。"""
+    p = v.project
+    excluded = _excluded_in_plan(_plan_sections(p).get("対象外/制約", ""))
+
+    def kids(record_id: str, type_key: str) -> list[str]:
+        return [c for c in p.children(record_id) if type_of(c) == type_key]
+
+    def waiting(htc: str) -> bool:
+        return "回答待ち" in p.records[htc].fields.get("状態", "")
+
+    def tests_of(conds) -> tuple[set[str], set[str]]:
+        """テスト条件に紐づくテストケース(カバレッジアイテム経由も含む)とテストチャーター。"""
+        htcs, chs = set(), set()
+        for c in conds:
+            htcs |= set(kids(c, "HTC")) | {h for ci in kids(c, "CI") for h in kids(ci, "HTC")}
+            chs |= set(kids(c, "CH"))
+        return htcs, chs
+
+    def has_tests(conds) -> bool:
+        htcs, chs = tests_of(conds)
+        return bool(htcs or chs)
+
+    covered = {
+        "REQ": {r for r in _ids(p, "REQ") if has_tests(_req_conds(p, r))},
+        "SPEC": {s for s in _ids(p, "SPEC") if has_tests(_conds_of(p, s))},
+        "RISK": {r for r in _ids(p, "RISK") if has_tests(_conds_of(p, r))},
+        "COND": {c for c in _ids(p, "COND") if has_tests([c])},
+        "CI": {i for i in _ids(p, "CI") if kids(i, "HTC")},
+    }
+
+    def htc_leaf(h: str) -> str:
+        f = p.records[h].fields
+        state = f' {_badge(f.get("状態", ""))}' if waiting(h) else ""
+        return _leaf(v, h, f'{_escape(f.get("実施方法", ""))} {_badge(f.get("優先順位", ""))}{state}')
+
+    # テスト条件からたどる: テスト条件 → カバレッジアイテム → テストケース(探索的テストの条件はテストチャーター)
+    cond_cards = []
+    for cond in p.of_type("COND"):
+        items, chs = kids(cond.id, "CI"), kids(cond.id, "CH")
+        ci_cards, done, partial = [], 0, False
+        for ci in items:
+            htcs = kids(ci, "HTC")
+            reason = p.records[ci].fields.get("通さない理由", "").strip()
+            if htcs and not all(waiting(h) for h in htcs):
+                color, done = "ok", done + 1
+            elif htcs:
+                color, done, partial = "warn", done + 1, True
+            else:
+                color = "ex" if reason else "ng"
+            ci_cards.append(_card(v, ci, p.records[ci].title, notes=[("通さない理由", reason)], sub_label="テストケース",
+                                  leaves="".join(htc_leaf(h) for h in htcs), card_id=f"ds-cond-{ci}", cls=color))
+        loose = [h for h in kids(cond.id, "HTC") if not set(p.records[h].links) & set(items)]
+        if items:
+            color = "ok" if done == len(items) and not partial else ("warn" if done or chs else "ng")
+            meta = f'<span class="ci">カバレッジアイテム {done} / {len(items)}</span>'
+        else:
+            color = "ok" if chs or loose else "ng"
+            meta = ""
+        meta += f'<span class="ci">チャーター {len(chs)}件</span>' if chs else ""
+        cond_cards.append(_card(
+            v, cond.id, cond.title, meta=meta, sub_label="カバレッジアイテム・テストケース・チャーター",
+            leaves="".join(ci_cards) + "".join(htc_leaf(h) for h in loose) + "".join(_leaf(v, c) for c in chs),
+            card_id=f"ds-cond-{cond.id}", cls=color))
+
+    # 要求からたどる: 要求 → 仕様 → テスト条件 → テストケース・テストチャーター
+    def color_of(record_id: str, htcs, chs) -> str:
+        if htcs and all(waiting(h) for h in htcs) and not chs:
+            return "warn"
+        return "ok" if htcs or chs else ("ex" if record_id in excluded else "ng")
+
+    def tests_meta(htcs, chs) -> str:
+        return f'<span class="ci">テストケース {len(htcs)}件・チャーター {len(chs)}件</span>'
+
+    def cond_card(parent: str, c: str) -> str:
+        # 同じテスト条件が複数の要求・仕様の下に出るので、行のidに親のIDを入れる
+        htcs, chs = tests_of([c])
+        return _card(v, c, p.records[c].title, meta=tests_meta(htcs, chs), sub_label="テストケース・チャーター",
+                     leaves="".join(htc_leaf(h) for h in sorted(htcs, key=tm_core._id_key))
+                     + "".join(_leaf(v, ch) for ch in sorted(chs, key=tm_core._id_key)),
+                     card_id=f"ds-req-{parent}-{c}", cls=color_of(c, htcs, chs))
+
+    def req_card(record_id: str, conds, shown, children: str = "", parent: str = "") -> str:
+        htcs, chs = tests_of(conds)
+        path = f"{parent}-{record_id}" if parent else record_id  # 同じ仕様が複数の要求の下に出るので、idにたどった道を入れる
+        return _card(v, record_id, p.records[record_id].title, meta=tests_meta(htcs, chs),
+                     sub_label="仕様とテスト条件" if children else "テスト条件",
+                     leaves="".join(cond_card(path, c) for c in shown) + children,
+                     card_id=f"ds-req-{path}", cls=color_of(record_id, htcs, chs))
+
+    req_pane = "".join(
+        req_card(r.id, _req_conds(p, r.id), _conds_of(p, r.id), "".join(
+            req_card(s, _conds_of(p, s), _conds_of(p, s), parent=r.id) for s in _specs_of(p, r.id)))
+        for r in p.of_type("REQ"))
+    return (
+        "<h2>テストケースのカバレッジ</h2>"
+        "<p class=\"muted\">ハイレベルテストケースとテストチャーターが押さえているものを数える。要求・仕様・リスクは、"
+        "直接紐づくテスト条件にテストケースかテストチャーターがあれば押さえていると数える。"
+        "回答待ちのテストケースは、回答が来るまで実装も実行もされない(数には入れ、一覧で黄色にする)。</p>"
+        + _table(["", "押さえている数", "割合", "押さえていないものと理由"],
+                 _coverage_rows(v, covered, excluded, "テストケース・テストチャーター"))
+        + "<p class=\"muted\">行をクリックすると、下の成果物が開く。左の線は、緑 = 押さえている、"
+        "黄 = 一部だけ・回答待ちのテストケースだけ、赤 = 無い、灰色 = 通さない理由がある・テスト計画で対象外にした。</p>"
+        + _tabs("ds-tab", [("ds-cond", "テスト条件からたどる", "".join(cond_cards)),
+                           ("ds-req", "要求からたどる", req_pane)])
+    )
+
+
+def _technique_table(v: View) -> str:
     p = v.project
     rows, row_ids = [], []
     for condition in p.of_type("COND"):
@@ -591,11 +724,18 @@ def _stage_design(v: View) -> str:
         "「うち回答待ち」は、回答待ちのテストケースでしか通らないカバレッジアイテムの数。"
         "回答待ちのテストケースは回答が来るまで実装も実行もされないので、テストベースから決められるのに回答待ちにしていないかを確かめる。</p>"
         + _table(["テスト条件", "テスト技法", "カバレッジ基準", "通る数 / 出した数", "カバレッジ", "うち回答待ち", "通していないカバレッジアイテム"], rows, row_ids)
-        + "<h2>要求 → ハイレベルテストケース</h2>"
-        + v.chain(_ids(p, "HTC"), ["REQ", "SPEC", "RISK", "COND", "CI", "HTC"], ["実施方法", "優先順位", "状態"])
-        + "<h2>要求 → テストチャーター</h2>"
-        + v.chain(_ids(p, "CH"), ["REQ", "RISK", "COND", "CH"], ["対象の領域", "時間枠(分)", "してはならないこと"])
     )
+
+
+def _charter_cards(v: View) -> str:
+    p = v.project
+    cards = [
+        _card(v, ch.id, ch.fields.get("目的", "") or ch.title, meta=f'<span class="ci">{_escape(ch.fields.get("時間枠(分)", ""))}分</span>',
+              notes=_other_fields(ch, {"ID", "目的"}), sub_label="テスト条件",
+              leaves="".join(_leaf(v, c) for c in p.parents(ch.id)), card_id=f"ch-{ch.id}")
+        for ch in p.of_type("CH")]
+    return ("<h2>テストチャーター</h2><p class=\"muted\">行をクリックすると、対象の領域・時間枠・してはならないことと、"
+            "紐づくテスト条件が開く。</p>" + (f'<div class="tree">{"".join(cards)}</div>' if cards else "<p>ありません。</p>"))
 
 
 def _unimplemented_table(v: View, type_key: str) -> str:
