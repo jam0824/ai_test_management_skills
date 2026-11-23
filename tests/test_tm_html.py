@@ -466,10 +466,10 @@ class Test視認性アップ:
         assert 'class="ng"' in htc4.split("</summary>")[0] and "上限の入力欄がまだ無い" in htc4
         assert 'class="warn"' in self._pane(html, "im-cond").split('id="im-cond-COND-001"')[1].split("</summary>")[0]
 
-    def test_テスト実装のカバレッジは開く一覧を割合の表より上に出す(self, root):
+    def test_テスト実装のカバレッジは種類ごとの割合を開く一覧より上に出す(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "implementation")
         section = html.split("<h2>ローレベルテストケースのカバレッジ</h2>")[1].split("<h2>")[0]
-        assert section.index('<div class="tabs">') < section.index("<table>")
+        assert section.index("<table>") < section.index('<div class="tabs">')
 
     def test_一覧の件数の横に実装したハイレベルテストケースの割合を出す(self, root):
         self._add_htc4(root, "上限の入力欄がまだ無い")
