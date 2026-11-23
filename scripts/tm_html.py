@@ -301,8 +301,7 @@ details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 
 .note{background:var(--soft);border-left:4px solid var(--line);padding:6px 10px;margin:8px 0}
 .verdict{font-size:20px;font-weight:700;padding:8px 14px;border-radius:6px;margin:6px 0 8px;border:2px solid}
 .verdict.ok{color:var(--ok);border-color:var(--ok)}.verdict.ng{color:var(--ng);border-color:var(--ng)}
-.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:900px){.cols{grid-template-columns:1fr}}
-.panel{border:1px solid var(--line);border-radius:6px;padding:8px 12px}.panel h2{margin:0 0 6px;border:none;font-size:16px}
+.panel{border:1px solid var(--line);border-radius:6px;padding:8px 12px;margin:0 0 12px}.panel h2{margin:0 0 6px;border:none;font-size:16px}
 .panel table{margin:2px 0 6px}.panel h3{margin:8px 0 2px;font-size:14px}.panel ul{margin:2px 0;padding-left:20px}
 .numbers{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0;font-size:13px}.numbers b{font-size:16px}
 :root{--pass:#2da44e;--fail:#cf222e;--block:#bf8700;--notrun:#d0d7de;--unimpl:#8c959f;--explored:#8250df}
@@ -341,6 +340,18 @@ details.reasons{border:none;margin:0;padding:0}details.reasons summary{font-weig
 """
 
 
+# ページの中のリンク(#id)で、閉じているタブの中へ飛んだときに、そのタブを開く(入れ子のタブも外側から開く)
+_SHOW_HASH_SCRIPT = (
+    "<script>function tmShowHash(){var id=decodeURIComponent(location.hash.slice(1));"
+    "var e=id&&document.getElementById(id);if(!e)return;var p=e.closest('.pane');"
+    "while(p){var tabs=p.parentElement,kids=[].slice.call(tabs.children);"
+    "var panes=kids.filter(function(c){return c.classList.contains('pane')});"
+    "var inputs=kids.filter(function(c){return c.tagName==='INPUT'});"
+    "var i=panes.indexOf(p);if(inputs[i])inputs[i].checked=true;p=tabs.closest('.pane')}"
+    "e.scrollIntoView()}addEventListener('hashchange',tmShowHash);tmShowHash()</script>"
+)
+
+
 def _page(title: str, body: str, current: str = "", hrefs: dict[str, str] | None = None,
           index_label: str = "目次") -> str:
     hrefs = hrefs or _hrefs()
@@ -351,7 +362,7 @@ def _page(title: str, body: str, current: str = "", hrefs: dict[str, str] | None
         "<!doctype html><html lang=\"ja\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
         f"<title>{_escape(title)}</title><style>{CSS}</style></head><body>"
-        f"<nav>{''.join(links)}</nav><main><h1>{_escape(title)}</h1>{body}</main></body></html>"
+        f"<nav>{''.join(links)}</nav><main><h1>{_escape(title)}</h1>{body}</main>{_SHOW_HASH_SCRIPT}</body></html>"
     )
 
 
@@ -1044,32 +1055,6 @@ def _script_coverage(v: View) -> str:
     )
 
 
-def _bugs_table(v: View, bugs) -> str:
-    p = v.project
-
-    def affected(bug, type_key: str) -> str:
-        # 要求・リスクのカバレッジと同じ数え方にする(欠陥レポートに範囲が書かれていればそれに従う)
-        if tm_core.bug_scope(bug) == set():
-            return tm_core.OUT_OF_SCOPE
-        return v.refs([i for i in _ids(p, type_key) if tm_core.bug_affects(p, bug.id, i)], False)
-
-    rows = [[v.ref(b.id), _badge(b.fields.get("重要度", "")), _badge(b.fields.get("状態", "")),
-             v.text(b.fields.get("見つけた日時", "")), v.refs(p.parents(b.id), False),
-             affected(b, "REQ"), affected(b, "RISK")] for b in bugs]
-    return _table(["欠陥レポート", "重要度", "状態", "見つけた日時", "見つけたテスト", "影響する要求", "影響するリスク"], rows) if rows else "<p>ありません。</p>"
-
-
-def _sessions_table(v: View) -> str:
-    p = v.project
-    rows = []
-    for session in p.of_type("SES"):
-        bugs = [c for c in p.children(session.id) if type_of(c) == "BUG"]
-        rows.append([v.ref(session.id, False), v.refs(p.parents(session.id)), v.text(session.fields.get("開始日時", "")),
-                     v.text(session.fields.get("かかった時間(分)", "")), v.refs(bugs, False) if bugs else "なし",
-                     v.file_link(session.file, "セッションシートを開く")])
-    return _table(["セッション", "テストチャーター", "開始日時", "かかった時間(分)", "見つけた不具合", "セッションシート"], rows) if rows else "<p>ありません。</p>"
-
-
 _RESULT_COLOR = {"Pass": "ok", "Fail": "ng", "ブロック": "warn", "未実行": "ex"}
 
 
@@ -1255,8 +1240,14 @@ def _bug_cards(v: View) -> str:
 
 
 def _stage_execution(v: View) -> str:
+    docs = _questions(v, "execution") + v.documents(tm_core.STAGE_DIRS["execution"])
+    return _tabs("ex-tab", _execution_panes(v, tm_core.metrics(v.project)) + [("ex-docs", "質問・ドキュメント", docs)])
+
+
+def _execution_panes(v: View, m: dict, summary_extra: str = "") -> list[tuple[str, str, str]]:
+    """テスト実行の結果のタブ(まとめ・Fail・E2E・手動・探索的テスト・欠陥レポート)。テストレポートでも使う。
+    summary_extra: まとめのタブの最後に足すもの。"""
     p = v.project
-    m = tm_core.metrics(p)
     t = m["testcases"]
     method_rows = [[_escape(name)] + [str(counts[s]) for s in tm_core.RESULTS] for name, counts in m["by_method"].items()]
     # 探索的テストは Pass・Fail を付けないので、チャーター・セッション・時間・見つけた不具合で別に出す
@@ -1279,6 +1270,7 @@ def _stage_execution(v: View) -> str:
         + "<h3>テストケース</h3>" + _table(["実施方法"] + tm_core.RESULTS, method_rows)
         + "<h3>探索的テスト</h3>" + exploratory
         + _trace_tree(v, m)
+        + summary_extra
     )
     ltcs = p.of_type("LTC")
     e2e = [l for l in ltcs if "E2E" in l.fields.get("実施方法", "")]
@@ -1286,16 +1278,14 @@ def _stage_execution(v: View) -> str:
     final = p.final_results()
     failed = [l for l in ltcs if l.id in final and final[l.id].result == "Fail"]
     bugs = p.of_type("BUG")
-    docs = _questions(v, "execution") + v.documents(tm_core.STAGE_DIRS["execution"])
-    return _tabs("ex-tab", [
+    return [
         ("ex-sum", "まとめ", summary),
         ("ex-fail", f"Fail({len(failed)})", _result_cards(v, failed, prefix="ex-fail-ltc")),
         ("ex-e2e", f"E2E自動テスト({len(e2e)})", _result_cards(v, e2e)),
         ("ex-manual", f"手動テスト({len(manual)})", _result_cards(v, manual)),
         ("ex-ses", f"探索的テスト({len(p.of_type('SES'))})", _session_cards(v)),
         ("ex-bug", f"欠陥レポート({len(bugs)})", _bug_cards(v)),
-        ("ex-docs", "質問・ドキュメント", docs),
-    ])
+    ]
 
 
 _STAGE_BODIES = {
@@ -1470,7 +1460,7 @@ def _first_view(v: View, m: dict, judgments: dict[str, tuple[str, str]], lacking
 
     problems = (
         "<div class=\"panel\"><h2>問題点は何か</h2>"
-        f"<h3>修正されていない不具合: {len(bugs)} 件</h3>" + _more(bugs, 4, "bugs")
+        f"<h3>修正されていない不具合: {len(bugs)} 件</h3>" + _more(bugs, 4, "ex-bug")
         + gap("カバーできていない要求", untested_req, partial_req, "req-coverage")
         + gap("カバーできていない高いリスク", untested_risk, partial_risk, "risk-coverage")
         + f"<p class=\"numbers\"><span><a href=\"#questions\">未回答の質問</a> <b>{len(m['open_questions'])}</b> 件</span>"
@@ -1478,7 +1468,8 @@ def _first_view(v: View, m: dict, judgments: dict[str, tuple[str, str]], lacking
         f"<span><a href=\"#not-run\">ブロック</a> <b>{t['ブロック']}</b> 件</span>"
         f"<span><a href=\"#not-run\">未実装</a> <b>{t['未実装']}</b> 件</span></p></div>"
     )
-    return f'<section id="first-view">{banner}<div class="cols">{done}{problems}</div></section>'
+    # 1列で、帯 → 問題点 → やるべきことをやったか(終了条件ごとの判定)の順に並べる。問題点を先に読めるようにする
+    return f'<section id="first-view">{banner}{problems}{done}</section>'
 
 
 # ---- テストレポート: 開いてたどれるトレーサビリティ ----
@@ -1620,10 +1611,6 @@ def _trace_tree(v: View, m: dict) -> str:
         '<input type="radio" name="trace-tab" id="tab-risk"><label for="tab-risk">リスクからたどる</label>'
         f'<div class="pane tree" id="req-coverage">{req}</div>'
         f'<div class="pane tree" id="risk-coverage">{risk}</div></div>'
-        # ファーストビューからリスクへのリンクで来たときは、リスクのタブを開く(スクリプトが無くても要求のタブは見える)
-        "<script>function tmTab(){if(location.hash==='#risk-coverage'){document.getElementById('tab-risk').checked=true}"
-        "else if(location.hash==='#req-coverage'){document.getElementById('tab-req').checked=true}}"
-        "tmTab();addEventListener('hashchange',tmTab)</script>"
     )
 
 
@@ -1683,7 +1670,6 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
     t = m["testcases"]
     errors, warnings = tm_core.check(project)
 
-    method_rows = [[_escape(name)] + [str(counts[s]) for s in tm_core.RESULTS] for name, counts in m["by_method"].items()]
     not_run_rows = [[v.ref(r["id"]), _badge(r["status"]), v.text(r["reason"])] for r in m["not_run"]]
     not_run_rows += [[v.ref(r["id"]), _badge("未実装"), v.text(r["reason"])] for r in m["unimplemented"]]
     question_rows = [[v.ref(q["id"], False), _escape(q["stage"]), v.text(q["question"])] for q in m["open_questions"]]
@@ -1695,40 +1681,41 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
         f"<h2>{_escape(title)}</h2>{md_to_html(body, v.known, v.id_href) if body.strip() else empty}"
         for title, body in sections.items() if title not in ("終了条件の判定", "足りないこと")
     )
-    details = (
-        '<section id="details">'
-        f'<div class="note">作成日時: {timestamp[:4]}-{timestamp[4:6]}-{timestamp[6:8]} {timestamp[8:10]}:{timestamp[10:12]}。'
+    # 判定: 最初に開くタブ。やるべきことをやったかと、問題点
+    judge = (
+        _first_view(v, m, judgments, sections.get("足りないこと", ""))
+        + f'<div class="note" id="details">作成日時: {timestamp[:4]}-{timestamp[4:6]}-{timestamp[6:8]} {timestamp[8:10]}:{timestamp[10:12]}。'
         f'使ったテストラン: {_escape(", ".join(m["runs"]) or "なし")}。'
         "数字はすべて、このレポートを作った時点の成果物(snapshot フォルダ)から数え直したもの。"
-        "同じテストケースを何回か実行したときは、いちばん新しいテストランの結果を数えている。</div>"
-        + _trace_tree(v, m)
-        + '<h2 id="spec-coverage">仕様のカバレッジ</h2><p class="muted">仕様ごとに、その仕様を直接確かめるテスト条件のテストを数える。</p>'
+        "同じテストケースを何回か実行したときは、いちばん新しいテストランの結果を数えている。"
+        f"実行率 {t['execution_rate']}% = 実行した {t['executed']} 件(Pass + Fail) ÷ ローレベルテストケース {t['total']} 件"
+        f"(未実装の {t['未実装']} 件は分母に入っていない)。</div>"
+    )
+    # まとめのタブには、テスト実行のページの中身に加えて、仕様のカバレッジとチャーターの時間を出す
+    summary_extra = (
+        '<h2 id="spec-coverage">仕様のカバレッジ</h2><p class="muted">仕様ごとに、その仕様を直接確かめるテスト条件のテストを数える。</p>'
         + _coverage_table(v, m["specs"], "仕様")
         + '<h2 id="charter-time">テストチャーターごとのセッションの時間</h2>'
         "<p class=\"muted\">セッションシートの「かかった時間(分)」(中断を除いた時間)の合計を、テストチャーターの時間枠と比べる。</p>"
         + _charter_time_table(v, m["charters"])
-        + "<h2>テスト結果の内訳</h2>"
-        f"<p>実行率 {t['execution_rate']}% = 実行した {t['executed']} 件(Pass + Fail) ÷ ローレベルテストケース {t['total']} 件。"
-        f"未実装の {t['未実装']} 件は分母に入っていない。</p>"
-        + _table(["実施方法"] + tm_core.RESULTS, method_rows)
-        + '<h2 id="bugs">修正されていない不具合</h2>'
-        + _bugs_table(v, [project.records[b["id"]] for b in m["open_bugs"]])
+    )
+    # 判定の記録: 判定.md に書いたこと、実行していないもの、未回答の質問、戻し記録、トレーサビリティの確認
+    record = (
+        written
         + '<h2 id="not-run">実行していないテストケース(未実行・ブロック・未実装)</h2>'
         + (_table(["テストケース", "状態", "理由"], not_run_rows) if not_run_rows else "<p>ありません。</p>")
         + '<h2 id="questions">未回答の質問</h2>'
         + (_table(["ID", "工程", "質問"], question_rows) if question_rows else "<p>ありません。</p>")
-        + written
         + "<h2>「後からわかったことの戻し方」の記録</h2>" + rollback_html
-        + "<h2>探索的テストのセッション</h2>" + _sessions_table(v)
         + "<h2>トレーサビリティ</h2>"
         f"<p>確認の結果: エラー {len(errors)} 件、警告 {len(warnings)} 件。"
         f'<a href="{IDS_PAGE}">ID索引</a>から、どの成果物でも上流(要求の側)と下流(テスト結果・証跡・欠陥レポートの側)の両方にたどれる。'
         "工程ごとの追跡表は上のメニューから開ける。</p>"
         + ("<ul>" + "".join(f"<li class=\"missing\">{_escape(e)}</li>" for e in errors) + "</ul>" if errors else "")
-        + "</section>"
     )
-    first = _first_view(v, m, judgments, sections.get("足りないこと", ""))
-    page = _page("テストレポート", first + details, current="index", hrefs=hrefs, index_label="テストレポート")
+    body = _tabs("rp-tab", [("rp-judge", "判定", judge)] + _execution_panes(v, m, summary_extra)
+                 + [("rp-record", "判定の記録", record)])
+    page = _page("テストレポート", body, current="index", hrefs=hrefs, index_label="テストレポート")
     (out / REPORT_PAGE).write_text(page, encoding="utf-8")
     (out / IDS_PAGE).write_text(
         render_ids(project, file_base="snapshot/", hrefs=hrefs, index_label="テストレポート"), encoding="utf-8")

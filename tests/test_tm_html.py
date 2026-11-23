@@ -867,6 +867,50 @@ class Testテストレポート:
         assert "境界値のテスト条件を最初から厚くする" in html
         assert "RB-001" in html
 
+    # ---- テストレポートのタブ ----
+
+    @staticmethod
+    def _report_pane(html: str, pane_id: str, next_id: str | None) -> str:
+        part = html.split(f'<div class="pane tree" id="{pane_id}">')[1]
+        return part.split(f'<div class="pane tree" id="{next_id}">')[0] if next_id else part
+
+    def test_レポートは判定と実行のタブと判定の記録のタブで切り替える(self, root):
+        html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
+        main = html.split("<main>")[1]
+        labels = [l.split("</label>")[0].split('">')[1] for l in main.split('<label for="tab-rp-')[1:]]
+        labels += [l.split("</label>")[0].split('">')[1] for l in main.split('<label for="tab-ex-')[1:]]
+        order = sorted(labels, key=lambda name: main.index(f'">{name}</label>'))
+        assert [n.split("(")[0] for n in order] == [
+            "判定", "まとめ", "Fail", "E2E自動テスト", "手動テスト", "探索的テスト", "欠陥レポート", "判定の記録"]
+        assert '<input type="radio" name="rp-tab" id="tab-rp-judge" checked>' in main  # 最初は判定を開く
+        assert "質問・ドキュメント" not in main
+
+    def test_判定のタブは帯のあとに問題点とやるべきことを1列で並べる(self, root):
+        html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
+        first = html.split('id="first-view"')[1].split('id="details"')[0]
+        assert 'class="cols"' not in first
+        assert first.index("満たしていない終了条件が 1 件") < first.index("問題点は何か") < first.index("やるべきことをやったか")
+
+    def test_判定のタブにファーストビューを出す(self, root):
+        html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
+        judge = self._report_pane(html, "rp-judge", "ex-sum")
+        assert 'id="first-view"' in judge and "満たしていない終了条件が 1 件" in judge
+
+    def test_まとめのタブに仕様のカバレッジとテストチャーターの時間も出す(self, root):
+        html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
+        summary = self._report_pane(html, "ex-sum", "ex-fail")
+        assert 'id="cov-SPEC-002"' in summary and 'id="time-CH-001"' in summary and 'id="tree-REQ-001"' in summary
+
+    def test_判定の記録のタブに書いた文章と実行していないものと質問と戻し記録を出す(self, root):
+        html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
+        record = self._report_pane(html, "rp-record", None)
+        assert "境界値のテスト条件を最初から厚くする" in record and "RB-001" in record
+        assert 'id="not-run"' in record and 'id="questions"' in record
+
+    def test_ページの中のリンクで別のタブの中へ飛ぶとそのタブを開く(self, root):
+        html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
+        assert "function tmShowHash" in html and "hashchange" in html
+
     def test_作った時点の成果物を一緒に保存する(self, root):
         out = self._build(root)
         assert (out / "snapshot/01_要求仕様/要求.md").exists()
