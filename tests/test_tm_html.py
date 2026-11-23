@@ -227,6 +227,13 @@ class Test視認性アップ:
             < main.index("<h2>この工程で出た質問</h2>")
         assert main.split("<h2>")[1].startswith("テスト条件のカバレッジ")
 
+    def test_2つのフィーチャーに紐づくテスト条件の行は最初の行だけにidを付ける(self, root):
+        replace_in(root, "04_テスト分析/テスト分析.md", "| COND-001 | 年齢の有効範囲 | FT-001 |", "| COND-001 | 年齢の有効範囲 | FT-001, FT-002 |")
+        html = tm_html.render_stage(tm_core.load_project(root), "analysis")
+        features = html.split("<h2>フィーチャーごとのテスト条件</h2>")[1].split("<h2>")[0]
+        assert features.count("年齢の有効範囲") == 2  # どちらのフィーチャーの表にも行は出す
+        assert html.count('id="row-COND-001"') == 1
+
     def test_テスト条件が要求と仕様とリスクとテストアプローチを押さえている割合を出す(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "analysis")
         table = html.split("<h2>テスト条件のカバレッジ</h2>")[1].split("</table>")[0]

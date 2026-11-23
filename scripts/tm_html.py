@@ -202,7 +202,7 @@ def _table(headers: list[str], rows: list[list[str]], row_ids: list[str] | None 
     head = "".join(f"<th>{h}</th>" for h in headers)
     body = []
     for n, row in enumerate(rows):
-        attr = f' id="{row_ids[n]}"' if row_ids else ""
+        attr = f' id="{row_ids[n]}"' if row_ids and row_ids[n] else ""
         body.append(f"<tr{attr}>" + "".join(f"<td>{c}</td>" for c in row) + "</tr>")
     cls_attr = f' class="{cls}"' if cls else ""
     return f"<div class=\"scroll\"><table{cls_attr}><thead><tr>{head}</tr></thead><tbody>{''.join(body)}</tbody></table></div>"
@@ -247,8 +247,12 @@ class View:
         up = [a for a in self.project.ancestors(record_id) if type_of(a) == type_key]
         return up or [d for d in self.project.descendants(record_id) if type_of(d) == type_key]
 
-    def chain(self, focus_ids: list[str], columns: list[str], extra: list[str] = (), row_prefix: str = "row-") -> str:
-        """1行に1件、上流から順に並べた追跡表。extra は、その成果物自身の項目。"""
+    def chain(self, focus_ids: list[str], columns: list[str], extra: list[str] = (), row_prefix: str = "row-",
+              no_id: set[str] = frozenset()) -> str:
+        """1行に1件、上流から順に並べた追跡表。extra は、その成果物自身の項目。
+
+        no_id は、同じページのほかの表で先に出した行。idが重ならないよう、その行にはidを付けない。
+        """
         headers = [TYPES[c] for c in columns] + list(extra)
         rows = []
         for record_id in focus_ids:
@@ -258,7 +262,7 @@ class View:
                 value = record.fields.get(name, "")
                 cells.append(_badge(value) if name in ("区分", "結果") else self.text(value))
             rows.append(cells)
-        return _table(headers, rows, [row_prefix + i for i in focus_ids])
+        return _table(headers, rows, ["" if i in no_id else row_prefix + i for i in focus_ids])
 
     def file_link(self, relative: str, label: str | None = None) -> str:
         return f'<a href="{self.file_base}{html_lib.escape(relative)}">{_escape(label or relative)}</a>'
@@ -546,10 +550,12 @@ def _stage_analysis(v: View) -> str:
     grouped: set[str] = set()
     for feature in p.of_type("FT"):
         conditions = [c for c in p.children(feature.id) if type_of(c) == "COND"]
-        grouped |= set(conditions)
         parts.append(f"<h3>{v.ref(feature.id)}</h3><p class=\"muted\">仕様: {v.refs(v.related(feature.id, 'SPEC'), False)}"
                      f" / 要求: {v.refs(v.related(feature.id, 'REQ'), False)}</p>")
-        parts.append(v.chain(conditions, ["COND", "TA", "RISK"], ["要求・仕様ID", "優先順位", "テストオラクル", "段階"]))
+        # 2つ以上のフィーチャーに紐づくテスト条件は、どの表にも行を出し、idは最初の行だけに付ける
+        parts.append(v.chain(conditions, ["COND", "TA", "RISK"], ["要求・仕様ID", "優先順位", "テストオラクル", "段階"],
+                             no_id=set(grouped)))
+        grouped |= set(conditions)
     rest = [c for c in _ids(p, "COND") if c not in grouped]
     if rest:
         parts.append("<h3 class=\"missing\">フィーチャーに紐づいていないテスト条件</h3>" + v.chain(rest, ["COND", "TA", "RISK"]))
