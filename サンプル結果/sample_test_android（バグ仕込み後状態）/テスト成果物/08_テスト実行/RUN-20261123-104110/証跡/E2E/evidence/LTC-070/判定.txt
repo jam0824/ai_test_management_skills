@@ -1,0 +1,17 @@
+LTC-070 給与変更設定の部品6つを resource-id で特定できる
+結果: Fail
+スクリプトが途中で止まった: OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+ERR スクリプトが途中で止まった: OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 213, in run_cases
+    c.func(ctx)
+  File "D:\codes\sample_test_android\e2e\tests\test_inputs_and_ui.py", line 194, in ltc070
+    t.app.restart()
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 167, in restart
+    return self.wait_for(lambda s: s.has("startAge") or s.has("screen"), "起動して入力欄が出る", 30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 176, in wait_for
+    raise OperationError(f"待っても画面が変わらない: {what}")
+framework.screen.OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+

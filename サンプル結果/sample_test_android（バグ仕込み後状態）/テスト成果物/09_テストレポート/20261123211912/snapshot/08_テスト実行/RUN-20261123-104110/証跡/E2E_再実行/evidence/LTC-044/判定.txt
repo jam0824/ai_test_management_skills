@@ -1,0 +1,4 @@
+LTC-044 給与変更の1件に年齢と年収を入力できる
+結果: Pass
+OK  salaryChangeAge の値が 35(画面 '35')
+OK  salaryChangeSalary の値が 4000000(画面 '4000000')

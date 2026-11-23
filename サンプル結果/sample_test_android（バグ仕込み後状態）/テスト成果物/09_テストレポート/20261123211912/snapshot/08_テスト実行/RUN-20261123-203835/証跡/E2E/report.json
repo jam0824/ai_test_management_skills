@@ -1,0 +1,617 @@
+{
+  "config": {
+    "rootDir": "D:\\codes\\sample_test_android\\e2e",
+    "projects": [
+      {
+        "name": "",
+        "id": "emulator-5554"
+      }
+    ],
+    "metadata": {
+      "tool": "e2e/run_e2e.py (Python + adb)",
+      "device": "emulator-5554"
+    }
+  },
+  "suites": [
+    {
+      "title": "tests/test_salary.py",
+      "file": "tests/test_salary.py",
+      "line": 0,
+      "column": 0,
+      "specs": [
+        {
+          "title": "LTC-027 年収を増やしても手取りの割合が上がらない",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 0,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "emulator-5554",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 594372.4172115326,
+                  "startTime": "2026-11-23T20:51:31.930819+09:00",
+                  "retry": 0,
+                  "stdout": [],
+                  "stderr": [],
+                  "attachments": [
+                    {
+                      "name": "end.png",
+                      "contentType": "image/png",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\end.png"
+                    },
+                    {
+                      "name": "end_dump.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\end_dump.xml"
+                    },
+                    {
+                      "name": "run10_年収1000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run10_年収1000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run10_年収1000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run10_年収1000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run10_年収1000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run10_年収1000000_lines.txt"
+                    },
+                    {
+                      "name": "run11_年収1500000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run11_年収1500000_dump_first.xml"
+                    },
+                    {
+                      "name": "run11_年収1500000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run11_年収1500000_dump_last.xml"
+                    },
+                    {
+                      "name": "run11_年収1500000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run11_年収1500000_lines.txt"
+                    },
+                    {
+                      "name": "run12_年収2000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run12_年収2000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run12_年収2000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run12_年収2000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run12_年収2000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run12_年収2000000_lines.txt"
+                    },
+                    {
+                      "name": "run13_年収3000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run13_年収3000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run13_年収3000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run13_年収3000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run13_年収3000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run13_年収3000000_lines.txt"
+                    },
+                    {
+                      "name": "run14_年収4000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run14_年収4000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run14_年収4000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run14_年収4000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run14_年収4000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run14_年収4000000_lines.txt"
+                    },
+                    {
+                      "name": "run15_年収5000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run15_年収5000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run15_年収5000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run15_年収5000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run15_年収5000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run15_年収5000000_lines.txt"
+                    },
+                    {
+                      "name": "run16_年収6000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run16_年収6000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run16_年収6000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run16_年収6000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run16_年収6000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run16_年収6000000_lines.txt"
+                    },
+                    {
+                      "name": "run17_年収7000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run17_年収7000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run17_年収7000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run17_年収7000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run17_年収7000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run17_年収7000000_lines.txt"
+                    },
+                    {
+                      "name": "run18_年収8000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run18_年収8000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run18_年収8000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run18_年収8000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run18_年収8000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run18_年収8000000_lines.txt"
+                    },
+                    {
+                      "name": "run19_年収10000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run19_年収10000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run19_年収10000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run19_年収10000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run19_年収10000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run19_年収10000000_lines.txt"
+                    },
+                    {
+                      "name": "run1_年収1_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run1_年収1_dump_first.xml"
+                    },
+                    {
+                      "name": "run1_年収1_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run1_年収1_dump_last.xml"
+                    },
+                    {
+                      "name": "run1_年収1_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run1_年収1_lines.txt"
+                    },
+                    {
+                      "name": "run20_年収12000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run20_年収12000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run20_年収12000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run20_年収12000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run20_年収12000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run20_年収12000000_lines.txt"
+                    },
+                    {
+                      "name": "run21_年収15000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run21_年収15000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run21_年収15000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run21_年収15000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run21_年収15000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run21_年収15000000_lines.txt"
+                    },
+                    {
+                      "name": "run22_年収20000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run22_年収20000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run22_年収20000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run22_年収20000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run22_年収20000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run22_年収20000000_lines.txt"
+                    },
+                    {
+                      "name": "run23_年収30000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run23_年収30000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run23_年収30000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run23_年収30000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run23_年収30000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run23_年収30000000_lines.txt"
+                    },
+                    {
+                      "name": "run24_年収50000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run24_年収50000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run24_年収50000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run24_年収50000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run24_年収50000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run24_年収50000000_lines.txt"
+                    },
+                    {
+                      "name": "run25_年収100000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run25_年収100000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run25_年収100000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run25_年収100000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run25_年収100000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run25_年収100000000_lines.txt"
+                    },
+                    {
+                      "name": "run2_年収100000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run2_年収100000_dump_first.xml"
+                    },
+                    {
+                      "name": "run2_年収100000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run2_年収100000_dump_last.xml"
+                    },
+                    {
+                      "name": "run2_年収100000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run2_年収100000_lines.txt"
+                    },
+                    {
+                      "name": "run3_年収300000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run3_年収300000_dump_first.xml"
+                    },
+                    {
+                      "name": "run3_年収300000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run3_年収300000_dump_last.xml"
+                    },
+                    {
+                      "name": "run3_年収300000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run3_年収300000_lines.txt"
+                    },
+                    {
+                      "name": "run4_年収470000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run4_年収470000_dump_first.xml"
+                    },
+                    {
+                      "name": "run4_年収470000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run4_年収470000_dump_last.xml"
+                    },
+                    {
+                      "name": "run4_年収470000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run4_年収470000_lines.txt"
+                    },
+                    {
+                      "name": "run5_年収500000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run5_年収500000_dump_first.xml"
+                    },
+                    {
+                      "name": "run5_年収500000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run5_年収500000_dump_last.xml"
+                    },
+                    {
+                      "name": "run5_年収500000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run5_年収500000_lines.txt"
+                    },
+                    {
+                      "name": "run6_年収600000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run6_年収600000_dump_first.xml"
+                    },
+                    {
+                      "name": "run6_年収600000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run6_年収600000_dump_last.xml"
+                    },
+                    {
+                      "name": "run6_年収600000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run6_年収600000_lines.txt"
+                    },
+                    {
+                      "name": "run7_年収700000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run7_年収700000_dump_first.xml"
+                    },
+                    {
+                      "name": "run7_年収700000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run7_年収700000_dump_last.xml"
+                    },
+                    {
+                      "name": "run7_年収700000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run7_年収700000_lines.txt"
+                    },
+                    {
+                      "name": "run8_年収800000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run8_年収800000_dump_first.xml"
+                    },
+                    {
+                      "name": "run8_年収800000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run8_年収800000_dump_last.xml"
+                    },
+                    {
+                      "name": "run8_年収800000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run8_年収800000_lines.txt"
+                    },
+                    {
+                      "name": "run9_年収900000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run9_年収900000_dump_first.xml"
+                    },
+                    {
+                      "name": "run9_年収900000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run9_年収900000_dump_last.xml"
+                    },
+                    {
+                      "name": "run9_年収900000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run9_年収900000_lines.txt"
+                    },
+                    {
+                      "name": "判定.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\判定.txt"
+                    }
+                  ],
+                  "errors": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "LTC-027",
+          "file": "tests/test_salary.py",
+          "line": 50,
+          "column": 0
+        }
+      ],
+      "suites": []
+    },
+    {
+      "title": "tests/test_assets.py",
+      "file": "tests/test_assets.py",
+      "line": 0,
+      "column": 0,
+      "specs": [
+        {
+          "title": "LTC-037 投資が残っているあいだは、どの期間でも現金が0円未満にならない",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 0,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "emulator-5554",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 120673.58946800232,
+                  "startTime": "2026-11-23T21:01:28.769634+09:00",
+                  "retry": 0,
+                  "stdout": [],
+                  "stderr": [],
+                  "attachments": [
+                    {
+                      "name": "end.png",
+                      "contentType": "image/png",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-037\\end.png"
+                    },
+                    {
+                      "name": "end_dump.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-037\\end_dump.xml"
+                    },
+                    {
+                      "name": "run1_現金不足_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-037\\run1_現金不足_dump_first.xml"
+                    },
+                    {
+                      "name": "run1_現金不足_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-037\\run1_現金不足_dump_last.xml"
+                    },
+                    {
+                      "name": "run1_現金不足_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-037\\run1_現金不足_lines.txt"
+                    },
+                    {
+                      "name": "判定.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-037\\判定.txt"
+                    }
+                  ],
+                  "errors": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "LTC-037",
+          "file": "tests/test_assets.py",
+          "line": 71,
+          "column": 0
+        }
+      ],
+      "suites": []
+    },
+    {
+      "title": "tests/test_rotation.py",
+      "file": "tests/test_rotation.py",
+      "line": 0,
+      "column": 0,
+      "specs": [
+        {
+          "title": "LTC-065 回転したあとに開始すると、回転前に入れた条件で計算される",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 0,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "emulator-5554",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 740172.7259159088,
+                  "startTime": "2026-11-23T21:03:31.919044+09:00",
+                  "retry": 0,
+                  "stdout": [],
+                  "stderr": [],
+                  "attachments": [
+                    {
+                      "name": "end.png",
+                      "contentType": "image/png",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-065\\end.png"
+                    },
+                    {
+                      "name": "end_dump.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-065\\end_dump.xml"
+                    },
+                    {
+                      "name": "run1_縦向きのまま開始_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-065\\run1_縦向きのまま開始_dump_first.xml"
+                    },
+                    {
+                      "name": "run1_縦向きのまま開始_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-065\\run1_縦向きのまま開始_dump_last.xml"
+                    },
+                    {
+                      "name": "run1_縦向きのまま開始_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-065\\run1_縦向きのまま開始_lines.txt"
+                    },
+                    {
+                      "name": "判定.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-065\\判定.txt"
+                    },
+                    {
+                      "name": "横向きで開始_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-065\\横向きで開始_dump_first.xml"
+                    },
+                    {
+                      "name": "横向きで開始_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-065\\横向きで開始_dump_last.xml"
+                    },
+                    {
+                      "name": "横向きで開始_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-065\\横向きで開始_lines.txt"
+                    }
+                  ],
+                  "errors": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "LTC-065",
+          "file": "tests/test_rotation.py",
+          "line": 177,
+          "column": 0
+        }
+      ],
+      "suites": []
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-23T20:51:31.930819+09:00",
+    "duration": 1462723.703,
+    "expected": 3,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  }
+}

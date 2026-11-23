@@ -1,0 +1,41 @@
+LTC-050 2件のうち1件を削除した設定が計算に残らない
+結果: Fail
+スクリプトが途中で止まった: DeviceError: adb がタイムアウトした: shell am start -W -n jp.sample.retirementsimulator/.MainActivity
+[実行 run1_2件から2行目を削除] 入力 {"startAge": 55, "retirementAge": 65, "pensionStartAge": 65, "eventProb": 0} 給与変更 [{'年齢': 58, '年収': 5000000}, {'年齢': 61, '年収': 6000000}] 削除 [2]
+ERR スクリプトが途中で止まった: DeviceError: adb がタイムアウトした: shell am start -W -n jp.sample.retirementsimulator/.MainActivity
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 44, in run
+    proc = subprocess.run(cmd, capture_output=True, timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aku_s\AppData\Local\Programs\Python\Python311\Lib\subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aku_s\AppData\Local\Programs\Python\Python311\Lib\subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aku_s\AppData\Local\Programs\Python\Python311\Lib\subprocess.py", line 1630, in _communicate
+    raise TimeoutExpired(self.args, orig_timeout)
+subprocess.TimeoutExpired: Command '['C:\\Users\\aku_s\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb.EXE', '-s', 'emulator-5554', 'shell', 'am start -W -n jp.sample.retirementsimulator/.MainActivity']' timed out after 90 seconds
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 213, in run_cases
+    c.func(ctx)
+  File "D:\codes\sample_test_android\e2e\tests\test_salary_changes.py", line 52, in ltc050
+    res = t.simulate(d["共通"], changes=case2["追加"], delete_rows=[case2["削除する行"]], label="2件から2行目を削除")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 146, in simulate
+    self.app.restart()
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 166, in restart
+    self.d.start_app()
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 123, in start_app
+    self.shell(f"am start -W -n {ACTIVITY}")
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 53, in shell
+    return self.run("shell", command, timeout=timeout, check=check).decode("utf-8", "replace")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 46, in run
+    raise DeviceError(f"adb がタイムアウトした: {' '.join(args)}") from exc
+framework.device.DeviceError: adb がタイムアウトした: shell am start -W -n jp.sample.retirementsimulator/.MainActivity
+

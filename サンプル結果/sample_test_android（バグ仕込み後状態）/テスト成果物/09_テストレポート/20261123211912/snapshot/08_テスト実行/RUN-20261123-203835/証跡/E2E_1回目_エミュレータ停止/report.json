@@ -1,0 +1,341 @@
+{
+  "config": {
+    "rootDir": "D:\\codes\\sample_test_android\\e2e",
+    "projects": [
+      {
+        "name": "",
+        "id": "emulator-5554"
+      }
+    ],
+    "metadata": {
+      "tool": "e2e/run_e2e.py (Python + adb)",
+      "device": "emulator-5554"
+    }
+  },
+  "suites": [
+    {
+      "title": "tests/test_salary.py",
+      "file": "tests/test_salary.py",
+      "line": 0,
+      "column": 0,
+      "specs": [
+        {
+          "title": "LTC-027 年収を増やしても手取りの割合が上がらない",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 0,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "emulator-5554",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 289109.3318462372,
+                  "startTime": "2026-11-23T20:38:51.740325+09:00",
+                  "retry": 0,
+                  "stdout": [],
+                  "stderr": [],
+                  "attachments": [
+                    {
+                      "name": "run10_年収1000000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run10_年収1000000_dump_first.xml"
+                    },
+                    {
+                      "name": "run10_年収1000000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run10_年収1000000_dump_last.xml"
+                    },
+                    {
+                      "name": "run10_年収1000000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run10_年収1000000_lines.txt"
+                    },
+                    {
+                      "name": "run1_年収1_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run1_年収1_dump_first.xml"
+                    },
+                    {
+                      "name": "run1_年収1_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run1_年収1_dump_last.xml"
+                    },
+                    {
+                      "name": "run1_年収1_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run1_年収1_lines.txt"
+                    },
+                    {
+                      "name": "run2_年収100000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run2_年収100000_dump_first.xml"
+                    },
+                    {
+                      "name": "run2_年収100000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run2_年収100000_dump_last.xml"
+                    },
+                    {
+                      "name": "run2_年収100000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run2_年収100000_lines.txt"
+                    },
+                    {
+                      "name": "run3_年収300000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run3_年収300000_dump_first.xml"
+                    },
+                    {
+                      "name": "run3_年収300000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run3_年収300000_dump_last.xml"
+                    },
+                    {
+                      "name": "run3_年収300000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run3_年収300000_lines.txt"
+                    },
+                    {
+                      "name": "run4_年収470000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run4_年収470000_dump_first.xml"
+                    },
+                    {
+                      "name": "run4_年収470000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run4_年収470000_dump_last.xml"
+                    },
+                    {
+                      "name": "run4_年収470000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run4_年収470000_lines.txt"
+                    },
+                    {
+                      "name": "run5_年収500000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run5_年収500000_dump_first.xml"
+                    },
+                    {
+                      "name": "run5_年収500000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run5_年収500000_dump_last.xml"
+                    },
+                    {
+                      "name": "run5_年収500000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run5_年収500000_lines.txt"
+                    },
+                    {
+                      "name": "run6_年収600000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run6_年収600000_dump_first.xml"
+                    },
+                    {
+                      "name": "run6_年収600000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run6_年収600000_dump_last.xml"
+                    },
+                    {
+                      "name": "run6_年収600000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run6_年収600000_lines.txt"
+                    },
+                    {
+                      "name": "run7_年収700000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run7_年収700000_dump_first.xml"
+                    },
+                    {
+                      "name": "run7_年収700000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run7_年収700000_dump_last.xml"
+                    },
+                    {
+                      "name": "run7_年収700000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run7_年収700000_lines.txt"
+                    },
+                    {
+                      "name": "run8_年収800000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run8_年収800000_dump_first.xml"
+                    },
+                    {
+                      "name": "run8_年収800000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run8_年収800000_dump_last.xml"
+                    },
+                    {
+                      "name": "run8_年収800000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run8_年収800000_lines.txt"
+                    },
+                    {
+                      "name": "run9_年収900000_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run9_年収900000_dump_first.xml"
+                    },
+                    {
+                      "name": "run9_年収900000_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run9_年収900000_dump_last.xml"
+                    },
+                    {
+                      "name": "run9_年収900000_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\run9_年収900000_lines.txt"
+                    },
+                    {
+                      "name": "判定.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-027\\判定.txt"
+                    }
+                  ],
+                  "errors": [
+                    {
+                      "message": "スクリプトが途中で止まった: DeviceError: adb が失敗した(255): shell am start -W -n jp.sample.retirementsimulator/.MainActivity: "
+                    }
+                  ],
+                  "error": {
+                    "message": "スクリプトが途中で止まった: DeviceError: adb が失敗した(255): shell am start -W -n jp.sample.retirementsimulator/.MainActivity: ",
+                    "stack": "Traceback (most recent call last):\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\runner.py\", line 213, in run_cases\n    c.func(ctx)\n  File \"D:\\codes\\sample_test_android\\e2e\\tests\\test_salary.py\", line 52, in ltc027\n    runs = ladder_runs(t)\n           ^^^^^^^^^^^^^^\n  File \"D:\\codes\\sample_test_android\\e2e\\tests\\test_salary.py\", line 21, in ladder_runs\n    res = t.simulate({**d[\"共通の入力\"], \"salary\": salary}, until=(30, 12), share=True, label=f\"年収{salary}\")\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\runner.py\", line 146, in simulate\n    self.app.restart()\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\screen.py\", line 166, in restart\n    self.d.start_app()\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\device.py\", line 123, in start_app\n    self.shell(f\"am start -W -n {ACTIVITY}\")\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\device.py\", line 53, in shell\n    return self.run(\"shell\", command, timeout=timeout, check=check).decode(\"utf-8\", \"replace\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\device.py\", line 48, in run\n    raise DeviceError(f\"adb が失敗した({proc.returncode}): {' '.join(args)}: \"\nframework.device.DeviceError: adb が失敗した(255): shell am start -W -n jp.sample.retirementsimulator/.MainActivity: \n"
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "LTC-027",
+          "file": "tests/test_salary.py",
+          "line": 50,
+          "column": 0
+        }
+      ],
+      "suites": []
+    },
+    {
+      "title": "tests/test_assets.py",
+      "file": "tests/test_assets.py",
+      "line": 0,
+      "column": 0,
+      "specs": [
+        {
+          "title": "LTC-037 投資が残っているあいだは、どの期間でも現金が0円未満にならない",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 0,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "emulator-5554",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 24.811983108520508,
+                  "startTime": "2026-11-23T20:43:40.877661+09:00",
+                  "retry": 0,
+                  "stdout": [],
+                  "stderr": [],
+                  "attachments": [
+                    {
+                      "name": "判定.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-037\\判定.txt"
+                    }
+                  ],
+                  "errors": [
+                    {
+                      "message": "スクリプトが途中で止まった: DeviceError: adb が失敗した(1): shell settings put system accelerometer_rotation 0: adb.EXE: device offline"
+                    }
+                  ],
+                  "error": {
+                    "message": "スクリプトが途中で止まった: DeviceError: adb が失敗した(1): shell settings put system accelerometer_rotation 0: adb.EXE: device offline",
+                    "stack": "Traceback (most recent call last):\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\runner.py\", line 213, in run_cases\n    c.func(ctx)\n  File \"D:\\codes\\sample_test_android\\e2e\\tests\\test_assets.py\", line 73, in ltc037\n    res = t.simulate(td005(\"現金不足\")[\"値\"], label=\"現金不足\")\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\runner.py\", line 146, in simulate\n    self.app.restart()\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\screen.py\", line 163, in restart\n    self.d.set_rotation(rotation)\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\device.py\", line 157, in set_rotation\n    self.shell(\"settings put system accelerometer_rotation 0\")\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\device.py\", line 53, in shell\n    return self.run(\"shell\", command, timeout=timeout, check=check).decode(\"utf-8\", \"replace\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\device.py\", line 48, in run\n    raise DeviceError(f\"adb が失敗した({proc.returncode}): {' '.join(args)}: \"\nframework.device.DeviceError: adb が失敗した(1): shell settings put system accelerometer_rotation 0: adb.EXE: device offline\n"
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "LTC-037",
+          "file": "tests/test_assets.py",
+          "line": 71,
+          "column": 0
+        }
+      ],
+      "suites": []
+    },
+    {
+      "title": "tests/test_rotation.py",
+      "file": "tests/test_rotation.py",
+      "line": 0,
+      "column": 0,
+      "specs": [
+        {
+          "title": "LTC-065 回転したあとに開始すると、回転前に入れた条件で計算される",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 0,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "emulator-5554",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 45.011281967163086,
+                  "startTime": "2026-11-23T20:43:40.925478+09:00",
+                  "retry": 0,
+                  "stdout": [],
+                  "stderr": [],
+                  "attachments": [
+                    {
+                      "name": "判定.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-203835\\証跡\\E2E\\evidence\\LTC-065\\判定.txt"
+                    }
+                  ],
+                  "errors": [
+                    {
+                      "message": "スクリプトが途中で止まった: DeviceError: adb が失敗した(1): shell settings put system accelerometer_rotation 0: adb.EXE: device offline"
+                    }
+                  ],
+                  "error": {
+                    "message": "スクリプトが途中で止まった: DeviceError: adb が失敗した(1): shell settings put system accelerometer_rotation 0: adb.EXE: device offline",
+                    "stack": "Traceback (most recent call last):\n  File \"D:\\codes\\sample_test_android\\e2e\\tests\\test_rotation.py\", line 182, in ltc065\n    t.app.restart()\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\screen.py\", line 163, in restart\n    self.d.set_rotation(rotation)\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\device.py\", line 157, in set_rotation\n    self.shell(\"settings put system accelerometer_rotation 0\")\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\device.py\", line 53, in shell\n    return self.run(\"shell\", command, timeout=timeout, check=check).decode(\"utf-8\", \"replace\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\device.py\", line 48, in run\n    raise DeviceError(f\"adb が失敗した({proc.returncode}): {' '.join(args)}: \"\nframework.device.DeviceError: adb が失敗した(1): shell settings put system accelerometer_rotation 0: adb.EXE: device offline\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\runner.py\", line 213, in run_cases\n    c.func(ctx)\n  File \"D:\\codes\\sample_test_android\\e2e\\tests\\test_rotation.py\", line 199, in ltc065\n    t.app.d.set_rotation(PORTRAIT)\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\device.py\", line 157, in set_rotation\n    self.shell(\"settings put system accelerometer_rotation 0\")\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\device.py\", line 53, in shell\n    return self.run(\"shell\", command, timeout=timeout, check=check).decode(\"utf-8\", \"replace\")\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\device.py\", line 48, in run\n    raise DeviceError(f\"adb が失敗した({proc.returncode}): {' '.join(args)}: \"\nframework.device.DeviceError: adb が失敗した(1): shell settings put system accelerometer_rotation 0: adb.EXE: device offline\n"
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "LTC-065",
+          "file": "tests/test_rotation.py",
+          "line": 177,
+          "column": 0
+        }
+      ],
+      "suites": []
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-23T20:38:51.740325+09:00",
+    "duration": 289258.369,
+    "expected": 0,
+    "unexpected": 3,
+    "skipped": 0,
+    "flaky": 0
+  }
+}

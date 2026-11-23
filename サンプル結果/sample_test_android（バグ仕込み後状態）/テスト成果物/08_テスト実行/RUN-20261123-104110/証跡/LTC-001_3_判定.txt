@@ -1,0 +1,17 @@
+LTC-001 起動直後の入力欄14項目が仕様書の初期値
+結果: Fail
+期待値と違う(1 件): expenseCurrent: 画面 '155600'、期待値 156000
+OK  startAge: 画面 '30'、期待値 30
+OK  retirementAge: 画面 '65'、期待値 65
+OK  pensionStartAge: 画面 '65'、期待値 65
+OK  gapIncome: 画面 '0'、期待値 0
+OK  salary: 画面 '3000000'、期待値 3000000
+OK  monthlyPension: 画面 '145000'、期待値 145000
+OK  initialCash: 画面 '1000000'、期待値 1000000
+OK  initialInv: 画面 '0'、期待値 0
+NG  expenseCurrent: 画面 '155600'、期待値 156000
+OK  expenseGap: 画面 '228000'、期待値 228000
+OK  expenseRetired: 画面 '228000'、期待値 228000
+OK  investRate: 画面 '20'、期待値 20
+OK  interest: 画面 '4'、期待値 4
+OK  eventProb: 画面 '1'、期待値 1

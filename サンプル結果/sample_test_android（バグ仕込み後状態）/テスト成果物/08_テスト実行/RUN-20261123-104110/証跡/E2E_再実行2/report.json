@@ -1,0 +1,453 @@
+{
+  "config": {
+    "rootDir": "D:\\codes\\sample_test_android\\e2e",
+    "projects": [
+      {
+        "name": "",
+        "id": "emulator-5554"
+      }
+    ],
+    "metadata": {
+      "tool": "e2e/run_e2e.py (Python + adb)",
+      "device": "emulator-5554"
+    }
+  },
+  "suites": [
+    {
+      "title": "tests/test_periods.py",
+      "file": "tests/test_periods.py",
+      "line": 0,
+      "column": 0,
+      "specs": [
+        {
+          "title": "LTC-017 退職後の月は退職後収入と退職〜年金開始期間の生活費で、変えた入力は退職後の月だけに効く",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 0,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "emulator-5554",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 444520.12372016907,
+                  "startTime": "2026-11-23T14:39:27.630395+09:00",
+                  "retry": 0,
+                  "stdout": [],
+                  "stderr": [],
+                  "attachments": [
+                    {
+                      "name": "end.png",
+                      "contentType": "image/png",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-017\\end.png"
+                    },
+                    {
+                      "name": "end_dump.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-017\\end_dump.xml"
+                    },
+                    {
+                      "name": "run1_P_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-017\\run1_P_dump_first.xml"
+                    },
+                    {
+                      "name": "run1_P_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-017\\run1_P_dump_last.xml"
+                    },
+                    {
+                      "name": "run1_P_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-017\\run1_P_lines.txt"
+                    },
+                    {
+                      "name": "run2_P_退職後生活費_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-017\\run2_P_退職後生活費_dump_first.xml"
+                    },
+                    {
+                      "name": "run2_P_退職後生活費_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-017\\run2_P_退職後生活費_dump_last.xml"
+                    },
+                    {
+                      "name": "run2_P_退職後生活費_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-017\\run2_P_退職後生活費_lines.txt"
+                    },
+                    {
+                      "name": "run3_P_退職後収入_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-017\\run3_P_退職後収入_dump_first.xml"
+                    },
+                    {
+                      "name": "run3_P_退職後収入_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-017\\run3_P_退職後収入_dump_last.xml"
+                    },
+                    {
+                      "name": "run3_P_退職後収入_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-017\\run3_P_退職後収入_lines.txt"
+                    },
+                    {
+                      "name": "判定.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-017\\判定.txt"
+                    }
+                  ],
+                  "errors": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "LTC-017",
+          "file": "tests/test_periods.py",
+          "line": 76,
+          "column": 0
+        }
+      ],
+      "suites": []
+    },
+    {
+      "title": "tests/test_salary_changes.py",
+      "file": "tests/test_salary_changes.py",
+      "line": 0,
+      "column": 0,
+      "specs": [
+        {
+          "title": "LTC-050 2件のうち1件を削除した設定が計算に残らない",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 0,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "emulator-5554",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 315458.2040309906,
+                  "startTime": "2026-11-23T14:46:55.612172+09:00",
+                  "retry": 0,
+                  "stdout": [],
+                  "stderr": [],
+                  "attachments": [
+                    {
+                      "name": "end.png",
+                      "contentType": "image/png",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-050\\end.png"
+                    },
+                    {
+                      "name": "end_dump.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-050\\end_dump.xml"
+                    },
+                    {
+                      "name": "run1_2件から2行目を削除_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-050\\run1_2件から2行目を削除_dump_first.xml"
+                    },
+                    {
+                      "name": "run1_2件から2行目を削除_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-050\\run1_2件から2行目を削除_dump_last.xml"
+                    },
+                    {
+                      "name": "run1_2件から2行目を削除_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-050\\run1_2件から2行目を削除_lines.txt"
+                    },
+                    {
+                      "name": "run2_1件だけ_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-050\\run2_1件だけ_dump_first.xml"
+                    },
+                    {
+                      "name": "run2_1件だけ_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-050\\run2_1件だけ_dump_last.xml"
+                    },
+                    {
+                      "name": "run2_1件だけ_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-050\\run2_1件だけ_lines.txt"
+                    },
+                    {
+                      "name": "判定.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-050\\判定.txt"
+                    }
+                  ],
+                  "errors": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "LTC-050",
+          "file": "tests/test_salary_changes.py",
+          "line": 48,
+          "column": 0
+        }
+      ],
+      "suites": []
+    },
+    {
+      "title": "tests/test_rotation.py",
+      "file": "tests/test_rotation.py",
+      "line": 0,
+      "column": 0,
+      "specs": [
+        {
+          "title": "LTC-063 入力している途中に回転しても、途中の値が消えない",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 0,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "emulator-5554",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "passed",
+                  "duration": 48534.25168991089,
+                  "startTime": "2026-11-23T14:52:14.326770+09:00",
+                  "retry": 0,
+                  "stdout": [],
+                  "stderr": [],
+                  "attachments": [
+                    {
+                      "name": "end.png",
+                      "contentType": "image/png",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-063\\end.png"
+                    },
+                    {
+                      "name": "end_dump.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-063\\end_dump.xml"
+                    },
+                    {
+                      "name": "landscape.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-063\\landscape.xml"
+                    },
+                    {
+                      "name": "landscape_raw.png",
+                      "contentType": "image/png",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-063\\landscape_raw.png"
+                    },
+                    {
+                      "name": "landscape_raw.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-063\\landscape_raw.xml"
+                    },
+                    {
+                      "name": "判定.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-063\\判定.txt"
+                    }
+                  ],
+                  "errors": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "LTC-063",
+          "file": "tests/test_rotation.py",
+          "line": 102,
+          "column": 0
+        },
+        {
+          "title": "LTC-065 回転したあとに開始すると、回転前に入れた条件で計算される",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 0,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "emulator-5554",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 191173.3136177063,
+                  "startTime": "2026-11-23T14:53:10.093736+09:00",
+                  "retry": 0,
+                  "stdout": [],
+                  "stderr": [],
+                  "attachments": [
+                    {
+                      "name": "end.png",
+                      "contentType": "image/png",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-065\\end.png"
+                    },
+                    {
+                      "name": "end_dump.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-065\\end_dump.xml"
+                    },
+                    {
+                      "name": "判定.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-065\\判定.txt"
+                    }
+                  ],
+                  "errors": [
+                    {
+                      "message": "スクリプトが途中で止まった: OperationError: 待っても画面が変わらない: 結果の行(outputLine)が出る"
+                    }
+                  ],
+                  "error": {
+                    "message": "スクリプトが途中で止まった: OperationError: 待っても画面が変わらない: 結果の行(outputLine)が出る",
+                    "stack": "Traceback (most recent call last):\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\runner.py\", line 213, in run_cases\n    c.func(ctx)\n  File \"D:\\codes\\sample_test_android\\e2e\\tests\\test_rotation.py\", line 168, in ltc065\n    t.app.press_run()\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\screen.py\", line 426, in press_run\n    return self.wait_for(lambda x: x.has(\"outputLine\") or x.anr_dialog() or not x.is_app_foreground(),\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\codes\\sample_test_android\\e2e\\framework\\screen.py\", line 176, in wait_for\n    raise OperationError(f\"待っても画面が変わらない: {what}\")\nframework.screen.OperationError: 待っても画面が変わらない: 結果の行(outputLine)が出る\n"
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "LTC-065",
+          "file": "tests/test_rotation.py",
+          "line": 157,
+          "column": 0
+        }
+      ],
+      "suites": []
+    },
+    {
+      "title": "tests/test_flows.py",
+      "file": "tests/test_flows.py",
+      "line": 0,
+      "column": 0,
+      "specs": [
+        {
+          "title": "LTC-078 給与変更を設定して結果を確かめ、削除して開始し直す",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 0,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "emulator-5554",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "failed",
+                  "duration": 605705.6593894958,
+                  "startTime": "2026-11-23T14:56:27.531752+09:00",
+                  "retry": 0,
+                  "stdout": [],
+                  "stderr": [],
+                  "attachments": [
+                    {
+                      "name": "end.png",
+                      "contentType": "image/png",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-078\\end.png"
+                    },
+                    {
+                      "name": "end_dump.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-078\\end_dump.xml"
+                    },
+                    {
+                      "name": "run1_給与変更1件_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-078\\run1_給与変更1件_dump_first.xml"
+                    },
+                    {
+                      "name": "run1_給与変更1件_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-078\\run1_給与変更1件_dump_last.xml"
+                    },
+                    {
+                      "name": "run1_給与変更1件_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-078\\run1_給与変更1件_lines.txt"
+                    },
+                    {
+                      "name": "run2_給与変更なし_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-078\\run2_給与変更なし_dump_first.xml"
+                    },
+                    {
+                      "name": "run2_給与変更なし_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-078\\run2_給与変更なし_dump_last.xml"
+                    },
+                    {
+                      "name": "run2_給与変更なし_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-078\\run2_給与変更なし_lines.txt"
+                    },
+                    {
+                      "name": "判定.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-078\\判定.txt"
+                    },
+                    {
+                      "name": "削除して開始し直した_dump_first.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-078\\削除して開始し直した_dump_first.xml"
+                    },
+                    {
+                      "name": "削除して開始し直した_dump_last.xml",
+                      "contentType": "application/xml",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-078\\削除して開始し直した_dump_last.xml"
+                    },
+                    {
+                      "name": "削除して開始し直した_lines.txt",
+                      "contentType": "text/plain",
+                      "path": "D:\\codes\\sample_test_android\\テスト成果物\\08_テスト実行\\RUN-20261123-104110\\証跡\\E2E_再実行2\\evidence\\LTC-078\\削除して開始し直した_lines.txt"
+                    }
+                  ],
+                  "errors": [
+                    {
+                      "message": "期待値と違う(1 件): 1回目の結果に [年収: ¥5,000,000] が1回出る(240 回)"
+                    }
+                  ],
+                  "error": {
+                    "message": "期待値と違う(1 件): 1回目の結果に [年収: ¥5,000,000] が1回出る(240 回)",
+                    "stack": "期待値と違う(1 件): 1回目の結果に [年収: ¥5,000,000] が1回出る(240 回)"
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "LTC-078",
+          "file": "tests/test_flows.py",
+          "line": 55,
+          "column": 0
+        }
+      ],
+      "suites": []
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-23T14:39:27.630395+09:00",
+    "duration": 1629063.436,
+    "expected": 3,
+    "unexpected": 2,
+    "skipped": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,5 @@
+LTC-003 起動直後の給与変更設定が0件
+結果: Pass
+OK  salaryChanges が見えている
+OK  salaryChangeAge が0個(画面 0 個)
+OK  salaryChangeSalary が0個(画面 0 個)

@@ -1,0 +1,24 @@
+LTC-052 2件の給与変更で、3つの区間の給与収入がその区間の年収を基本にしたときと同じ
+結果: Pass
+[実行 run1_2件の給与変更] 入力 {"startAge": 30, "retirementAge": 50, "pensionStartAge": 65, "eventProb": 0, "salary": 4000000} 給与変更 [{'年齢': 35, '年収': 5000000}, {'年齢': 42, '年収': 7000000}] 削除 None
+OK  [run1_2件の給与変更] 開始したあと落ちていない
+[run1_2件の給与変更] 読んだ行 1040、月の記録 249、最後まで読んだ False、最後の記録 50歳9月、32 秒
+OK  [run1_2件の給与変更] 読んでいるあいだに落ちていない
+[実行 run2_salary4000000] 入力 {"startAge": 30, "retirementAge": 50, "pensionStartAge": 65, "eventProb": 0, "salary": 4000000} 給与変更 None 削除 None
+OK  [run2_salary4000000] 開始したあと落ちていない
+[run2_salary4000000] 読んだ行 1037、月の記録 249、最後まで読んだ False、最後の記録 50歳9月、32 秒
+OK  [run2_salary4000000] 読んでいるあいだに落ちていない
+OK  30歳1月〜33歳12月 の 48 行が両方で読めた(48、48)
+OK  30歳1月〜33歳12月 の各月の給与収入がsalary 4000000 の実行と同じ: 48 件すべてで成り立つ
+[実行 run3_salary5000000] 入力 {"startAge": 30, "retirementAge": 50, "pensionStartAge": 65, "eventProb": 0, "salary": 5000000} 給与変更 None 削除 None
+OK  [run3_salary5000000] 開始したあと落ちていない
+[run3_salary5000000] 読んだ行 1048、月の記録 251、最後まで読んだ False、最後の記録 50歳11月、32 秒
+OK  [run3_salary5000000] 読んでいるあいだに落ちていない
+OK  37歳1月〜40歳12月 の 48 行が両方で読めた(48、48)
+OK  37歳1月〜40歳12月 の各月の給与収入がsalary 5000000 の実行と同じ: 48 件すべてで成り立つ
+[実行 run4_salary7000000] 入力 {"startAge": 30, "retirementAge": 50, "pensionStartAge": 65, "eventProb": 0, "salary": 7000000} 給与変更 None 削除 None
+OK  [run4_salary7000000] 開始したあと落ちていない
+[run4_salary7000000] 読んだ行 1054、月の記録 252、最後まで読んだ False、最後の記録 50歳12月、32 秒
+OK  [run4_salary7000000] 読んでいるあいだに落ちていない
+OK  44歳1月〜48歳12月 の 60 行が両方で読めた(60、60)
+OK  44歳1月〜48歳12月 の各月の給与収入がsalary 7000000 の実行と同じ: 60 件すべてで成り立つ

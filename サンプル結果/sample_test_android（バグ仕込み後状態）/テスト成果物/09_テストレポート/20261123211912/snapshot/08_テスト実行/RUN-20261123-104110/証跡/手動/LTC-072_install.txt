@@ -1,0 +1,13 @@
+LTC-072 インストールの確認(2026-11-23 12:51 JST に、前のテスト実行エージェントが 10:41 に行ったインストールの結果を後から確かめたもの)
+
+前のエージェントは install コマンドの出力(Success)をファイルに残していなかった。代わりに、パッケージの情報でインストールされた時刻を確かめた。
+
+$ adb -s emulator-5554 shell dumpsys package jp.sample.retirementsimulator | grep -E "firstInstallTime|lastUpdateTime|versionName"
+    versionName=1.0
+    lastUpdateTime=2026-11-23 01:41:15
+      firstInstallTime=2026-11-23 01:41:15
+
+エミュレータの時刻は UTC。01:41:15 UTC = 10:41:15 JST で、PROC-004 の実施時刻(証跡の画像 LTC-072_1_起動.png の時刻 1:41、ファイル時刻 10:41)と一致する。
+firstInstallTime = lastUpdateTime なので、アンインストールした状態からの新規インストールで、その後の上書きインストールは無い。
+
+クラッシュのログ: LTC-072_crash.txt(adb logcat -d -b crash の出力)は 0 バイト = アプリの行なし。

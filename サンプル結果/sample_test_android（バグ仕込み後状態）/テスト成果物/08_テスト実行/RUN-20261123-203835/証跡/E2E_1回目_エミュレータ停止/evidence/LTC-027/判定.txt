@@ -1,0 +1,79 @@
+LTC-027 年収を増やしても手取りの割合が上がらない
+結果: Fail
+スクリプトが途中で止まった: DeviceError: adb が失敗した(255): shell am start -W -n jp.sample.retirementsimulator/.MainActivity: 
+[実行 run1_年収1] 入力 {"eventProb": 0, "salary": 1} 給与変更 None 削除 None
+OK  [run1_年収1] 開始したあと落ちていない
+[run1_年収1] 読んだ行 194、月の記録 38、最後まで読んだ False、最後の記録 33歳2月、2 秒
+OK  [run1_年収1] 読んでいるあいだに落ちていない
+OK  [年収 1] 30歳1月〜30歳12月の12行が読めた(12 行)
+[実行 run2_年収100000] 入力 {"eventProb": 0, "salary": 100000} 給与変更 None 削除 None
+OK  [run2_年収100000] 開始したあと落ちていない
+[run2_年収100000] 読んだ行 194、月の記録 38、最後まで読んだ False、最後の記録 33歳2月、2 秒
+OK  [run2_年収100000] 読んでいるあいだに落ちていない
+OK  [年収 100000] 30歳1月〜30歳12月の12行が読めた(12 行)
+[実行 run3_年収300000] 入力 {"eventProb": 0, "salary": 300000} 給与変更 None 削除 None
+OK  [run3_年収300000] 開始したあと落ちていない
+[run3_年収300000] 読んだ行 194、月の記録 39、最後まで読んだ False、最後の記録 33歳3月、2 秒
+OK  [run3_年収300000] 読んでいるあいだに落ちていない
+OK  [年収 300000] 30歳1月〜30歳12月の12行が読めた(12 行)
+[実行 run4_年収470000] 入力 {"eventProb": 0, "salary": 470000} 給与変更 None 削除 None
+OK  [run4_年収470000] 開始したあと落ちていない
+[run4_年収470000] 読んだ行 194、月の記録 38、最後まで読んだ False、最後の記録 33歳2月、2 秒
+OK  [run4_年収470000] 読んでいるあいだに落ちていない
+OK  [年収 470000] 30歳1月〜30歳12月の12行が読めた(12 行)
+[実行 run5_年収500000] 入力 {"eventProb": 0, "salary": 500000} 給与変更 None 削除 None
+OK  [run5_年収500000] 開始したあと落ちていない
+[run5_年収500000] 読んだ行 194、月の記録 39、最後まで読んだ False、最後の記録 33歳3月、2 秒
+OK  [run5_年収500000] 読んでいるあいだに落ちていない
+OK  [年収 500000] 30歳1月〜30歳12月の12行が読めた(12 行)
+[実行 run6_年収600000] 入力 {"eventProb": 0, "salary": 600000} 給与変更 None 削除 None
+OK  [run6_年収600000] 開始したあと落ちていない
+[run6_年収600000] 読んだ行 194、月の記録 39、最後まで読んだ False、最後の記録 33歳3月、2 秒
+OK  [run6_年収600000] 読んでいるあいだに落ちていない
+OK  [年収 600000] 30歳1月〜30歳12月の12行が読めた(12 行)
+[実行 run7_年収700000] 入力 {"eventProb": 0, "salary": 700000} 給与変更 None 削除 None
+OK  [run7_年収700000] 開始したあと落ちていない
+[run7_年収700000] 読んだ行 194、月の記録 39、最後まで読んだ False、最後の記録 33歳3月、2 秒
+OK  [run7_年収700000] 読んでいるあいだに落ちていない
+OK  [年収 700000] 30歳1月〜30歳12月の12行が読めた(12 行)
+[実行 run8_年収800000] 入力 {"eventProb": 0, "salary": 800000} 給与変更 None 削除 None
+OK  [run8_年収800000] 開始したあと落ちていない
+[run8_年収800000] 読んだ行 194、月の記録 39、最後まで読んだ False、最後の記録 33歳3月、2 秒
+OK  [run8_年収800000] 読んでいるあいだに落ちていない
+OK  [年収 800000] 30歳1月〜30歳12月の12行が読めた(12 行)
+[実行 run9_年収900000] 入力 {"eventProb": 0, "salary": 900000} 給与変更 None 削除 None
+OK  [run9_年収900000] 開始したあと落ちていない
+[run9_年収900000] 読んだ行 194、月の記録 39、最後まで読んだ False、最後の記録 33歳3月、2 秒
+OK  [run9_年収900000] 読んでいるあいだに落ちていない
+OK  [年収 900000] 30歳1月〜30歳12月の12行が読めた(12 行)
+[実行 run10_年収1000000] 入力 {"eventProb": 0, "salary": 1000000} 給与変更 None 削除 None
+OK  [run10_年収1000000] 開始したあと落ちていない
+[run10_年収1000000] 読んだ行 194、月の記録 39、最後まで読んだ False、最後の記録 33歳3月、2 秒
+OK  [run10_年収1000000] 読んでいるあいだに落ちていない
+OK  [年収 1000000] 30歳1月〜30歳12月の12行が読めた(12 行)
+[実行 run11_年収1500000] 入力 {"eventProb": 0, "salary": 1500000} 給与変更 None 削除 None
+ERR スクリプトが途中で止まった: DeviceError: adb が失敗した(255): shell am start -W -n jp.sample.retirementsimulator/.MainActivity: 
+証跡の screencap/dump が取れなかった: adb が失敗した(4294967295): exec-out screencap -p: error: device offline
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 213, in run_cases
+    c.func(ctx)
+  File "D:\codes\sample_test_android\e2e\tests\test_salary.py", line 52, in ltc027
+    runs = ladder_runs(t)
+           ^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\tests\test_salary.py", line 21, in ladder_runs
+    res = t.simulate({**d["共通の入力"], "salary": salary}, until=(30, 12), share=True, label=f"年収{salary}")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 146, in simulate
+    self.app.restart()
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 166, in restart
+    self.d.start_app()
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 123, in start_app
+    self.shell(f"am start -W -n {ACTIVITY}")
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 53, in shell
+    return self.run("shell", command, timeout=timeout, check=check).decode("utf-8", "replace")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 48, in run
+    raise DeviceError(f"adb が失敗した({proc.returncode}): {' '.join(args)}: "
+framework.device.DeviceError: adb が失敗した(255): shell am start -W -n jp.sample.retirementsimulator/.MainActivity: 
+

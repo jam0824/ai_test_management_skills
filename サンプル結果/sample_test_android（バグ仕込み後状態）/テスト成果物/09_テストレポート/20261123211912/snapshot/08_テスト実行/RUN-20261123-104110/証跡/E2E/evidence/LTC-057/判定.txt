@@ -1,0 +1,24 @@
+LTC-057 発生率100%のとき、すべての月にイベントが出る
+結果: Fail
+スクリプトが途中で止まった: OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+[実行 run1_発生率100%] 入力 {"startAge": 55, "eventProb": 100} 給与変更 None 削除 None
+ERR スクリプトが途中で止まった: OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 213, in run_cases
+    c.func(ctx)
+  File "D:\codes\sample_test_android\e2e\tests\test_events.py", line 45, in ltc057
+    full = run_100(t)
+           ^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\tests\test_events.py", line 20, in run_100
+    res = t.simulate(td007()["入力"]["発生率100%"], share=True, label="発生率100%")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 146, in simulate
+    self.app.restart()
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 167, in restart
+    return self.wait_for(lambda s: s.has("startAge") or s.has("screen"), "起動して入力欄が出る", 30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 176, in wait_for
+    raise OperationError(f"待っても画面が変わらない: {what}")
+framework.screen.OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+

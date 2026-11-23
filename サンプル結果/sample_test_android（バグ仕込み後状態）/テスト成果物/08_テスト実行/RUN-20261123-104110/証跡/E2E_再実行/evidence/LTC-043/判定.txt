@@ -1,0 +1,7 @@
+LTC-043 追加を押すたびに1件ずつ増える
+結果: Pass
+OK  1 回押した後の salaryChangeAge の数が 1(画面 1)
+OK  2 回押した後の salaryChangeAge の数が 2(画面 2)
+OK  3 回押した後の salaryChangeAge の数が 3(画面 3)
+OK  4 回押した後の salaryChangeAge の数が 4(画面 4)
+OK  5 回押した後の salaryChangeAge の数が 5(画面 5)

@@ -1,0 +1,21 @@
+端末 emulator-5554。読み取り用の表示にする
+[1/3] LTC-027 年収を増やしても手取りの割合が上がらない ...
+    -> Fail (289 秒): スクリプトが途中で止まった: DeviceError: adb が失敗した(255): shell am start -W -n jp.sample.retirementsimulator/.MainActivity: 
+[2/3] LTC-037 投資が残っているあいだは、どの期間でも現金が0円未満にならない ...
+    -> Fail (0 秒): スクリプトが途中で止まった: DeviceError: adb が失敗した(1): shell settings put system accelerometer_rotation 0: adb.EXE: device offline
+[3/3] LTC-065 回転したあとに開始すると、回転前に入れた条件で計算される ...
+    -> Fail (0 秒): スクリプトが途中で止まった: DeviceError: adb が失敗した(1): shell settings put system accelerometer_rotation 0: adb.EXE: device offline
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\run_e2e.py", line 105, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "D:\codes\sample_test_android\e2e\run_e2e.py", line 96, in main
+    device.force_stop()
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 120, in force_stop
+    self.shell(f"am force-stop {PACKAGE}")
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 53, in shell
+    return self.run("shell", command, timeout=timeout, check=check).decode("utf-8", "replace")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 48, in run
+    raise DeviceError(f"adb が失敗した({proc.returncode}): {' '.join(args)}: "
+framework.device.DeviceError: adb が失敗した(1): shell am force-stop jp.sample.retirementsimulator: adb.EXE: device offline

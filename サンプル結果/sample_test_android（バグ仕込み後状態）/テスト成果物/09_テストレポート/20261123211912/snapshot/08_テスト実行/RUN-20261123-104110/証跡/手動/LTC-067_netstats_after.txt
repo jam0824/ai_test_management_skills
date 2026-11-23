@@ -1,0 +1,151 @@
+Directory:
+  /data/misc/apexdata/com.android.tethering/netstats
+Configs:
+  netstats_combine_subtype_enabled=false 
+  netstats_store_files_in_apexdata=true 
+  netstats_import_legacy_target_attempts=1 
+  platform legacy stats import attempts count=1 
+  platform legacy stats import successes count=1 
+  platform legacy stats import fallbacks count=0 
+Active interfaces:
+  iface=eth0 ident=[{type=0, ratType=3, subscriberId=310260..., metered=true, defaultNetwork=false, oemManaged=OEM_NONE, subId=1}] 
+  iface=wlan0 ident=[{type=1, ratType=COMBINED, wifiNetworkKey="AndroidWifi"open, metered=false, defaultNetwork=true, oemManaged=OEM_NONE, subId=-1}] 
+Active UID interfaces:
+  iface=eth0 ident=[{type=0, ratType=3, subscriberId=310260..., metered=true, defaultNetwork=false, oemManaged=OEM_NONE, subId=1}] 
+  iface=wlan0 ident=[{type=1, ratType=COMBINED, wifiNetworkKey="AndroidWifi"open, metered=false, defaultNetwork=true, oemManaged=OEM_NONE, subId=-1}] 
+All wifi interfaces:
+  wlan0 
+All mobile interfaces:
+  eth0 
+Top openSession callers:
+  {uid=1000,package=android}=296
+
+Stats Providers:
+  OffloadController Xt:
+    NetworkStats: elapsedRealtime=0
+  BpfCoordinator Xt:
+    NetworkStats: elapsedRealtime=0
+  ImsPhoneCallTracker Xt:
+    NetworkStats: elapsedRealtime=0
+
+Stats Observers:
+  RequestInfo from pid/uid:559/1000(android) for DataUsageRequest [ requestId=1, networkTemplate=NetworkTemplate: matchRule=MOBILE, matchSubscriberIds=[], matchWifiNetworkKeys=[], thresholdInBytes=0 ] accessLevel:3
+  RequestInfo from pid/uid:559/1000(android) for DataUsageRequest [ requestId=2, networkTemplate=NetworkTemplate: matchRule=WIFI, matchSubscriberIds=[], matchWifiNetworkKeys=[], thresholdInBytes=0 ] accessLevel:3
+  RequestInfo from pid/uid:559/1000(android) for DataUsageRequest [ requestId=14, networkTemplate=NetworkTemplate: matchRule=MOBILE, matchSubscriberIds=[310260...], matchWifiNetworkKeys=[], metered=YES, defaultNetwork=NO, thresholdInBytes=3542789 ] accessLevel:3
+
+Dev stats:
+  Pending bytes: 
+  History since boot:
+Xt stats:
+  Pending bytes: 1297123
+  History since boot:
+  ident=[{type=0, ratType=3, subscriberId=310260..., metered=true, defaultNetwork=false, oemManaged=OEM_NONE, subId=1}] uid=-1 set=ALL tag=0x0
+    NetworkStatsHistory: bucketDuration=3600
+      st=1795402800 rb=10528 rp=27 tb=20706 tp=55 op=0
+      st=1795406400 rb=12000 rp=38 tb=21941 tp=54 op=0
+      st=1795410000 rb=18852 rp=59 tb=35819 tp=96 op=0
+      st=1795413600 rb=1871 rp=5 tb=3577 tp=9 op=0
+  ident=[{type=0, ratType=3, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1}] uid=-1 set=ALL tag=0x0
+    NetworkStatsHistory: bucketDuration=3600
+      st=1795402800 rb=18571 rp=72 tb=30097 tp=152 op=0
+      st=1795406400 rb=11002 rp=39 tb=10759 tp=56 op=0
+      st=1795410000 rb=14695 rp=63 tb=24817 tp=110 op=0
+  ident=[{type=1, ratType=COMBINED, wifiNetworkKey="AndroidWifi"open, metered=false, defaultNetwork=false, oemManaged=OEM_NONE, subId=-1}] uid=-1 set=ALL tag=0x0
+    NetworkStatsHistory: bucketDuration=3600
+      st=1795402800 rb=7217 rp=57 tb=8112 tp=69 op=0
+      st=1795406400 rb=2000 rp=16 tb=1851 tp=16 op=0
+      st=1795410000 rb=7277 rp=60 tb=8502 tp=80 op=0
+  ident=[{type=1, ratType=COMBINED, wifiNetworkKey="AndroidWifi"open, metered=false, defaultNetwork=true, oemManaged=OEM_NONE, subId=-1}] uid=-1 set=ALL tag=0x0
+    NetworkStatsHistory: bucketDuration=3600
+      st=1795402800 rb=251395 rp=634 tb=176219 tp=707 op=0
+      st=1795406400 rb=250244 rp=731 tb=150300 tp=739 op=0
+      st=1795410000 rb=87957 rp=313 tb=102859 tp=399 op=0
+      st=1795413600 rb=2881 rp=13 tb=5074 tp=20 op=0
+
+InterfaceMapUpdater:
+  BPF map status:
+    IfaceIndexNameMap: OK
+  BPF map content:
+    IfaceIndexNameMap:
+      ifaceIndex=5 ifaceName=tunl0
+      ifaceIndex=9 ifaceName=ip_vti0
+      ifaceIndex=13 ifaceName=ip6gre0
+      ifaceIndex=4 ifaceName=ifb1
+      ifaceIndex=8 ifaceName=erspan0
+      ifaceIndex=12 ifaceName=ip6tnl0
+      ifaceIndex=16 ifaceName=wlan0
+      ifaceIndex=11 ifaceName=sit0
+      ifaceIndex=10 ifaceName=ip6_vti0
+      ifaceIndex=7 ifaceName=gretap0
+      ifaceIndex=3 ifaceName=ifb0
+      ifaceIndex=14 ifaceName=hwsim0
+      ifaceIndex=15 ifaceName=eth0
+      ifaceIndex=6 ifaceName=gre0
+      ifaceIndex=1 ifaceName=lo
+      ifaceIndex=2 ifaceName=dummy0
+
+BPF map status:
+  mCookieTagMap: OK
+  mUidCounterSetMap: OK
+  mAppUidStatsMap: OK
+  mStatsMapA: OK
+  mStatsMapB: OK
+  mIfaceStatsMap: OK
+
+BPF map content:
+  mCookieTagMap:
+    cookie=16678 tag=0x20000407 uid=10123
+    cookie=16683 tag=0x7ea uid=10124
+    cookie=305 tag=0x20000407 uid=10123
+    cookie=16639 tag=0x20000407 uid=10123
+    cookie=16646 tag=0xfffffe01 uid=1073
+    cookie=8315 tag=0x0 uid=10176
+    cookie=8295 tag=0x1803 uid=10123
+    cookie=16467 tag=0x0 uid=10176
+    cookie=81 tag=0x20000407 uid=10123
+  mUidCounterSetMap:
+    uid=1002 set=1
+    uid=1073 set=1
+    uid=1001 set=1
+    uid=10162 set=1
+    uid=10123 set=1
+    uid=1000 set=1
+    uid=10159 set=1
+    uid=10189 set=1
+    uid=10161 set=1
+    uid=10119 set=1
+    uid=10177 set=1
+    uid=10125 set=1
+    uid=1068 set=1
+    uid=10124 set=1
+  mAppUidStatsMap:
+    uid rxBytes rxPackets txBytes txPackets
+    1020 308599 917 129389 391
+    10123 291763 485 153746 453
+    1000 278 3 214 3
+    10121 6031 17 2679 17
+    1051 0 0 4552 65
+    10176 9466 26 7366 26
+    10125 70963 304 44316 348
+    10119 5910 16 1965 16
+    1073 42399 289 33701 302
+    0 0 0 69302 464
+    10145 32531 100 32434 120
+    10124 39745 123 41481 132
+    10147 12676 53 3053 18
+    10138 33563 56 14450 70
+  mStatsMapA:
+    ifaceIndex ifaceName tag_hex uid_int cnt_set rxBytes rxPackets txBytes txPackets
+    16 wlan0 0x0 0 0 0 0 252 3
+    16 wlan0 0x1065fff 10123 1 4093 16 9328 19
+    16 wlan0 0x20000407 10123 1 104 2 72 1
+    16 wlan0 0xffffff82 10123 1 482 2 300 4
+    2 dummy0 0x0 0 0 0 0 56 1
+  mStatsMapB:
+    ifaceIndex ifaceName tag_hex uid_int cnt_set rxBytes rxPackets txBytes txPackets
+  mIfaceStatsMap:
+    ifaceIndex ifaceName rxBytes rxPackets txBytes txPackets
+    2 dummy0 25972 104 55276 255
+    16 wlan0 617292 1859 466317 2093
+    1 lo 3663 42 3663 42
+    15 eth0 87639 304 148084 537

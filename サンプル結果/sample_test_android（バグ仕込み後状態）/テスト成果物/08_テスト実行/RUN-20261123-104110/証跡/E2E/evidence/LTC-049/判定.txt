@@ -1,0 +1,28 @@
+LTC-049 1件追加して削除した設定が計算に残らない
+結果: Fail
+スクリプトが途中で止まった: DeviceError: uiautomator dump が取れない: ERROR: null root node returned by UiTestAutomationBridge.
+[実行 run1_追加して削除] 入力 {"startAge": 55, "retirementAge": 65, "pensionStartAge": 65, "eventProb": 0} 給与変更 [{'年齢': 58, '年収': 5000000}] 削除 [1]
+ERR スクリプトが途中で止まった: DeviceError: uiautomator dump が取れない: ERROR: null root node returned by UiTestAutomationBridge.
+証跡の screencap/dump が取れなかった: adb がタイムアウトした: exec-out screencap -p
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 213, in run_cases
+    c.func(ctx)
+  File "D:\codes\sample_test_android\e2e\tests\test_salary_changes.py", line 40, in ltc049
+    res = t.simulate(d["共通"], changes=case1["追加"], delete_rows=[case1["削除する行"]], label="追加して削除")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 146, in simulate
+    self.app.restart()
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 167, in restart
+    return self.wait_for(lambda s: s.has("startAge") or s.has("screen"), "起動して入力欄が出る", 30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 172, in wait_for
+    s = self.snap()
+        ^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 144, in snap
+    xml = self.d.dump_xml()
+          ^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 75, in dump_xml
+    raise DeviceError(f"uiautomator dump が取れない: {last}")
+framework.device.DeviceError: uiautomator dump が取れない: ERROR: null root node returned by UiTestAutomationBridge.
+

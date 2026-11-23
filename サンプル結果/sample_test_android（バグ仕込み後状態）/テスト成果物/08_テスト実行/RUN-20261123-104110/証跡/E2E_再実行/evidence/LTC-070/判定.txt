@@ -1,0 +1,8 @@
+LTC-070 給与変更設定の部品6つを resource-id で特定できる
+結果: Pass
+OK  toggleSalaryChanges がある
+OK  salaryChanges がある
+OK  addSalaryChange がある
+OK  salaryChangeAge がある
+OK  salaryChangeSalary がある
+OK  salaryChangeDelete がある

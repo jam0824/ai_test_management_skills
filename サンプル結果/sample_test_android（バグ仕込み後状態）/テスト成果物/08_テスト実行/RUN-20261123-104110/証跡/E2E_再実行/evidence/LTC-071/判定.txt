@@ -1,0 +1,5 @@
+LTC-071 開始・結果の行・画面全体のスクロールを resource-id で特定できる
+結果: Pass
+OK  開始前に runBtn がある
+OK  開始前に screen がある
+OK  開始後に outputLine が1つ以上ある(194 個)

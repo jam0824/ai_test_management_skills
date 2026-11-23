@@ -1,0 +1,36 @@
+LTC-065 回転したあとに開始すると、回転前に入れた条件で計算される
+結果: Fail
+スクリプトが途中で止まった: DeviceError: adb が失敗した(1): shell settings put system accelerometer_rotation 0: adb.EXE: device offline
+ERR スクリプトが途中で止まった: DeviceError: adb が失敗した(1): shell settings put system accelerometer_rotation 0: adb.EXE: device offline
+証跡の screencap/dump が取れなかった: adb が失敗した(4294967295): exec-out screencap -p: error: device offline
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\tests\test_rotation.py", line 182, in ltc065
+    t.app.restart()
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 163, in restart
+    self.d.set_rotation(rotation)
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 157, in set_rotation
+    self.shell("settings put system accelerometer_rotation 0")
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 53, in shell
+    return self.run("shell", command, timeout=timeout, check=check).decode("utf-8", "replace")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 48, in run
+    raise DeviceError(f"adb が失敗した({proc.returncode}): {' '.join(args)}: "
+framework.device.DeviceError: adb が失敗した(1): shell settings put system accelerometer_rotation 0: adb.EXE: device offline
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 213, in run_cases
+    c.func(ctx)
+  File "D:\codes\sample_test_android\e2e\tests\test_rotation.py", line 199, in ltc065
+    t.app.d.set_rotation(PORTRAIT)
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 157, in set_rotation
+    self.shell("settings put system accelerometer_rotation 0")
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 53, in shell
+    return self.run("shell", command, timeout=timeout, check=check).decode("utf-8", "replace")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 48, in run
+    raise DeviceError(f"adb が失敗した({proc.returncode}): {' '.join(args)}: "
+framework.device.DeviceError: adb が失敗した(1): shell settings put system accelerometer_rotation 0: adb.EXE: device offline
+

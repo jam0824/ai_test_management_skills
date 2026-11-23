@@ -1,0 +1,25 @@
+LTC-050 2件のうち1件を削除した設定が計算に残らない
+結果: Fail
+スクリプトが途中で止まった: OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+[実行 run1_2件から2行目を削除] 入力 {"startAge": 55, "retirementAge": 65, "pensionStartAge": 65, "eventProb": 0} 給与変更 [{'年齢': 58, '年収': 5000000}, {'年齢': 61, '年収': 6000000}] 削除 [2]
+OK  [run1_2件から2行目を削除] 開始したあと落ちていない
+[run1_2件から2行目を削除] 読んだ行 2426、月の記録 552、最後まで読んだ True、最後の記録 100歳12月、96 秒
+OK  [run1_2件から2行目を削除] 読んでいるあいだに落ちていない
+[実行 run2_1件だけ] 入力 {"startAge": 55, "retirementAge": 65, "pensionStartAge": 65, "eventProb": 0} 給与変更 [{'年齢': 58, '年収': 5000000}] 削除 None
+ERR スクリプトが途中で止まった: OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 213, in run_cases
+    c.func(ctx)
+  File "D:\codes\sample_test_android\e2e\tests\test_salary_changes.py", line 53, in ltc050
+    base = t.simulate(d["共通"], changes=case2["比べる実行"]["給与変更"], label="1件だけ")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 146, in simulate
+    self.app.restart()
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 167, in restart
+    return self.wait_for(lambda s: s.has("startAge") or s.has("screen"), "起動して入力欄が出る", 30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 176, in wait_for
+    raise OperationError(f"待っても画面が変わらない: {what}")
+framework.screen.OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+

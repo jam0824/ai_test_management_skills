@@ -1,0 +1,18 @@
+LTC-063 入力している途中に回転しても、途中の値が消えない
+結果: Fail
+スクリプトが途中で止まった: OperationError: 画面の一番上に戻れない
+ERR スクリプトが途中で止まった: OperationError: 画面の一番上に戻れない
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 213, in run_cases
+    c.func(ctx)
+  File "D:\codes\sample_test_android\e2e\tests\test_rotation.py", line 107, in ltc063
+    initial = t.app.read_inputs()
+              ^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 311, in read_inputs
+    s = self.scroll_to_top()
+        ^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 235, in scroll_to_top
+    raise OperationError("画面の一番上に戻れない")
+framework.screen.OperationError: 画面の一番上に戻れない
+

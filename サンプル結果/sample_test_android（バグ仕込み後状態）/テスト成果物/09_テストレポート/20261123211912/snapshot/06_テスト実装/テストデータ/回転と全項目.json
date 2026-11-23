@@ -1,0 +1,9 @@
+{
+  "id": "TD-008",
+  "説明": "画面の回転のテストの入力。14入力欄すべてを初期値(TD-001)と違う値にした組と、給与変更2件。",
+  "14項目": {"startAge": 50, "retirementAge": 62, "pensionStartAge": 66, "gapIncome": 50000, "salary": 4000000, "monthlyPension": 160000, "initialCash": 2000000, "initialInv": 500000, "expenseCurrent": 170000, "expenseGap": 210000, "expenseRetired": 240000, "investRate": 25, "interest": 3, "eventProb": 0},
+  "給与変更2件": [{"年齢": 54, "年収": 5000000}, {"年齢": 58, "年収": 6000000}],
+  "入力途中": {"入力欄": "salary", "入れる値": "4500000"},
+  "結果を出す入力": {"startAge": 55, "eventProb": 0},
+  "向き": {"縦": "settings put system user_rotation 0", "横": "settings put system user_rotation 1", "前もって": "settings put system accelerometer_rotation 0"}
+}

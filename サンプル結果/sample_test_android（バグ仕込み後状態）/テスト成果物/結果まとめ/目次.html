@@ -1,0 +1,62 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>テスト成果物の目次</title><style>
+:root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--bg:#fff;--soft:#f6f8fa;--ok:#1a7f37;--ng:#cf222e;--warn:#9a6700;--link:#0969da}
+@media (prefers-color-scheme: dark){:root{--fg:#e6edf3;--muted:#9198a1;--line:#3d444d;--bg:#0d1117;--soft:#151b23;--ok:#3fb950;--ng:#f85149;--warn:#d29922;--link:#4493f8}}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI","Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;color:var(--fg);background:var(--bg);line-height:1.6;font-size:14px}
+main{max-width:1280px;margin:0 auto;padding:12px 20px 48px}
+nav{background:var(--soft);border-bottom:1px solid var(--line);padding:8px 20px;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px}
+nav a.current{font-weight:700;color:var(--fg)}
+a{color:var(--link);text-decoration:none}a:hover{text-decoration:underline}
+h1{font-size:22px;margin:10px 0 6px}h2{font-size:17px;margin:26px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}h3{font-size:15px;margin:18px 0 6px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;margin:6px 0 12px}
+th,td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+th{background:var(--soft);white-space:nowrap;font-weight:600}
+a.id{font-family:Consolas,Menlo,monospace;font-size:12.5px;white-space:nowrap}
+.badge{display:inline-block;padding:0 8px;border-radius:10px;font-size:12px;font-weight:600;white-space:nowrap;border:1px solid var(--line)}
+.badge.ok,.badge.low{color:var(--ok);border-color:var(--ok)}.badge.ng,.badge.high{color:var(--ng);border-color:var(--ng)}
+.badge.warn,.badge.mid{color:var(--warn);border-color:var(--warn)}.badge.none{color:var(--muted)}
+.none-text,.muted{color:var(--muted)}.missing{color:var(--ng)}
+details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 10px}summary{cursor:pointer;font-weight:600}
+.doc h1{font-size:17px}.doc h2{font-size:15px;border:none}
+.record{border:1px solid var(--line);border-radius:6px;margin:10px 0;padding:8px 12px}.record h3{margin:0 0 4px}
+.note{background:var(--soft);border-left:4px solid var(--line);padding:6px 10px;margin:8px 0}
+.verdict{font-size:20px;font-weight:700;padding:8px 14px;border-radius:6px;margin:6px 0 8px;border:2px solid}
+.verdict.ok{color:var(--ok);border-color:var(--ok)}.verdict.ng{color:var(--ng);border-color:var(--ng)}
+.panel{border:1px solid var(--line);border-radius:6px;padding:8px 12px;margin:0 0 12px}.panel h2{margin:0 0 6px;border:none;font-size:16px}
+.panel table{margin:2px 0 6px}.panel h3{margin:8px 0 2px;font-size:14px}.panel ul{margin:2px 0;padding-left:20px}
+.numbers{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0;font-size:13px}.numbers b{font-size:16px}
+:root{--pass:#2da44e;--fail:#cf222e;--block:#bf8700;--notrun:#d0d7de;--unimpl:#8c959f;--explored:#8250df}
+@media (prefers-color-scheme: dark){:root{--notrun:#3d444d;--unimpl:#6e7781}}
+.tabs input{position:absolute;opacity:0}.tabs label{display:inline-block;padding:6px 14px;border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;cursor:pointer;margin-right:4px;background:var(--soft)}
+.tabs input:checked+label{background:var(--bg);font-weight:700}.tabs input:focus-visible+label{outline:2px solid var(--link)}
+.pane{display:none;border-top:1px solid var(--line)}
+#tab-req:checked~#req-coverage,#tab-risk:checked~#risk-coverage{display:block}
+.tabs>input:nth-of-type(1):checked~.pane:nth-of-type(1),.tabs>input:nth-of-type(2):checked~.pane:nth-of-type(2),.tabs>input:nth-of-type(3):checked~.pane:nth-of-type(3),.tabs>input:nth-of-type(4):checked~.pane:nth-of-type(4),.tabs>input:nth-of-type(5):checked~.pane:nth-of-type(5),.tabs>input:nth-of-type(6):checked~.pane:nth-of-type(6),.tabs>input:nth-of-type(7):checked~.pane:nth-of-type(7),.tabs>input:nth-of-type(8):checked~.pane:nth-of-type(8){display:block}
+.tree details{border:none;border-radius:0;margin:0;padding:0}
+.tree summary{font-weight:400;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:5px 8px;border-bottom:1px solid var(--line)}
+.tree summary:hover{background:var(--soft)}
+.tree summary.ng{box-shadow:inset 3px 0 0 var(--fail)}.tree summary.warn{box-shadow:inset 3px 0 0 var(--block)}.tree summary.ok{box-shadow:inset 3px 0 0 var(--pass)}.tree summary.ex{box-shadow:inset 3px 0 0 var(--unimpl)}
+.tree .kids{margin-left:22px;border-left:1px dashed var(--line)}
+.tree .lv-REQ>summary,.tree .lv-RISK>summary,.tree .card>summary{font-weight:600}
+.kind{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;white-space:nowrap}
+.tree .title{flex:1 1 280px;min-width:0}
+.bar{display:inline-flex;width:140px;height:10px;border-radius:5px;overflow:hidden;background:var(--notrun);flex:none}
+.bar i,.legend i{display:inline-block;height:100%}.pass{background:var(--pass)}.fail{background:var(--fail)}.block{background:var(--block)}
+.notrun{background:var(--notrun)}.unimpl{background:repeating-linear-gradient(45deg,var(--unimpl) 0 3px,transparent 3px 6px)}.explored{background:var(--explored)}
+/* 帯の頭を行ごとにそろえるため、帯の右の2つの欄は決まった幅にする */
+.rate{font-size:12.5px;white-space:nowrap;flex:none;width:130px}
+.flags{flex:none;width:240px}.flags b{font-size:11.5px;font-weight:600;margin-right:6px;white-space:nowrap}.flags .f{color:var(--fail)}.flags .w{color:var(--block)}
+.ci{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.leaf{padding:4px 8px;border-bottom:1px solid var(--line);font-size:13px}.leaf .memo{color:var(--muted);font-size:12px;margin-left:8px}
+.card-note{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:6px 8px;padding:6px 10px;background:var(--soft);border-left:3px solid var(--line);font-size:13px}
+.card-note dt{font-weight:600;color:var(--muted);white-space:nowrap}.card-note dd{margin:0}
+.tree .sub{font-size:12px;font-weight:600;color:var(--muted);padding:6px 8px 2px}
+.latest-report{font-size:18px;font-weight:700;border:2px solid var(--link);border-radius:6px;padding:10px 14px;margin:8px 0 14px}
+.latest-report .muted{font-size:13px;font-weight:400}
+.nowrap{white-space:nowrap}
+details.reasons{border:none;margin:0;padding:0}details.reasons summary{font-weight:400;color:var(--link)}
+.bug-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px}.bug-compare>div{border:1px solid var(--line);border-radius:6px;padding:6px 10px}.bug-compare .exp{border-left:4px solid var(--pass)}.bug-compare .act{border-left:4px solid var(--fail)}.bug-compare p,.bug-compare ul,.bug-steps ol,.bug-steps p{margin:4px 0}.bug-steps{margin:8px;padding:0 2px}@media (max-width:700px){.bug-compare{grid-template-columns:1fr}}details.fold{border:none;border-top:1px solid var(--line);border-radius:0;margin:0 8px;padding:4px 2px}details.fold summary{font-weight:400;color:var(--link)}details.fold .doc{padding:2px 0 6px}
+.pct{font-weight:700}.pct.ok{color:var(--ok)}.pct.warn{color:var(--warn)}.pct.ng{color:var(--ng)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;margin:6px 0}.legend i{width:12px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+</style></head><body><nav><a href="目次.html" class="current">目次</a><a href="要求仕様整理.html">要求仕様整理</a><a href="リスク分析.html">リスク分析</a><a href="テスト計画.html">テスト計画</a><a href="テスト分析.html">テスト分析</a><a href="テスト設計.html">テスト設計</a><a href="テスト実装.html">テスト実装</a><a href="E2E自動テストスクリプト作成.html">E2E自動テストスクリプト作成</a><a href="テスト実行.html">テスト実行</a><a href="ID索引.html">ID索引</a></nav><main><h1>テスト成果物の目次</h1><div class="latest-report"><a href="../09_テストレポート/20261123211912/テストレポート.html">最新のテストレポートを開く</a> <span class="muted">(2026-11-23 21:19 作成)</span></div><h2>工程</h2><div class="scroll"><table><thead><tr><th>工程</th><th>成果物</th></tr></thead><tbody><tr><td><a href="要求仕様整理.html">要求仕様整理</a></td><td>あり</td></tr><tr><td><a href="リスク分析.html">リスク分析</a></td><td>あり</td></tr><tr><td><a href="テスト計画.html">テスト計画</a></td><td>あり</td></tr><tr><td><a href="テスト分析.html">テスト分析</a></td><td>あり</td></tr><tr><td><a href="テスト設計.html">テスト設計</a></td><td>あり</td></tr><tr><td><a href="テスト実装.html">テスト実装</a></td><td>あり</td></tr><tr><td><a href="E2E自動テストスクリプト作成.html">E2E自動テストスクリプト作成</a></td><td>あり</td></tr><tr><td><a href="テスト実行.html">テスト実行</a></td><td>あり</td></tr></tbody></table></div><h2>トレーサビリティの確認</h2><p>エラー 0 件、警告 1 件(成果物がある最後の工程「テスト実行」まで確認)</p><h3>警告(下流がまだ無いもの)</h3><ul><li>RISK-040: テスト条件が無いリスク (仕様書の注意事項(目安であること、制度変更を考慮しないこと))</li></ul></main><script>function tmShowHash(){var id=decodeURIComponent(location.hash.slice(1));var e=id&&document.getElementById(id);if(!e)return;var p=e.closest('.pane');while(p){var tabs=p.parentElement,kids=[].slice.call(tabs.children);var panes=kids.filter(function(c){return c.classList.contains('pane')});var inputs=kids.filter(function(c){return c.tagName==='INPUT'});var i=panes.indexOf(p);if(inputs[i])inputs[i].checked=true;p=tabs.closest('.pane')}e.scrollIntoView()}addEventListener('hashchange',tmShowHash);tmShowHash()</script></body></html>

@@ -1,0 +1,31 @@
+LTC-038 その月の不足額と投資残高の3つの関係での取り崩し
+結果: Fail
+期待値と違う(3 件): [D+100000] 不足した月の |(総資産 − 前の行の総資産) − (収入 − 生活費)| < 4円(総資産 300000→77500、収入 0、生活費 200000) / [D] 不足した月の |(総資産 − 前の行の総資産) − (収入 − 生活費)| < 4円(総資産 200000→-22500、収入 0、生活費 200000) / [floor(D/2)] 不足した月の |(総資産 − 前の行の総資産) − (収入 − 生活費)| < 4円(総資産 143750→-67500、収入 0、生活費 200000)
+[実行 run1_1回目] 入力 {"startAge": 55, "retirementAge": 60, "pensionStartAge": 65, "gapIncome": 0, "expenseCurrent": 150000, "expenseGap": 200000, "eventProb": 0, "interest": 0, "investRate": 0, "initialInv": 0} 給与変更 None 削除 None
+OK  [run1_1回目] 開始したあと落ちていない
+[run1_1回目] 読んだ行 540、月の記録 129、最後まで読んだ False、最後の記録 65歳9月、13 秒
+OK  [run1_1回目] 読んでいるあいだに落ちていない
+OK  1回目の 60歳1月〜64歳12月 に不足した月がある(TD-005 不足額の読み取り)
+不足した月 61歳5月、不足額 D = 112500
+[実行 run2_D_100000] 入力 {"startAge": 55, "retirementAge": 60, "pensionStartAge": 65, "gapIncome": 0, "expenseCurrent": 150000, "expenseGap": 200000, "eventProb": 0, "interest": 0, "investRate": 0, "initialInv": 212500} 給与変更 None 削除 None
+OK  [run2_D_100000] 開始したあと落ちていない
+[run2_D_100000] 読んだ行 539、月の記録 129、最後まで読んだ False、最後の記録 65歳9月、13 秒
+OK  [run2_D_100000] 読んでいるあいだに落ちていない
+OK  [D+100000] 不足した月の行が読めた
+NG  [D+100000] 不足した月の |(総資産 − 前の行の総資産) − (収入 − 生活費)| < 4円(総資産 300000→77500、収入 0、生活費 200000)
+OK  [D+100000] 不足した月の現金 ≧ 0円で投資 > 0円(現金 0、投資 77500)
+[実行 run3_D] 入力 {"startAge": 55, "retirementAge": 60, "pensionStartAge": 65, "gapIncome": 0, "expenseCurrent": 150000, "expenseGap": 200000, "eventProb": 0, "interest": 0, "investRate": 0, "initialInv": 112500} 給与変更 None 削除 None
+OK  [run3_D] 開始したあと落ちていない
+[run3_D] 読んだ行 542、月の記録 130、最後まで読んだ False、最後の記録 65歳10月、13 秒
+OK  [run3_D] 読んでいるあいだに落ちていない
+OK  [D] 不足した月の行が読めた
+NG  [D] 不足した月の |(総資産 − 前の行の総資産) − (収入 − 生活費)| < 4円(総資産 200000→-22500、収入 0、生活費 200000)
+OK  [D] 不足した月の現金 ≧ 0円(現金 0)
+[実行 run4_floor_D_2_] 入力 {"startAge": 55, "retirementAge": 60, "pensionStartAge": 65, "gapIncome": 0, "expenseCurrent": 150000, "expenseGap": 200000, "eventProb": 0, "interest": 0, "investRate": 0, "initialInv": 56250} 給与変更 None 削除 None
+OK  [run4_floor_D_2_] 開始したあと落ちていない
+[run4_floor_D_2_] 読んだ行 541、月の記録 129、最後まで読んだ False、最後の記録 65歳9月、14 秒
+OK  [run4_floor_D_2_] 読んでいるあいだに落ちていない
+OK  [floor(D/2)] 不足した月の行が読めた
+NG  [floor(D/2)] 不足した月の |(総資産 − 前の行の総資産) − (収入 − 生活費)| < 4円(総資産 143750→-67500、収入 0、生活費 200000)
+OK  [floor(D/2)] 落ちずに 64歳12月まで読めた
+OK  [floor(D/2)] 不足した月より後の行に読めない値が無い

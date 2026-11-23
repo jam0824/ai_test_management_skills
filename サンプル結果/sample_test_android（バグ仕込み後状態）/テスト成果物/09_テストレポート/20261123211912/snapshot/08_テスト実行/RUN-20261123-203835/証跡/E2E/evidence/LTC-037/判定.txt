@@ -1,0 +1,11 @@
+LTC-037 投資が残っているあいだは、どの期間でも現金が0円未満にならない
+結果: Pass
+[実行 run1_現金不足] 入力 {"startAge": 55, "retirementAge": 60, "pensionStartAge": 65, "gapIncome": 50000, "salary": 3000000, "monthlyPension": 145000, "initialCash": 100000, "initialInv": 200000000, "expenseCurrent": 300000, "expenseGap": 200000, "expenseRetired": 228000, "eventProb": 0, "investRate": 0, "interest": 0} 給与変更 None 削除 None
+OK  [run1_現金不足] 開始したあと落ちていない
+[run1_現金不足] 読んだ行 2850、月の記録 552、最後まで読んだ True、最後の記録 100歳12月、96 秒
+OK  [run1_現金不足] 読んでいるあいだに落ちていない
+OK  最後の行まで読めた(行が増えなくなるまで読んだ: True、月の記録 552)
+OK  投資 > 0円のすべての行で、現金 ≧ 0円: 552 件すべてで成り立つ
+OK  入力の確かめ: 55〜58歳に投資が前の行より減った行が1行以上ある
+OK  入力の確かめ: 62〜63歳に投資が前の行より減った行が1行以上ある
+OK  入力の確かめ: 67歳以降に投資が前の行より減った行が1行以上ある

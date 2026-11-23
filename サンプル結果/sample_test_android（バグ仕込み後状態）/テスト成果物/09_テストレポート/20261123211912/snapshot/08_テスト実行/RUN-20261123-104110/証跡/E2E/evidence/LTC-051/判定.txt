@@ -1,0 +1,27 @@
+LTC-051 給与変更で指定した年齢から年収が変わる
+結果: Fail
+スクリプトが途中で止まった: DeviceError: uiautomator dump が取れない: ERROR: null root node returned by UiTestAutomationBridge.
+[実行 run1_給与変更あり] 入力 {"startAge": 35, "retirementAge": 50, "pensionStartAge": 65, "eventProb": 0, "salary": 3000000} 給与変更 [{'年齢': 40, '年収': 5000000}] 削除 None
+ERR スクリプトが途中で止まった: DeviceError: uiautomator dump が取れない: ERROR: null root node returned by UiTestAutomationBridge.
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 213, in run_cases
+    c.func(ctx)
+  File "D:\codes\sample_test_android\e2e\tests\test_salary_changes.py", line 63, in ltc051
+    changed = t.simulate(d["値"], changes=d["給与変更"], until=(48, 12), label="給与変更あり")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 146, in simulate
+    self.app.restart()
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 167, in restart
+    return self.wait_for(lambda s: s.has("startAge") or s.has("screen"), "起動して入力欄が出る", 30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 172, in wait_for
+    s = self.snap()
+        ^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 144, in snap
+    xml = self.d.dump_xml()
+          ^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 75, in dump_xml
+    raise DeviceError(f"uiautomator dump が取れない: {last}")
+framework.device.DeviceError: uiautomator dump が取れない: ERROR: null root node returned by UiTestAutomationBridge.
+

@@ -1,0 +1,17 @@
+LTC-063 入力している途中に回転しても、途中の値が消えない
+結果: Fail
+スクリプトが途中で止まった: OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+ERR スクリプトが途中で止まった: OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 213, in run_cases
+    c.func(ctx)
+  File "D:\codes\sample_test_android\e2e\tests\test_rotation.py", line 106, in ltc063
+    t.app.restart()
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 167, in restart
+    return self.wait_for(lambda s: s.has("startAge") or s.has("screen"), "起動して入力欄が出る", 30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 176, in wait_for
+    raise OperationError(f"待っても画面が変わらない: {what}")
+framework.screen.OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+

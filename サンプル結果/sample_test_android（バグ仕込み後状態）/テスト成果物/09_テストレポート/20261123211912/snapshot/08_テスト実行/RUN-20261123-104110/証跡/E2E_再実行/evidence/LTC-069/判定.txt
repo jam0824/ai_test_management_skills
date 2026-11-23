@@ -1,0 +1,16 @@
+LTC-069 入力欄14項目を resource-id で特定できる
+結果: Pass
+OK  startAge が1つあり EditText(1 個、['android.widget.EditText'])
+OK  retirementAge が1つあり EditText(1 個、['android.widget.EditText'])
+OK  pensionStartAge が1つあり EditText(1 個、['android.widget.EditText'])
+OK  gapIncome が1つあり EditText(1 個、['android.widget.EditText'])
+OK  salary が1つあり EditText(1 個、['android.widget.EditText'])
+OK  monthlyPension が1つあり EditText(1 個、['android.widget.EditText'])
+OK  initialCash が1つあり EditText(1 個、['android.widget.EditText'])
+OK  initialInv が1つあり EditText(1 個、['android.widget.EditText'])
+OK  expenseCurrent が1つあり EditText(1 個、['android.widget.EditText'])
+OK  expenseGap が1つあり EditText(1 個、['android.widget.EditText'])
+OK  expenseRetired が1つあり EditText(1 個、['android.widget.EditText'])
+OK  investRate が1つあり EditText(1 個、['android.widget.EditText'])
+OK  interest が1つあり EditText(1 個、['android.widget.EditText'])
+OK  eventProb が1つあり EditText(1 個、['android.widget.EditText'])

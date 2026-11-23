@@ -1,0 +1,21 @@
+LTC-052 2件の給与変更で、3つの区間の給与収入がその区間の年収を基本にしたときと同じ
+結果: Fail
+スクリプトが途中で止まった: OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+[実行 run1_2件の給与変更] 入力 {"startAge": 30, "retirementAge": 50, "pensionStartAge": 65, "eventProb": 0, "salary": 4000000} 給与変更 [{'年齢': 35, '年収': 5000000}, {'年齢': 42, '年収': 7000000}] 削除 None
+ERR スクリプトが途中で止まった: OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 213, in run_cases
+    c.func(ctx)
+  File "D:\codes\sample_test_android\e2e\tests\test_salary_changes.py", line 72, in ltc052
+    main = t.simulate(d["値"], changes=d["給与変更"], until=(48, 12), label="2件の給与変更")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 146, in simulate
+    self.app.restart()
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 167, in restart
+    return self.wait_for(lambda s: s.has("startAge") or s.has("screen"), "起動して入力欄が出る", 30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 176, in wait_for
+    raise OperationError(f"待っても画面が変わらない: {what}")
+framework.screen.OperationError: 待っても画面が変わらない: 起動して入力欄が出る
+

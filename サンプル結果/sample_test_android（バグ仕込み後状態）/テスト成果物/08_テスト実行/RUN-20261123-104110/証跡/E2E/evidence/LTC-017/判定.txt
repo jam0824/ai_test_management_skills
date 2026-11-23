@@ -1,0 +1,36 @@
+LTC-017 退職後の月は退職後収入と退職〜年金開始期間の生活費で、変えた入力は退職後の月だけに効く
+結果: Fail
+スクリプトが途中で止まった: DeviceError: uiautomator dump が取れない: ERROR: null root node returned by UiTestAutomationBridge.
+[実行 P] 同じ入力の実行 run1_P の結果を使う(ローレベルテストケースの備考のとおり)
+OK  最後の行まで読めた(行が増えなくなるまで読んだ: True、月の記録 552)
+OK  [P] 62歳1月〜63歳12月 の行がある(24 行)
+OK  [P] 62歳1月〜63歳12月 の月の生活費が 200,000円: 24 件すべてで成り立つ
+OK  [P] 62歳1月〜63歳12月 の月の収入の種類が 退職後収入: 24 件すべてで成り立つ
+[実行 run1_P_退職後生活費] 入力 {"startAge": 55, "retirementAge": 60, "pensionStartAge": 65, "gapIncome": 50000, "salary": 3000000, "monthlyPension": 145000, "expenseCurrent": 150000, "expenseGap": 210000, "expenseRetired": 228000, "eventProb": 0} 給与変更 None 削除 None
+ERR スクリプトが途中で止まった: DeviceError: uiautomator dump が取れない: ERROR: null root node returned by UiTestAutomationBridge.
+証跡の screencap/dump が取れなかった: adb がタイムアウトした: exec-out screencap -p
+
+Traceback (most recent call last):
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 213, in run_cases
+    c.func(ctx)
+  File "D:\codes\sample_test_android\e2e\tests\test_periods.py", line 80, in ltc017
+    ex = run_p(t, "P_退職後生活費")
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\tests\test_periods.py", line 18, in run_p
+    res = t.simulate(period_input(name), share=(name == "P"), label=name)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\runner.py", line 146, in simulate
+    self.app.restart()
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 167, in restart
+    return self.wait_for(lambda s: s.has("startAge") or s.has("screen"), "起動して入力欄が出る", 30)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 172, in wait_for
+    s = self.snap()
+        ^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\screen.py", line 144, in snap
+    xml = self.d.dump_xml()
+          ^^^^^^^^^^^^^^^^^
+  File "D:\codes\sample_test_android\e2e\framework\device.py", line 75, in dump_xml
+    raise DeviceError(f"uiautomator dump が取れない: {last}")
+framework.device.DeviceError: uiautomator dump が取れない: ERROR: null root node returned by UiTestAutomationBridge.
+

@@ -1,0 +1,16 @@
+LTC-008 開始時貯金の差が最初の月の現金の差になる
+結果: Pass
+[実行 run1_initialCash0] 入力 {"eventProb": 0, "interest": 0, "investRate": 0, "expenseCurrent": 100000, "initialCash": 0} 給与変更 None 削除 None
+OK  [run1_initialCash0] 開始したあと落ちていない
+[run1_initialCash0] 読んだ行 194、月の記録 46、最後まで読んだ False、最後の記録 33歳10月、2 秒
+OK  [run1_initialCash0] 読んでいるあいだに落ちていない
+OK  [initialCash0] 最初の行が読めた
+[initialCash0] 最初の行: '-- 30歳1月 --\n給与: ¥188,125 (投資: ¥0)\n生活費: ¥100,000\n現金: ¥88,125 投資: ¥0 総資産: ¥88,125'
+[実行 run2_initialCash1000000] 入力 {"eventProb": 0, "interest": 0, "investRate": 0, "expenseCurrent": 100000, "initialCash": 1000000} 給与変更 None 削除 None
+OK  [run2_initialCash1000000] 開始したあと落ちていない
+[run2_initialCash1000000] 読んだ行 194、月の記録 46、最後まで読んだ False、最後の記録 33歳10月、2 秒
+OK  [run2_initialCash1000000] 読んでいるあいだに落ちていない
+OK  [initialCash1000000] 最初の行が読めた
+[initialCash1000000] 最初の行: '-- 30歳1月 --\n給与: ¥188,125 (投資: ¥0)\n生活費: ¥100,000\n現金: ¥1,088,125 投資: ¥0 総資産: ¥1,088,125'
+OK  現金の差 = 1,000,000円(88125 と 1088125)
+OK  投資の金額が同じ(0 と 0)

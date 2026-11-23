@@ -1,0 +1,7 @@
+LTC-063 入力している途中に回転しても、途中の値が消えない
+結果: Pass
+起動直後の値: {'startAge': '30', 'retirementAge': '65', 'pensionStartAge': '65', 'gapIncome': '0', 'salary': '3000000', 'monthlyPension': '145000', 'initialCash': '1000000', 'initialInv': '0', 'expenseCurrent': '155600', 'expenseGap': '228000', 'expenseRetired': '228000', 'investRate': '20', 'interest': '4', 'eventProb': '1'}
+横向きにする前、キーボードが出ている: True
+向きを 横 にした(画面 6000x1080)
+OK  横向きにした後、salary の値が 4500000(画面 '4500000')
+OK  ほかの13入力欄の値が起動直後の値のまま: 13 件すべてで成り立つ
