@@ -128,6 +128,32 @@ class Test視認性アップ:
         assert "SPEC-001" in kids and "SPEC-002" in kids and "SPEC-003" not in kids
         assert "サービスを使うため" in kids  # 要求のほかの欄(誰が・何のために など)も出る
 
+    def test_テスト計画のページはテストアイテムとテストスコープを上に出す(self, root):
+        path = root / "03_テスト計画/テスト計画.md"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "## テスト終了条件",
+            "## テストアイテム\n\n会員登録アプリ v1.2\n\n## テストスコープ\n\n- 年齢の入力(SPEC-001)\n\n## テスト終了条件"),
+            encoding="utf-8")
+        html = tm_html.render_stage(tm_core.load_project(root), "plan")
+        main = html.split("<main>")[1]
+        assert main.index("<h2>テストアイテム</h2>") < main.index("<h2>テストスコープ</h2>") < main.index("<h2>テスト終了条件</h2>")
+        items = main.split("<h2>テストアイテム</h2>")[1].split("<h2>")[0]
+        scope = main.split("<h2>テストスコープ</h2>")[1].split("<h2>")[0]
+        assert "会員登録アプリ v1.2" in items
+        assert "年齢の入力" in scope and 'href="ID索引.html#SPEC-001"' in scope
+
+    def test_テストアプローチはテストタイプ_内容_実施方法_要求_仕様_リスクの順に並べる(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "plan")
+        section = html.split("テストアプローチ</h2>")[1]
+        headers = section.split("<thead><tr>")[1].split("</tr></thead>")[0]
+        assert headers == "".join(f"<th>{h}</th>" for h in ["テストタイプ", "テストアプローチ", "実施方法", "要求", "仕様", "リスク"])
+        row = next(line for line in section.split("</tr>") if 'id="row-TA-001"' in line)
+        cells = row.split("<td>")[1:]
+        assert "機能テスト" in cells[0]
+        assert "TA-001" in cells[1] and "年齢の入力チェックを確かめる" in cells[1]
+        assert "E2E自動テスト" in cells[2]
+        assert "REQ-001" in cells[3] and "SPEC-001" in cells[4] and "RISK-001" in cells[5]
+
     def test_工程のページの質問は並べて開くと理由と関連が出る(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "analysis")
         summary, kids = self._risk_block(html, "Q-001")

@@ -414,10 +414,20 @@ def _stage_risk(v: View) -> str:
 
 def _stage_plan(v: View) -> str:
     p = v.project
+    # 何を・どこまでテストするかを先に読めるよう、テストアイテムとテストスコープを上に出す
+    plan_file = p.root / tm_core.STAGE_DIRS["plan"] / "テスト計画.md"
+    sections = _sections(plan_file.read_text(encoding="utf-8-sig")) if plan_file.is_file() else {}
+    head = "".join(f"<h2>{name}</h2>{md_to_html(sections[name], v.known, v.id_href)}"
+                   for name in ("テストアイテム", "テストスコープ") if sections.get(name, "").strip())
     exits = [[v.ref(e.id, False), v.text(e.fields.get("終了条件", e.title)), v.text(e.fields.get("測り方", ""))] for e in p.of_type("EXIT")]
-    return ("<h2>テスト終了条件</h2>" + _table(["ID", "終了条件", "測り方"], exits)
-            + "<h2>要求・仕様・リスク → テストアプローチ</h2>"
-            + v.chain(_ids(p, "TA"), ["REQ", "SPEC", "RISK", "TA"], ["テストタイプ", "実施方法"]))
+    approaches = [
+        [v.text(ta.fields.get("テストタイプ", "")), f'{v.ref(ta.id, False)} {v.text(ta.fields.get("内容", ""))}',
+         v.text(ta.fields.get("実施方法", ""))] + [v.refs(v.related(ta.id, t), False) for t in ("REQ", "SPEC", "RISK")]
+        for ta in p.of_type("TA")]
+    return (head + "<h2>テスト終了条件</h2>" + _table(["ID", "終了条件", "測り方"], exits)
+            + "<h2>テストアプローチ</h2>"
+            + _table(["テストタイプ", "テストアプローチ", "実施方法", "要求", "仕様", "リスク"], approaches,
+                     ["row-" + ta.id for ta in p.of_type("TA")]))
 
 
 def _stage_analysis(v: View) -> str:
