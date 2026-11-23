@@ -263,6 +263,9 @@ details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 
 .flags b{font-size:11.5px;font-weight:600;margin-right:6px;white-space:nowrap}.flags .f{color:var(--fail)}.flags .w{color:var(--block)}
 .ci{font-size:11.5px;color:var(--muted);white-space:nowrap}
 .leaf{padding:4px 8px;border-bottom:1px solid var(--line);font-size:13px}.leaf .memo{color:var(--muted);font-size:12px;margin-left:8px}
+.risk-note{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:6px 8px;padding:6px 10px;background:var(--soft);border-left:3px solid var(--line);font-size:13px}
+.risk-note dt{font-weight:600;color:var(--muted);white-space:nowrap}.risk-note dd{margin:0}
+.tree .sub{font-size:12px;font-weight:600;color:var(--muted);padding:6px 8px 2px}
 .legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;margin:6px 0}.legend i{width:12px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
 """
 
@@ -311,8 +314,29 @@ def _risk_order(project: Project) -> list[str]:
 
 
 def _stage_risk(v: View) -> str:
-    return ("<h2>要求 → 仕様 → リスク</h2><p class=\"muted\">リスクレベルの高い順。リスクレベル = 影響度 × 発生確率。15〜25 が高、8〜14 が中、1〜7 が低。</p>"
-            + v.chain(_risk_order(v.project), ["REQ", "SPEC", "RISK"], ["影響度", "発生確率", "リスクレベル", "区分"]))
+    """リスクを1件ずつたためる行で並べ、開くと根拠・備考と、紐づく仕様(とその要求)が出る。"""
+    blocks = []
+    for risk_id in _risk_order(v.project):
+        record = v.project.records[risk_id]
+        f = record.fields
+        specs = sorted(v.related(risk_id, "SPEC"), key=tm_core._id_key)
+        notes = "".join(
+            f"<dt>{name}</dt><dd>{v.text(f[name])}</dd>" for name in ("根拠", "備考") if f.get(name, "").strip())
+        spec_rows = "".join(
+            f'<div class="leaf"><span class="kind">{TYPES["SPEC"]}</span>{v.ref(s)}'
+            f' <span class="memo">{TYPES["REQ"]}: {v.refs(v.related(s, "REQ"), False)}</span></div>'
+            for s in specs)
+        leaves = ((f'<dl class="risk-note">{notes}</dl>' if notes else "")
+                  + (f'<div class="sub">紐づく仕様</div>{spec_rows}' if spec_rows else ""))
+        level = (f'<span class="ci">影響度 {_escape(f.get("影響度", ""))} × 発生確率 {_escape(f.get("発生確率", ""))}'
+                 f' = {_escape(f.get("リスクレベル", ""))}</span>')
+        blocks.append(
+            f'<details class="lv-RISK" id="row-{risk_id}"><summary><span class="kind">{TYPES["RISK"]}</span>'
+            f'{v.ref(risk_id, False)} {_badge(f.get("区分", ""))} <span class="title">{_escape(record.title)}</span>'
+            f'{level}<span class="ci">仕様 {len(specs)}件</span></summary><div class="kids">{leaves}</div></details>')
+    return ("<h2>リスクと紐づく仕様</h2><p class=\"muted\">リスクレベルの高い順。行をクリックすると、根拠・備考と、紐づく仕様とその要求が開く。"
+            "リスクレベル = 影響度 × 発生確率。15〜25 が高、8〜14 が中、1〜7 が低。</p>"
+            f'<div class="tree">{"".join(blocks)}</div>')
 
 
 def _stage_plan(v: View) -> str:

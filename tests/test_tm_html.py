@@ -86,10 +86,47 @@ class Test視認性アップ:
                      "design.html", "implementation.html", "e2e.html", "execution.html"]:
             assert (out / name).exists(), name
 
-    def test_リスクのページで要求から仕様とリスクまでたどれる(self, root):
+    @staticmethod
+    def _risk_block(html: str, risk_id: str) -> tuple[str, str]:
+        """リスクのページから、そのリスクの見出し(summary)と、開くと出る中身を取り出す。"""
+        block = html.split(f'<details class="lv-RISK" id="row-{risk_id}"')[1].split("</details>")[0]
+        summary, kids = block.split("</summary>")
+        return summary, kids
+
+    def test_リスクのページはリスクを並べて開くと紐づく仕様と要求が出る(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "risk")
-        row = next(line for line in html.split("</tr>") if 'id="row-RISK-001"' in line)
-        assert "REQ-001" in row and "SPEC-001" in row
+        summary, kids = self._risk_block(html, "RISK-001")
+        assert "RISK-001" in summary and "年齢の境界を誤って登録を通す" in summary
+        assert "SPEC-001" not in summary
+        assert "SPEC-001" in kids and "REQ-001" in kids
+        assert "SPEC-003" not in kids
+
+    def test_リスクのページはリスクレベルの高い順に並ぶ(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "risk")
+        assert html.index('id="row-RISK-001"') < html.index('id="row-RISK-002"')
+
+    def test_リスクのページで開くと根拠と備考も出る(self, root):
+        path = root / "02_リスク分析/リスク分析.md"
+        text = path.read_text(encoding="utf-8")
+        text = text.replace("| 区分 | 根拠 |", "| 区分 | 根拠 | 備考 |").replace("|---|---|---|---|---|---|---|---|", "|---|---|---|---|---|---|---|---|---|")
+        text = text.replace("起きやすい |", "起きやすい | Q-001 の回答待ち |").replace("単純な画面遷移 |", "単純な画面遷移 | |")
+        path.write_text(text, encoding="utf-8")
+        html = tm_html.render_stage(tm_core.load_project(root), "risk")
+        summary, kids = self._risk_block(html, "RISK-001")
+        assert "境界の実装ミスは起きやすい" in kids
+        assert 'href="ids.html#Q-001"' in kids and "の回答待ち" in kids
+        assert kids.index("境界の実装ミス") < kids.index("SPEC-001")
+        assert "境界の実装ミスは起きやすい" not in summary
+        _, kids2 = self._risk_block(html, "RISK-002")
+        assert "単純な画面遷移" in kids2 and "備考" not in kids2
+
+    def test_リスクのページで仕様が紐づかないリスクは開いても仕様が出ない(self, root):
+        append_to(root, "02_リスク分析/リスク分析.md", "| RISK-003 | 仕様に無いところで落ちる |  | 3 | 1 | 3 | 低 | 不明 |\n")
+        html = tm_html.render_stage(tm_core.load_project(root), "risk")
+        summary, kids = self._risk_block(html, "RISK-003")
+        assert "RISK-003" in summary
+        assert "不明" in kids
+        assert "SPEC-" not in kids
 
     def test_要求仕様のページで仕様が無い要求がわかる(self, root):
         append_to(root, "01_要求仕様/要求.md", "| REQ-003 | 退会できる | 利用者 | やめたいとき |\n")
