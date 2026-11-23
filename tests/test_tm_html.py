@@ -154,6 +154,42 @@ class Test視認性アップ:
         assert "E2E自動テスト" in cells[2]
         assert "REQ-001" in cells[3] and "SPEC-001" in cells[4] and "RISK-001" in cells[5]
 
+    @staticmethod
+    def _coverage_row(html: str, kind: str) -> str:
+        coverage = html.split("満たしている割合</h2>")[1].split("<h2>")[0]
+        return next(r for r in coverage.split("</tr>") if f">{kind}</span></td>" in r)
+
+    def test_テストアプローチの上に要求と仕様とリスクを満たしている割合を出す(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "plan")
+        main = html.split("<main>")[1]
+        assert main.index("<h2>テスト終了条件</h2>") < main.index("満たしている割合</h2>") < main.index("<h2>テストアプローチ</h2>")
+        assert "<td>2 / 2</td><td>100%</td>" in self._coverage_row(html, "要求")
+        assert "<td>3 / 3</td><td>100%</td>" in self._coverage_row(html, "仕様")
+        assert "<td>2 / 2</td><td>100%</td>" in self._coverage_row(html, "リスク")
+
+    def test_テストアプローチが無い仕様があれば割合とIDと理由を出す(self, root):
+        append_to(root, "01_要求仕様/仕様.md", "| SPEC-004 | 確認画面に戻るボタンがある | REQ-002 | 仕様書 2.3 |\n")
+        row = self._coverage_row(tm_html.render_stage(tm_core.load_project(root), "plan"), "仕様")
+        assert "<td>3 / 4</td><td>75%</td>" in row and "SPEC-004" in row and "テストアプローチが無い" in row
+
+    def test_テスト計画で対象外にしたものは対象外の理由を出す(self, root):
+        append_to(root, "01_要求仕様/仕様.md", "| SPEC-004 | 確認画面に戻るボタンがある | REQ-002 | 仕様書 2.3 |\n")
+        path = root / "03_テスト計画/テスト計画.md"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "## テスト終了条件",
+            "## 対象外/制約\n\n### 対象外\n\n| 対象外にするもの | 理由 |\n|---|---|\n| 戻るボタン(SPEC-004) | 次の版で作る |\n\n"
+            "### 制約\n\n- 時間は1日\n\n## テスト終了条件"), encoding="utf-8")
+        row = self._coverage_row(tm_html.render_stage(tm_core.load_project(root), "plan"), "仕様")
+        assert "SPEC-004" in row and "対象外" in row and "次の版で作る" in row
+        assert "テストアプローチが無い" not in row
+
+    def test_仕様が無い要求は仕様が無いことと扱っているリスクとテストアプローチを出す(self, root):
+        append_to(root, "01_要求仕様/要求.md", "| REQ-003 | ありえない値で誤った結果を信じない | 利用者 | 判断を誤らないため |\n")
+        append_to(root, "02_リスク分析/リスク分析.md", "| RISK-003 | ありえない値を入れても知らされない |  | 4 | 4 | 16 | 高 | REQ-003 に仕様が無い |\n")
+        append_to(root, "03_テスト計画/テスト計画.md", "| TA-004 | 機能テスト | 探索的テスト | ありえない値を探索する |  | RISK-003 |\n")
+        row = self._coverage_row(tm_html.render_stage(tm_core.load_project(root), "plan"), "要求")
+        assert "REQ-003" in row and "仕様が無い" in row and "RISK-003" in row and "TA-004" in row
+
     def test_工程のページの質問は並べて開くと理由と関連が出る(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "analysis")
         summary, kids = self._risk_block(html, "Q-001")

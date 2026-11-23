@@ -318,6 +318,7 @@ details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 
 .tree .sub{font-size:12px;font-weight:600;color:var(--muted);padding:6px 8px 2px}
 .latest-report{font-size:18px;font-weight:700;border:2px solid var(--link);border-radius:6px;padding:10px 14px;margin:8px 0 14px}
 .latest-report .muted{font-size:13px;font-weight:400}
+.nowrap{white-space:nowrap}
 .legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;margin:6px 0}.legend i{width:12px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
 """
 
@@ -424,10 +425,58 @@ def _stage_plan(v: View) -> str:
         [v.text(ta.fields.get("テストタイプ", "")), f'{v.ref(ta.id, False)} {v.text(ta.fields.get("内容", ""))}',
          v.text(ta.fields.get("実施方法", ""))] + [v.refs(v.related(ta.id, t), False) for t in ("REQ", "SPEC", "RISK")]
         for ta in p.of_type("TA")]
+    # テストアプローチの表の要求・仕様・リスクの列に、どれか1行でも出てくれば「満たしている」と数える
+    excluded = _excluded_in_plan(sections.get("対象外/制約", ""))
+    coverage = []
+    for type_key in ("REQ", "SPEC", "RISK"):
+        all_ids = _ids(p, type_key)
+        covered = {i for ta in p.of_type("TA") for i in v.related(ta.id, type_key)}
+        missing = [i for i in all_ids if i not in covered]
+        rate = f"{100 * (len(all_ids) - len(missing)) // len(all_ids)}%" if all_ids else "-"
+        reasons = "<br>".join(f"{v.ref(i, False)} {_not_covered_reason(v, i, excluded)}" for i in missing)
+        coverage.append([f'<span class="nowrap">{TYPES[type_key]}</span>', f"{len(all_ids) - len(missing)} / {len(all_ids)}", rate,
+                         reasons or '<span class="none-text">なし</span>'])
     return (head + "<h2>テスト終了条件</h2>" + _table(["ID", "終了条件", "測り方"], exits)
+            + "<h2>テストアプローチが要求・仕様・リスクを満たしている割合</h2>"
+            "<p class=\"muted\">下のテストアプローチの表の要求・仕様・リスクの列に、1行でも出てくるものを「満たしている」と数える。</p>"
+            + _table(["", "満たしている数", "割合", "満たしていないものと理由"], coverage)
             + "<h2>テストアプローチ</h2>"
             + _table(["テストタイプ", "テストアプローチ", "実施方法", "要求", "仕様", "リスク"], approaches,
                      ["row-" + ta.id for ta in p.of_type("TA")]))
+
+
+def _excluded_in_plan(section: str) -> dict[str, str]:
+    """テスト計画の「対象外/制約」のうち「対象外」の表から、ID → 対象外にした理由。"""
+    excluded: dict[str, str] = {}
+    sub = ""
+    rows: list[list[str]] = []
+    for line in section.splitlines() + [""]:
+        heading = re.match(r"^###\s+(.*)$", line)
+        if heading:
+            sub = heading.group(1)
+        if line.strip().startswith("|") and "対象外" in sub:
+            rows.append([c.strip() for c in line.strip().strip("|").split("|")])
+            continue
+        for cells in rows[1:]:  # 先頭は見出しの行
+            if all(re.fullmatch(r":?-+:?", c) for c in cells if c):
+                continue
+            for record_id in tm_core.find_ids(cells[0]):
+                excluded[record_id] = cells[1] if len(cells) > 1 else ""
+        rows = []
+    return excluded
+
+
+def _not_covered_reason(v: View, record_id: str, excluded: dict[str, str]) -> str:
+    if record_id in excluded:
+        return f'<span class="muted">対象外: {v.text(excluded[record_id])}</span>'
+    p = v.project
+    if type_of(record_id) == "REQ" and not any(type_of(c) == "SPEC" for c in p.children(record_id)):
+        risks = sorted((r.id for r in p.of_type("RISK") if record_id in r.links | r.mentions), key=tm_core._id_key)
+        tas = sorted({ta.id for ta in p.of_type("TA") if set(risks) & set(v.related(ta.id, "RISK"))}, key=tm_core._id_key)
+        handled = (f"。{v.refs(risks, False).replace('<br>', '、')} として "
+                   f"{v.refs(tas, False).replace('<br>', '、')} で扱う") if risks and tas else ""
+        return f'<span class="muted">仕様が無い{handled}</span>'
+    return '<span class="missing">テストアプローチが無い</span>'
 
 
 def _stage_analysis(v: View) -> str:
