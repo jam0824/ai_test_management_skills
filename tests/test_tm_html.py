@@ -115,10 +115,33 @@ class Test視認性アップ:
 
     @staticmethod
     def _risk_block(html: str, risk_id: str) -> tuple[str, str]:
-        """リスクのページから、そのリスクの見出し(summary)と、開くと出る中身を取り出す。"""
-        block = html.split(f'<details class="lv-RISK" id="row-{risk_id}"')[1].split("</details>")[0]
+        """開く一覧から、その行の見出し(summary)と、開くと出る中身を取り出す。"""
+        block = html.split(f'<details class="card" id="row-{risk_id}"')[1].split("</details>")[0]
         summary, kids = block.split("</summary>")
         return summary, kids
+
+    def test_要求仕様整理のページは要求を並べて開くと紐づく仕様が出る(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "requirements")
+        summary, kids = self._risk_block(html, "REQ-001")
+        assert "REQ-001" in summary and "年齢を入力して登録できる" in summary and "仕様 2件" in summary
+        assert "SPEC-001" not in summary
+        assert "SPEC-001" in kids and "SPEC-002" in kids and "SPEC-003" not in kids
+        assert "サービスを使うため" in kids  # 要求のほかの欄(誰が・何のために など)も出る
+
+    def test_工程のページの質問は並べて開くと理由と関連が出る(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "analysis")
+        summary, kids = self._risk_block(html, "Q-001")
+        assert "Q-001" in summary and "小数の年齢はどう扱うか" in summary and "未回答" in summary
+        assert "SPEC-001" not in summary
+        assert "曖昧" in kids and "期待結果が決まらない" in kids and "SPEC-001" in kids
+
+    def test_回答があれば質問を開くと回答が出る(self, root):
+        path = root / "質問表.md"
+        path.write_text(path.read_text(encoding="utf-8").replace("| 未回答 | |", "| 回答済み | 整数だけ扱う |"),
+                        encoding="utf-8")
+        html = tm_html.render_stage(tm_core.load_project(root), "analysis")
+        summary, kids = self._risk_block(html, "Q-001")
+        assert "回答済み" in summary and "整数だけ扱う" in kids
 
     def test_リスクのページはリスクを並べて開くと紐づく仕様と要求が出る(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "risk")

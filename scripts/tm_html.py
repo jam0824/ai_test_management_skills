@@ -303,7 +303,7 @@ details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 
 .tree summary:hover{background:var(--soft)}
 .tree summary.ng{box-shadow:inset 3px 0 0 var(--fail)}.tree summary.warn{box-shadow:inset 3px 0 0 var(--block)}.tree summary.ok{box-shadow:inset 3px 0 0 var(--pass)}
 .tree .kids{margin-left:22px;border-left:1px dashed var(--line)}
-.tree .lv-REQ>summary,.tree .lv-RISK>summary{font-weight:600}
+.tree .lv-REQ>summary,.tree .lv-RISK>summary,.tree .card>summary{font-weight:600}
 .kind{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;white-space:nowrap}
 .tree .title{flex:1 1 280px;min-width:0}
 .bar{display:inline-flex;width:140px;height:10px;border-radius:5px;overflow:hidden;background:var(--notrun);flex:none}
@@ -313,8 +313,8 @@ details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 
 .flags b{font-size:11.5px;font-weight:600;margin-right:6px;white-space:nowrap}.flags .f{color:var(--fail)}.flags .w{color:var(--block)}
 .ci{font-size:11.5px;color:var(--muted);white-space:nowrap}
 .leaf{padding:4px 8px;border-bottom:1px solid var(--line);font-size:13px}.leaf .memo{color:var(--muted);font-size:12px;margin-left:8px}
-.risk-note{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:6px 8px;padding:6px 10px;background:var(--soft);border-left:3px solid var(--line);font-size:13px}
-.risk-note dt{font-weight:600;color:var(--muted);white-space:nowrap}.risk-note dd{margin:0}
+.card-note{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:6px 8px;padding:6px 10px;background:var(--soft);border-left:3px solid var(--line);font-size:13px}
+.card-note dt{font-weight:600;color:var(--muted);white-space:nowrap}.card-note dd{margin:0}
 .tree .sub{font-size:12px;font-weight:600;color:var(--muted);padding:6px 8px 2px}
 .latest-report{font-size:18px;font-weight:700;border:2px solid var(--link);border-radius:6px;padding:10px 14px;margin:8px 0 14px}
 .latest-report .muted{font-size:13px;font-weight:400}
@@ -342,9 +342,36 @@ def _ids(project: Project, type_key: str) -> list[str]:
 
 # ---- 工程ごとのページ ----
 
+def _card(v: View, record_id: str, title: str, badges: str = "", meta: str = "",
+          notes: list[tuple[str, str]] = (), sub_label: str = "", leaves: str = "") -> str:
+    """1件をたためる行にする。開くと、notes(項目名と値)を囲みで、その下に sub_label の見出しと leaves を出す。"""
+    note = "".join(f"<dt>{_escape(name)}</dt><dd>{v.text(value)}</dd>" for name, value in notes if value.strip())
+    inner = ((f'<dl class="card-note">{note}</dl>' if note else "")
+             + (f'<div class="sub">{sub_label}</div>{leaves}' if leaves else ""))
+    return (f'<details class="card" id="row-{record_id}"><summary><span class="kind">{TYPES[type_of(record_id)]}</span>'
+            f'{v.ref(record_id, False)} {badges} <span class="title">{_escape(title)}</span>{meta}</summary>'
+            f'<div class="kids">{inner}</div></details>')
+
+
+def _leaf(v: View, record_id: str, memo: str = "") -> str:
+    memo_html = f' <span class="memo">{memo}</span>' if memo else ""
+    return f'<div class="leaf"><span class="kind">{TYPES[type_of(record_id)]}</span>{v.ref(record_id)}{memo_html}</div>'
+
+
+def _other_fields(record, skip: set[str]) -> list[tuple[str, str]]:
+    """表のほかの欄。ID・見出しに出したもの・紐づけの列(見出しが ID で終わる列)は除く。"""
+    return [(k, val) for k, val in record.fields.items() if k not in skip and not k.endswith("ID")]
+
+
 def _stage_requirements(v: View) -> str:
     p = v.project
-    rows = [[v.ref(r.id), v.refs(c for c in p.children(r.id) if type_of(c) == "SPEC")] for r in p.of_type("REQ")]
+    cards = []
+    for r in p.of_type("REQ"):
+        specs = sorted((c for c in p.children(r.id) if type_of(c) == "SPEC"), key=tm_core._id_key)
+        cards.append(_card(
+            v, r.id, r.title, meta=f'<span class="ci">仕様 {len(specs)}件</span>',
+            notes=_other_fields(r, {"ID", "要求"}), sub_label="紐づく仕様",
+            leaves="".join(_leaf(v, s) for s in specs)))
     asked = {link for q in p.of_type("Q") for link in q.links}
     no_spec = [r.id for r in p.of_type("REQ") if not any(type_of(c) == "SPEC" for c in p.children(r.id))]
     no_req = [s.id for s in p.of_type("SPEC") if not p.parents(s.id)]
@@ -353,7 +380,8 @@ def _stage_requirements(v: View) -> str:
         f"<li>{v.ref(i)} {'(質問表に記載あり)' if i in asked else no_question}</li>" for i in no_spec
     )
     return (
-        "<h2>要求と仕様の紐づけ</h2>" + _table(["要求", "紐づく仕様"], rows, ["row-" + r.id for r in p.of_type("REQ")])
+        "<h2>要求と紐づく仕様</h2><p class=\"muted\">行をクリックすると、要求のほかの欄(誰が・何のためになど)と、紐づく仕様が開く。</p>"
+        + f'<div class="tree">{"".join(cards)}</div>'
         + "<h2>仕様が無い要求</h2>" + (f"<ul>{lonely}</ul>" if lonely else "<p>ありません。</p>")
         + "<h2>要求に紐づかない仕様</h2>" + (f"<p>{v.refs(no_req)}</p>" if no_req else "<p>ありません。</p>")
     )
@@ -372,20 +400,13 @@ def _stage_risk(v: View) -> str:
         record = v.project.records[risk_id]
         f = record.fields
         specs = sorted(v.related(risk_id, "SPEC"), key=tm_core._id_key)
-        notes = "".join(
-            f"<dt>{name}</dt><dd>{v.text(f[name])}</dd>" for name in ("根拠", "備考") if f.get(name, "").strip())
-        spec_rows = "".join(
-            f'<div class="leaf"><span class="kind">{TYPES["SPEC"]}</span>{v.ref(s)}'
-            f' <span class="memo">{TYPES["REQ"]}: {v.refs(v.related(s, "REQ"), False)}</span></div>'
-            for s in specs)
-        leaves = ((f'<dl class="risk-note">{notes}</dl>' if notes else "")
-                  + (f'<div class="sub">紐づく仕様</div>{spec_rows}' if spec_rows else ""))
         level = (f'<span class="ci">影響度 {_escape(f.get("影響度", ""))} × 発生確率 {_escape(f.get("発生確率", ""))}'
                  f' = {_escape(f.get("リスクレベル", ""))}</span>')
-        blocks.append(
-            f'<details class="lv-RISK" id="row-{risk_id}"><summary><span class="kind">{TYPES["RISK"]}</span>'
-            f'{v.ref(risk_id, False)} {_badge(f.get("区分", ""))} <span class="title">{_escape(record.title)}</span>'
-            f'{level}<span class="ci">仕様 {len(specs)}件</span></summary><div class="kids">{leaves}</div></details>')
+        blocks.append(_card(
+            v, risk_id, record.title, badges=_badge(f.get("区分", "")),
+            meta=f'{level}<span class="ci">仕様 {len(specs)}件</span>',
+            notes=[(name, f.get(name, "")) for name in ("根拠", "備考")], sub_label="紐づく仕様",
+            leaves="".join(_leaf(v, s, f'{TYPES["REQ"]}: {v.refs(v.related(s, "REQ"), False)}') for s in specs)))
     return ("<h2>リスクと紐づく仕様</h2><p class=\"muted\">リスクレベルの高い順。行をクリックすると、根拠・備考と、紐づく仕様とその要求が開く。"
             "リスクレベル = 影響度 × 発生確率。15〜25 が高、8〜14 が中、1〜7 が低。</p>"
             f'<div class="tree">{"".join(blocks)}</div>')
@@ -572,12 +593,15 @@ _STAGE_BODIES = {
 
 def _questions(v: View, stage: str) -> str:
     name = tm_core.STAGE_NAMES[stage]
-    rows = [[v.ref(q.id, False), v.text(q.fields.get("質問", "")), v.text(q.fields.get("種類", "")),
-             v.refs(q.links, False), v.text(q.fields.get("状態", "")), v.text(q.fields.get("回答", ""))]
-            for q in v.project.of_type("Q") if q.fields.get("工程", "").strip() in (name, name.replace("作成", ""))]
-    if not rows:
+    cards = [
+        _card(v, q.id, q.fields.get("質問", "") or q.title, badges=_badge(q.fields.get("状態", "")),
+              notes=_other_fields(q, {"ID", "工程", "質問", "状態"}), sub_label="関連するもの",
+              leaves="".join(_leaf(v, link) for link in sorted(q.links, key=tm_core._id_key)))
+        for q in v.project.of_type("Q") if q.fields.get("工程", "").strip() in (name, name.replace("作成", ""))]
+    if not cards:
         return ""
-    return "<h2>この工程で出た質問</h2>" + _table(["ID", "質問", "種類", "関連", "状態", "回答"], rows)
+    return ("<h2>この工程で出た質問</h2><p class=\"muted\">行をクリックすると、種類・回答が必要な理由・回答と、関連するものが開く。</p>"
+            f'<div class="tree">{"".join(cards)}</div>')
 
 
 def render_stage(project: Project, stage: str, file_base: str = "../", hrefs: dict[str, str] | None = None,
