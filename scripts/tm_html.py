@@ -1063,6 +1063,7 @@ def _result_cards(v: View, ltcs, prefix: str = "ex-ltc") -> str:
     prefix: 行のidの頭。同じテストケースを別のタブにも出すときに、idが重ならないよう変える。"""
     p = v.project
     final = p.final_results()
+    run_versions = p.run_versions()
     cards = []
     for ltc in ltcs:
         result = final.get(ltc.id)
@@ -1071,7 +1072,8 @@ def _result_cards(v: View, ltcs, prefix: str = "ex-ltc") -> str:
         if result is None:
             notes = [("メモ", "テスト結果が無い")]
         else:
-            notes = [("テストラン", result.run), ("メモ", result.memo)]
+            notes = [("テストラン", result.run), ("テスト対象の版", run_versions.get(result.run) or "書かれていない"),
+                     ("メモ", result.memo)]
             leaves = "".join(
                 f'<div class="leaf"><span class="kind">証跡</span> '
                 + (_escape(e) if re.match(r"^[a-z]+://", e) else
@@ -1433,6 +1435,27 @@ def _more(items: list[str], limit: int, anchor: str) -> str:
     return f"<ul>{shown}{rest}</ul>" if items else ""
 
 
+def _stale_title(versions: dict) -> str:
+    stale = versions["older"] + versions["unknown"]
+    return f"今の版({_escape(versions['current'])})で確かめていない結果: {len(stale)} 件"
+
+
+def _stale_version(row: dict) -> str:
+    return row.get("version") or "版が書かれていない"
+
+
+def _stale_results(v: View, versions: dict) -> str:
+    """判定の記録に置く、今の版で確かめていない結果の全件。版が書かれたテストランが無ければ出さない。"""
+    if not versions["current"]:
+        return ""
+    stale = versions["older"] + versions["unknown"]
+    note = (f'<p class="muted">今の版は、版が書かれたいちばん新しいテストラン {versions["current_run"]} の版。'
+            "実行し直さなかったテストケースは、前のテストランの結果のまま数えている。</p>")
+    rows = [[v.ref(r["id"]), _escape(_stale_version(r)), r["run"]] for r in stale]
+    return (f'<h2 id="stale-results">{_stale_title(versions)}</h2>' + note
+            + (_table(["テストケース", "確かめた版", "テストラン"], rows) if rows else "<p>ありません。</p>"))
+
+
 def _first_view(v: View, m: dict, judgments: dict[str, tuple[str, str]], lacking: str) -> str:
     # 満たしていない・未判定の終了条件を先に並べ、狭い画面でもファーストビューに入るようにする。
     ok_rows, bad_rows, bad_ids = [], [], []
@@ -1472,11 +1495,20 @@ def _first_view(v: View, m: dict, judgments: dict[str, tuple[str, str]], lacking
         text = f"<h3>{label}: まったくテストしていない {len(untested)} 件、一部しか実行していない {len(partial)} 件</h3>"
         return text + _more([v.ref(r["id"]) for r in untested + partial], 3, anchor)
 
+    # 一部だけ実行し直したとき、実行し直さなかったテストケースは前の版の結果のまま数えられる
+    versions = m["versions"]
+    stale = versions["older"] + versions["unknown"]
+    stale_text = ""
+    if versions["current"] and stale:
+        stale_text = (f"<h3>{_stale_title(versions)}</h3>"
+                      + _more([f"{v.ref(r['id'])}({_escape(_stale_version(r))}、{r['run']})" for r in stale],
+                              3, "stale-results"))
     problems = (
         "<div class=\"panel\"><h2>問題点は何か</h2>"
         f"<h3>修正されていない不具合: {len(bugs)} 件</h3>" + _more(bugs, 4, "ex-bug")
         + gap("カバーできていない要求", untested_req, partial_req, "req-coverage")
         + gap("カバーできていない高いリスク", untested_risk, partial_risk, "risk-coverage")
+        + stale_text
         + f"<p class=\"numbers\"><span><a href=\"#questions\">未回答の質問</a> <b>{len(m['open_questions'])}</b> 件"
         f"(うち実機の動きあり <b>{sum(1 for q in m['open_questions'] if q['observed'])}</b> 件)</span>"
         f"<span><a href=\"#not-run\">未実行</a> <b>{t['未実行']}</b> 件</span>"
@@ -1720,6 +1752,7 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
         written
         + '<h2 id="not-run">実行していないテストケース(未実行・ブロック・未実装)</h2>'
         + (_table(["テストケース", "状態", "理由"], not_run_rows) if not_run_rows else "<p>ありません。</p>")
+        + _stale_results(v, m["versions"])
         + '<h2 id="questions">未回答の質問</h2>'
         + (_table(["ID", "工程", "質問", "実機の動き"], question_rows) if question_rows else "<p>ありません。</p>")
         + "<h2>「後からわかったことの戻し方」の記録</h2>" + rollback_html

@@ -309,6 +309,56 @@ class Test集計:
         assert by_id["REQ-001"]["未実装"] == 1
 
 
+RUN1 = "08_テスト実行/RUN-20261101-100000"
+RUN2 = "08_テスト実行/RUN-20261102-090000"
+
+
+def add_rerun(root, version="v2") -> None:
+    """2回目のテストランで LTC-002 だけを実行し直す。version を渡すと、その版を実行情報.mdに書く。"""
+    append_to(root, f"{RUN2}/テスト結果_E2E自動.md",
+              "| ローレベルテストケースID | 実施方法 | 結果 | 証跡 | 欠陥レポートID | メモ |\n|---|---|---|---|---|---|\n"
+              "| LTC-002 | E2E自動テスト | Pass | | | 確認テスト |\n")
+    if version:
+        append_to(root, f"{RUN2}/実行情報.md", f"# 実行情報\n\n- テスト対象の版: {version}\n")
+
+
+class Testテスト対象の版:
+    def test_実行情報のテスト対象の版をテストランごとに読む(self, root):
+        append_to(root, f"{RUN1}/実行情報.md", "# 実行情報\n\n- テスト対象の版: v1(コミット a1b2c3d)\n")
+        add_rerun(root)
+        project = tm_core.load_project(root)
+        assert project.run_versions() == {"RUN-20261101-100000": "v1(コミット a1b2c3d)", "RUN-20261102-090000": "v2"}
+
+    def test_いちばん新しいテストランの版を今の版にし前の版の結果を使っているテストケースを出す(self, root):
+        append_to(root, f"{RUN1}/実行情報.md", "テスト対象の版: v1\n")
+        add_rerun(root)
+        versions = tm_core.metrics(tm_core.load_project(root))["versions"]
+        assert versions["current"] == "v2"
+        assert versions["current_run"] == "RUN-20261102-090000"
+        assert versions["older"] == [
+            {"id": "LTC-001", "run": "RUN-20261101-100000", "version": "v1"},
+            {"id": "LTC-003", "run": "RUN-20261101-100000", "version": "v1"},
+        ]
+        assert versions["unknown"] == []
+
+    def test_版が書かれていないテストランの結果は版がわからないものとして出す(self, root):
+        add_rerun(root)
+        versions = tm_core.metrics(tm_core.load_project(root))["versions"]
+        assert versions["older"] == []
+        assert [r["id"] for r in versions["unknown"]] == ["LTC-001", "LTC-003"]
+
+    def test_同じ版のテストランの結果は前の版として出さない(self, root):
+        append_to(root, f"{RUN1}/実行情報.md", "テスト対象の版: v2\n")
+        add_rerun(root)
+        versions = tm_core.metrics(tm_core.load_project(root))["versions"]
+        assert versions["older"] == [] and versions["unknown"] == []
+
+    def test_どのテストランにも版が無ければ今の版も前の版の結果も出さない(self, root):
+        add_rerun(root, version=None)
+        versions = tm_core.metrics(tm_core.load_project(root))["versions"]
+        assert versions == {"current": None, "current_run": None, "older": [], "unknown": []}
+
+
 class Test欠陥レポートの範囲:
     HEADER = "| ID | タイトル | 重要度 | 状態 | 見つけた日時 | 関連ID |\n|---|---|---|---|---|---|\n| BUG-001 | 17歳で登録できてしまう | 高 | 未修正 | 2026-11-01 10:05 | LTC-002 |\n"
     NEW = ("| ID | タイトル | 重要度 | 状態 | 見つけた日時 | 関連ID | 要求・仕様ID |\n|---|---|---|---|---|---|---|\n"

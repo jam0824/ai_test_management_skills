@@ -916,6 +916,39 @@ class Testテストレポート:
         judge = self._report_pane(html, "rp-judge", "ex-sum")
         assert 'id="first-view"' in judge and "満たしていない終了条件が 1 件" in judge
 
+    @staticmethod
+    def _rerun_on_new_version(root):
+        """v1 で全部実行したあと、v2 で LTC-002 だけ実行し直す。"""
+        append_to(root, "08_テスト実行/RUN-20261101-100000/実行情報.md", "- テスト対象の版: v1\n")
+        append_to(root, "08_テスト実行/RUN-20261102-090000/実行情報.md", "- テスト対象の版: v2\n")
+        append_to(root, "08_テスト実行/RUN-20261102-090000/テスト結果_E2E自動.md",
+                  "| ローレベルテストケースID | 実施方法 | 結果 | 証跡 | 欠陥レポートID | メモ |\n|---|---|---|---|---|---|\n"
+                  "| LTC-002 | E2E自動テスト | Pass | | | 確認テスト |\n")
+
+    def test_判定のタブの問題点に前の版の結果を使っているテストケースを出す(self, root):
+        self._rerun_on_new_version(root)
+        html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
+        problems = self._report_pane(html, "rp-judge", "ex-sum").split("問題点は何か")[1].split("やるべきことをやったか")[0]
+        assert "今の版(v2)で確かめていない結果: 2 件" in problems
+        assert "LTC-001" in problems and "LTC-003" in problems
+
+    def test_判定の記録のタブに今の版で確かめていない結果を全件出す(self, root):
+        self._rerun_on_new_version(root)
+        html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
+        stale = self._report_pane(html, "rp-record", None).split('id="stale-results"')[1].split("</table>")[0]
+        assert "RUN-20261102-090000" in stale  # 今の版を決めたテストラン
+        assert stale.count("<tr>") == 3 and "LTC-001" in stale and "LTC-003" in stale and "LTC-002" not in stale
+
+    def test_どのテストランにも版が無ければ前の版の結果を出さない(self, root):
+        html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
+        assert "で確かめていない結果" not in html
+
+    def test_テスト結果を開くとテスト対象の版が出る(self, root):
+        self._rerun_on_new_version(root)
+        html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
+        card = html.split('id="ex-ltc-LTC-001"')[1].split("</details>")[0]
+        assert "テスト対象の版" in card and "v1" in card
+
     def test_まとめのタブに仕様のカバレッジとテストチャーターの時間も出す(self, root):
         html = (self._build(root) / "テストレポート.html").read_text(encoding="utf-8")
         summary = self._report_pane(html, "ex-sum", "ex-fail")

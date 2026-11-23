@@ -109,6 +109,9 @@ _NOT_TITLE = {"実施者", "日時", "開始日時", "終了日時", "見つけ�
 # テストベースの写し: 変わったところを比べるために置く、テストベースそのもの。成果物ではない
 TEST_BASE_COPY_DIR = "テストベースの写し"
 _EXCLUDED_DIRS = {"html", "結果まとめ", REPORT_DIR, "snapshot", TEST_BASE_COPY_DIR}
+# テストランのフォルダの実行情報。「テスト対象の版: …」の行から、その回にテストした版を読む
+RUN_INFO_FILE = "実行情報.md"
+_VERSION_LINE = re.compile(r"^\s*(?:[-*]\s*)?テスト対象の版\s*[:：]\s*(.+?)\s*$", re.M)
 
 
 def find_ids(text: str) -> list[str]:
@@ -291,6 +294,15 @@ class Project:
         return sorted({r.run for r in self.results} | {
             p.name for p in (self.root / EXECUTION_DIR).glob("RUN-*") if p.is_dir()
         })
+
+    def run_versions(self) -> dict[str, str | None]:
+        """テストランごとに、実行情報.md の「テスト対象の版:」に書かれた版。書かれていなければ None。"""
+        versions: dict[str, str | None] = {}
+        for run in self.runs():
+            info = self.root / EXECUTION_DIR / run / RUN_INFO_FILE
+            match = _VERSION_LINE.search(info.read_text(encoding="utf-8-sig")) if info.is_file() else None
+            versions[run] = match.group(1).strip() if match else None
+        return versions
 
     def final_results(self) -> dict[str, Result]:
         """テストケースごとに、いちばん新しいテストランの結果を返す。"""
@@ -649,6 +661,32 @@ def charter_time(project: Project) -> list[dict]:
     return rows
 
 
+def result_versions(project: Project) -> dict:
+    """数えている結果(Pass・Fail)のうち、今の版(版が書かれたいちばん新しいテストランの版)で確かめていないもの。
+
+    一部だけ実行し直すと、実行し直さなかったテストケースは前の版の結果のまま数えられる。それを見分けるため。
+    どのテストランにも版が書かれていなければ、何も出さない。
+    """
+    versions = project.run_versions()
+    known = [run for run in sorted(versions) if versions[run]]
+    if not known:
+        return {"current": None, "current_run": None, "older": [], "unknown": []}
+    current_run = known[-1]
+    current = versions[current_run]
+    older, unknown = [], []
+    final = project.final_results()
+    for ltc in sorted(final, key=_id_key):
+        result = final[ltc]
+        if result.result not in ("Pass", "Fail"):
+            continue
+        version = versions.get(result.run)
+        if version is None:
+            unknown.append({"id": ltc, "run": result.run})
+        elif version != current:
+            older.append({"id": ltc, "run": result.run, "version": version})
+    return {"current": current, "current_run": current_run, "older": older, "unknown": unknown}
+
+
 def metrics(project: Project) -> dict:
     """テストレポートに載せる数字を、成果物から数え直す。"""
     final = project.final_results()
@@ -717,6 +755,7 @@ def metrics(project: Project) -> dict:
             for e in project.of_type("EXIT")
         ],
         "runs": project.runs(),
+        "versions": result_versions(project),
         "sessions": [s.id for s in project.of_type("SES")],
     }
 

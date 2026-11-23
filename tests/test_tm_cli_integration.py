@@ -88,6 +88,18 @@ class Test統合テスト:
         assert index.exists()
         assert run_id in index.read_text(encoding="utf-8")
 
+    def test_metricsは今の版で確かめていない結果を出す(self, root):
+        run_dir = root / "08_テスト実行/RUN-20261102-090000"
+        run_dir.mkdir()
+        (root / "08_テスト実行/RUN-20261101-100000/実行情報.md").write_text("- テスト対象の版: v1\n", encoding="utf-8")
+        (run_dir / "実行情報.md").write_text("- テスト対象の版: v2\n", encoding="utf-8")
+        (run_dir / "テスト結果_E2E自動.md").write_text(
+            "| ローレベルテストケースID | 実施方法 | 結果 | 証跡 | 欠陥レポートID | メモ |\n|---|---|---|---|---|---|\n"
+            "| LTC-002 | E2E自動テスト | Pass | | | |\n", encoding="utf-8")
+        result = run("metrics", "--root", str(root))
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "今の版: v2(RUN-20261102-090000 の版)。今の版で確かめていない結果 2 件: LTC-001(v1), LTC-003(v1)" in result.stdout
+
     def test_reportは判定が無いと失敗で終わり何が要るかを示す(self, root):
         result = run("report", "--root", str(root))
         assert result.returncode == 1

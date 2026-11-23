@@ -115,6 +115,11 @@ def cmd_metrics(args) -> int:
     print(f"テストケース {t['total']} 件 / 実行率 {t['execution_rate']}% (実行 {t['executed']} ÷ ローレベルテストケース {t['total']})")
     print(f"Pass {t['Pass']} / Fail {t['Fail']} / ブロック {t['ブロック']} / 未実行 {t['未実行']} / 未実装 {t['未実装']}")
     print(f"テストラン: {', '.join(data['runs']) or 'なし'}")
+    versions = data["versions"]
+    if versions["current"]:
+        stale = versions["older"] + versions["unknown"]
+        print(f"今の版: {versions['current']}({versions['current_run']} の版)。今の版で確かめていない結果 {len(stale)} 件: "
+              + ", ".join(f"{r['id']}({r.get('version') or '版が書かれていない'})" for r in stale))
     print(f"修正されていない不具合 {len(data['open_bugs'])} 件: " + ", ".join(f"{b['id']}({b['severity']})" for b in data["open_bugs"]))
     print(f"未回答の質問 {len(data['open_questions'])} 件: " + ", ".join(q["id"] for q in data["open_questions"]))
     for label, rows in (("要求", data["requirements"]), ("仕様", data["specs"]), ("リスク", data["risks"])):
