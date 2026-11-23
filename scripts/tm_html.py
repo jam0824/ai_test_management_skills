@@ -6,11 +6,61 @@ import re
 import shutil
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import quote
 
 import tm_core
 from tm_core import TYPES, Project, type_of
 
 VIEW_STAGES = [s for s in tm_core.STAGE_KEYS if s != "report"]
+
+# ページの置き場所と名前。人が工程のフォルダを開いて見つけられるよう、日本語の名前にする
+SUMMARY_DIR = "結果まとめ"
+INDEX_PAGE = "目次.html"
+IDS_PAGE = "ID索引.html"
+REPORT_PAGE = "テストレポート.html"
+
+
+def page_name(stage: str) -> str:
+    """工程のページのファイル名(例: リスク分析.html)。"""
+    return f"{tm_core.STAGE_NAMES[stage]}.html"
+
+
+def _latest_report(project: Project) -> str | None:
+    """いちばん新しいテストレポートの日時(フォルダ名)。無ければ None。"""
+    names = sorted(p.parent.name for p in (project.root / tm_core.REPORT_DIR).glob(f"*/{REPORT_PAGE}"))
+    return names[-1] if names else None
+
+
+def _redirect_page(target: str, label: str) -> str:
+    url = html_lib.escape(quote(target))
+    return (
+        "<!doctype html><html lang=\"ja\"><head><meta charset=\"utf-8\">"
+        f'<meta http-equiv="refresh" content="0; url={url}"><title>{_escape(label)}</title></head>'
+        f'<body><p>{_escape(label)}を開いています。開かないときは <a href="{url}">ここ</a> をクリックしてください。</p></body></html>'
+    )
+
+
+def write_report_entries(project: Project) -> list[Path]:
+    """最新のテストレポートへ飛ぶ入口を、成果物のフォルダの直下と、テストレポートのフォルダに置く。
+    人はまず最終結果を見たいが、レポートは日時のフォルダの奥にあって見つけにくいため。"""
+    latest = _latest_report(project)
+    if latest is None:
+        return []
+    label = f"最新のテストレポート({latest})"
+    entries = {
+        project.root / REPORT_PAGE: f"{tm_core.REPORT_DIR}/{latest}/{REPORT_PAGE}",
+        project.root / tm_core.REPORT_DIR / REPORT_PAGE: f"{latest}/{REPORT_PAGE}",
+    }
+    for path, target in entries.items():
+        path.write_text(_redirect_page(target, label), encoding="utf-8")
+    return list(entries)
+
+
+def _hrefs(base: str = "", index_page: str = INDEX_PAGE) -> dict[str, str]:
+    """メニューのリンク先。base は、目次・ID索引・工程のページがあるフォルダへの相対パス。"""
+    hrefs = {"index": base + index_page, "ids": base + IDS_PAGE}
+    hrefs.update({stage: base + page_name(stage) for stage in VIEW_STAGES})
+    return hrefs
 
 
 class ReportError(Exception):
@@ -62,7 +112,7 @@ def _link(match: re.Match) -> str:
     return f'<a href="{match.group(2)}">{match.group(1)}</a>'
 
 
-def md_to_html(text: str, known_ids=None, id_href: str = "ids.html") -> str:
+def md_to_html(text: str, known_ids=None, id_href: str = IDS_PAGE) -> str:
     """成果物で使う範囲のMarkdown(見出し・段落・リスト・表・コード)をHTMLにする。"""
     lines = text.splitlines()
     out: list[str] = []
@@ -153,7 +203,7 @@ def _badge(text: str) -> str:
 class View:
     """1ページ分の描画の設定(ID索引とファイルへの相対パス)を持つ。"""
 
-    def __init__(self, project: Project, id_href: str = "ids.html", file_base: str = "../"):
+    def __init__(self, project: Project, id_href: str = IDS_PAGE, file_base: str = "../"):
         self.project = project
         self.id_href = id_href
         self.file_base = file_base
@@ -266,21 +316,23 @@ details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 
 .risk-note{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:6px 8px;padding:6px 10px;background:var(--soft);border-left:3px solid var(--line);font-size:13px}
 .risk-note dt{font-weight:600;color:var(--muted);white-space:nowrap}.risk-note dd{margin:0}
 .tree .sub{font-size:12px;font-weight:600;color:var(--muted);padding:6px 8px 2px}
+.latest-report{font-size:18px;font-weight:700;border:2px solid var(--link);border-radius:6px;padding:10px 14px;margin:8px 0 14px}
+.latest-report .muted{font-size:13px;font-weight:400}
 .legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;margin:6px 0}.legend i{width:12px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
 """
 
 
-def _page(title: str, body: str, current: str = "", extra_nav: str = "") -> str:
-    links = ['<a href="index.html"' + (' class="current"' if current == "index" else "") + ">目次</a>"]
-    for key in VIEW_STAGES:
-        cls = ' class="current"' if key == current else ""
-        links.append(f'<a href="{key}.html"{cls}>{tm_core.STAGE_NAMES[key]}</a>')
-    links.append('<a href="ids.html"' + (' class="current"' if current == "ids" else "") + ">ID索引</a>")
+def _page(title: str, body: str, current: str = "", hrefs: dict[str, str] | None = None,
+          index_label: str = "目次") -> str:
+    hrefs = hrefs or _hrefs()
+    names = {"index": index_label, **tm_core.STAGE_NAMES, "ids": "ID索引"}
+    links = [f'<a href="{hrefs[key]}"' + (' class="current"' if key == current else "") + f">{names[key]}</a>"
+             for key in ["index", *VIEW_STAGES, "ids"]]
     return (
         "<!doctype html><html lang=\"ja\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
         f"<title>{_escape(title)}</title><style>{CSS}</style></head><body>"
-        f"<nav>{extra_nav}{''.join(links)}</nav><main><h1>{_escape(title)}</h1>{body}</main></body></html>"
+        f"<nav>{''.join(links)}</nav><main><h1>{_escape(title)}</h1>{body}</main></body></html>"
     )
 
 
@@ -528,13 +580,16 @@ def _questions(v: View, stage: str) -> str:
     return "<h2>この工程で出た質問</h2>" + _table(["ID", "質問", "種類", "関連", "状態", "回答"], rows)
 
 
-def render_stage(project: Project, stage: str, id_href: str = "ids.html", file_base: str = "../") -> str:
-    view = View(project, id_href, file_base)
+def render_stage(project: Project, stage: str, file_base: str = "../", hrefs: dict[str, str] | None = None,
+                 index_label: str = "目次") -> str:
+    hrefs = hrefs or _hrefs()
+    view = View(project, hrefs["ids"], file_base)
     body = _STAGE_BODIES[stage](view) + _questions(view, stage) + view.documents(tm_core.STAGE_DIRS[stage])
-    return _page(tm_core.STAGE_NAMES[stage], body, current=stage)
+    return _page(tm_core.STAGE_NAMES[stage], body, current=stage, hrefs=hrefs, index_label=index_label)
 
 
-def render_ids(project: Project, file_base: str = "../") -> str:
+def render_ids(project: Project, file_base: str = "../", hrefs: dict[str, str] | None = None,
+               index_label: str = "目次") -> str:
     """すべての成果物を1件ずつ載せ、上流と下流の両方にたどれるようにする。"""
     view = View(project, id_href="", file_base=file_base)
     final = project.final_results()
@@ -565,7 +620,7 @@ def render_ids(project: Project, file_base: str = "../") -> str:
                 f'<section class="record" id="{record.id}"><h3>{record.id} {_escape(record.title[:80])}</h3>'
                 + _table(["項目", "内容"], fields + trace) + "</section>"
             )
-    return _page("ID索引", "".join(parts), current="ids")
+    return _page("ID索引", "".join(parts), current="ids", hrefs=hrefs, index_label=index_label)
 
 
 def _render_index(project: Project) -> str:
@@ -573,10 +628,11 @@ def _render_index(project: Project) -> str:
     rows = []
     for key in VIEW_STAGES:
         folder = project.root / tm_core.STAGE_DIRS[key]
-        rows.append([f'<a href="{key}.html">{tm_core.STAGE_NAMES[key]}</a>', "あり" if folder.is_dir() else '<span class="none-text">まだ</span>'])
-    reports = sorted((project.root / tm_core.REPORT_DIR).glob("*/index.html"))
-    latest = (f'<p>最新のテストレポート: <a href="../{tm_core.REPORT_DIR}/{reports[-1].parent.name}/index.html">'
-              f'{reports[-1].parent.name}</a></p>') if reports else ""
+        rows.append([f'<a href="{page_name(key)}">{tm_core.STAGE_NAMES[key]}</a>', "あり" if folder.is_dir() else '<span class="none-text">まだ</span>'])
+    report = _latest_report(project)
+    latest = (f'<div class="latest-report"><a href="../{tm_core.REPORT_DIR}/{report}/{REPORT_PAGE}">最新のテストレポートを開く</a>'
+              f' <span class="muted">({report[:4]}-{report[4:6]}-{report[6:8]} {report[8:10]}:{report[10:12]} 作成)</span></div>'
+              ) if report else ""
     problems = "".join(f"<li>{_escape(e)}</li>" for e in errors)
     notes = "".join(f"<li>{_escape(w)}</li>" for w in warnings)
     body = (
@@ -589,21 +645,24 @@ def _render_index(project: Project) -> str:
     return _page("テスト成果物の目次", body, current="index")
 
 
-def build_html(project: Project, out_dir: Path, stages: list[str] | None = None) -> list[Path]:
-    """視認性アップ: 工程ごとのページ・目次・ID索引を作る。"""
-    out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    pages = {"index.html": _render_index(project), "ids.html": render_ids(project)}
+def build_html(project: Project, stages: list[str] | None = None) -> list[Path]:
+    """視認性アップ: 結果まとめ のフォルダに目次・ID索引・工程ごとのページを作る。
+    工程のフォルダがあれば、その中にも同じ工程のページを作る(人は工程のフォルダで結果を探すため)。"""
+    summary = project.root / SUMMARY_DIR
+    summary.mkdir(parents=True, exist_ok=True)
+    pages = {summary / INDEX_PAGE: _render_index(project), summary / IDS_PAGE: render_ids(project)}
     for stage in stages or VIEW_STAGES:
-        pages[f"{stage}.html"] = render_stage(project, stage)
+        pages[summary / page_name(stage)] = render_stage(project, stage)
+        folder = project.root / tm_core.STAGE_DIRS[stage]
+        if folder.is_dir():
+            pages[folder / page_name(stage)] = render_stage(project, stage, hrefs=_hrefs(f"../{SUMMARY_DIR}/"))
     for stage in VIEW_STAGES:  # 目次やナビのリンクが切れないよう、指定していない工程のページも無ければ作る
-        if f"{stage}.html" not in pages and not (out_dir / f"{stage}.html").exists():
-            pages[f"{stage}.html"] = render_stage(project, stage)
-    written = []
-    for name, content in pages.items():
-        (out_dir / name).write_text(content, encoding="utf-8")
-        written.append(out_dir / name)
-    return written
+        path = summary / page_name(stage)
+        if path not in pages and not path.exists():
+            pages[path] = render_stage(project, stage)
+    for path, content in pages.items():
+        path.write_text(content, encoding="utf-8")
+    return list(pages) + write_report_entries(project)
 
 
 # ---- テストレポート ----
@@ -874,10 +933,13 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
     snapshot = out / "snapshot"
     if snapshot.exists():
         shutil.rmtree(snapshot)
-    shutil.copytree(project.root, snapshot, ignore=shutil.ignore_patterns("html", tm_core.REPORT_DIR))
+    # 写しには成果物だけを入れる(視認性アップで作ったページは入れない)
+    generated = ["html", SUMMARY_DIR, tm_core.REPORT_DIR, REPORT_PAGE] + [page_name(s) for s in VIEW_STAGES]
+    shutil.copytree(project.root, snapshot, ignore=shutil.ignore_patterns(*generated))
     shutil.copyfile(judgment_path, out / JUDGMENT_FILE)
 
-    v = View(project, id_href="ids.html", file_base="snapshot/")
+    hrefs = _hrefs(index_page=REPORT_PAGE)
+    v = View(project, id_href=IDS_PAGE, file_base="snapshot/")
     m = tm_core.metrics(project)
     t = m["testcases"]
     errors, warnings = tm_core.check(project)
@@ -921,22 +983,19 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
         + "<h2>探索的テストのセッション</h2>" + _sessions_table(v)
         + "<h2>トレーサビリティ</h2>"
         f"<p>確認の結果: エラー {len(errors)} 件、警告 {len(warnings)} 件。"
-        '<a href="ids.html">ID索引</a>から、どの成果物でも上流(要求の側)と下流(テスト結果・証跡・欠陥レポートの側)の両方にたどれる。'
+        f'<a href="{IDS_PAGE}">ID索引</a>から、どの成果物でも上流(要求の側)と下流(テスト結果・証跡・欠陥レポートの側)の両方にたどれる。'
         "工程ごとの追跡表は上のメニューから開ける。</p>"
         + ("<ul>" + "".join(f"<li class=\"missing\">{_escape(e)}</li>" for e in errors) + "</ul>" if errors else "")
         + "</section>"
     )
     first = _first_view(v, m, judgments, sections.get("足りないこと", ""))
-    nav = '<a href="index.html" class="current">テストレポート</a>'
-    page = _page("テストレポート", first + details, current="report")
-    page = page.replace('<nav><a href="index.html">目次</a>', f"<nav>{nav}", 1)
-    (out / "index.html").write_text(page, encoding="utf-8")
-
-    def stage_page(content: str) -> str:
-        return content.replace('<nav><a href="index.html">目次</a>', f'<nav><a href="index.html">テストレポート</a>', 1)
-
-    (out / "ids.html").write_text(stage_page(render_ids(project, file_base="snapshot/")), encoding="utf-8")
+    page = _page("テストレポート", first + details, current="index", hrefs=hrefs, index_label="テストレポート")
+    (out / REPORT_PAGE).write_text(page, encoding="utf-8")
+    (out / IDS_PAGE).write_text(
+        render_ids(project, file_base="snapshot/", hrefs=hrefs, index_label="テストレポート"), encoding="utf-8")
     for stage in VIEW_STAGES:
-        (out / f"{stage}.html").write_text(
-            stage_page(render_stage(project, stage, file_base="snapshot/")), encoding="utf-8")
+        (out / page_name(stage)).write_text(
+            render_stage(project, stage, file_base="snapshot/", hrefs=hrefs, index_label="テストレポート"),
+            encoding="utf-8")
+    write_report_entries(project)
     return out

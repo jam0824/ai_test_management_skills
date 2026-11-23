@@ -104,7 +104,7 @@ ID_RE = re.compile(
     r"(?<![A-Za-z0-9])(" + "|".join(sorted(TYPES, key=len, reverse=True)) + r")-(\d+)(?![0-9])"
 )
 _SEPARATOR_CELL = re.compile(r"^:?-+:?$")
-_EXCLUDED_DIRS = {"html", REPORT_DIR, "snapshot"}
+_EXCLUDED_DIRS = {"html", "結果まとめ", REPORT_DIR, "snapshot"}
 
 
 def find_ids(text: str) -> list[str]:

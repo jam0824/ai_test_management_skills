@@ -57,8 +57,10 @@ class Test統合テスト:
     def test_htmlは指定した工程のページを作る(self, root):
         result = run("html", "--root", str(root), "--stage", "analysis")
         assert result.returncode == 0, result.stdout + result.stderr
-        assert (root / "html/analysis.html").exists()
-        assert (root / "html/ids.html").exists()
+        assert (root / "結果まとめ/テスト分析.html").exists()
+        assert (root / "結果まとめ/ID索引.html").exists()
+        assert (root / "04_テスト分析/テスト分析.html").exists()
+        assert "結果まとめ" in result.stdout and "テスト分析.html" in result.stdout
 
     def test_E2Eの実行結果からテストランとレポートまでつながる(self, root, tmp_path):
         new_run = run("new-run", "--root", str(root))
@@ -82,7 +84,7 @@ class Test統合テスト:
         (root / "09_テストレポート/判定.md").write_text(JUDGMENT, encoding="utf-8")
         built = run("report", "--root", str(root), "--timestamp", "20261103130000")
         assert built.returncode == 0, built.stdout + built.stderr
-        index = root / "09_テストレポート/20261103130000/index.html"
+        index = root / "09_テストレポート/20261103130000/テストレポート.html"
         assert index.exists()
         assert run_id in index.read_text(encoding="utf-8")
 

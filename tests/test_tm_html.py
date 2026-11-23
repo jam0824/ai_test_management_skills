@@ -1,4 +1,5 @@
 """tm_html(視認性アップのHTMLとテストレポート)のテスト。"""
+import shutil
 import sys
 from pathlib import Path
 
@@ -78,13 +79,39 @@ class TestMarkdownからHTML:
 
 
 class Test視認性アップ:
-    def test_工程ごとのページとID索引を作る(self, root):
-        project = tm_core.load_project(root)
-        out = root / "html"
-        tm_html.build_html(project, out)
-        for name in ["index.html", "ids.html", "requirements.html", "risk.html", "plan.html", "analysis.html",
-                     "design.html", "implementation.html", "e2e.html", "execution.html"]:
+    def test_結果まとめに目次とID索引と工程ごとのページを日本語の名前で作る(self, root):
+        tm_html.build_html(tm_core.load_project(root))
+        out = root / "結果まとめ"
+        for name in ["目次.html", "ID索引.html", "要求仕様整理.html", "リスク分析.html", "テスト計画.html", "テスト分析.html",
+                     "テスト設計.html", "テスト実装.html", "E2E自動テストスクリプト作成.html", "テスト実行.html"]:
             assert (out / name).exists(), name
+        assert not (root / "html").exists()
+
+    def test_工程のフォルダにもその工程のページを作る(self, root):
+        tm_html.build_html(tm_core.load_project(root))
+        assert (root / "02_リスク分析/リスク分析.html").exists()
+        assert (root / "08_テスト実行/テスト実行.html").exists()
+
+    def test_まだ無い工程のフォルダは作らない(self, root):
+        shutil.rmtree(root / "07_E2E自動テストスクリプト")
+        tm_html.build_html(tm_core.load_project(root))
+        assert not (root / "07_E2E自動テストスクリプト").exists()
+        assert (root / "結果まとめ/E2E自動テストスクリプト作成.html").exists()
+
+    def test_工程のフォルダのページから結果まとめとID索引へリンクする(self, root):
+        tm_html.build_html(tm_core.load_project(root))
+        html = (root / "02_リスク分析/リスク分析.html").read_text(encoding="utf-8")
+        assert 'href="../結果まとめ/ID索引.html#RISK-001"' in html
+        assert 'href="../結果まとめ/目次.html"' in html and 'href="../結果まとめ/テスト計画.html"' in html
+        execution = (root / "08_テスト実行/テスト実行.html").read_text(encoding="utf-8")
+        assert 'href="../08_テスト実行/RUN-20261101-100000/証跡/LTC-002.png"' in execution
+
+    def test_結果まとめのページは同じフォルダのページへリンクする(self, root):
+        tm_html.build_html(tm_core.load_project(root))
+        html = (root / "結果まとめ/リスク分析.html").read_text(encoding="utf-8")
+        assert 'href="ID索引.html#RISK-001"' in html and 'href="テスト計画.html"' in html
+        index = (root / "結果まとめ/目次.html").read_text(encoding="utf-8")
+        assert 'href="リスク分析.html"' in index
 
     @staticmethod
     def _risk_block(html: str, risk_id: str) -> tuple[str, str]:
@@ -114,7 +141,7 @@ class Test視認性アップ:
         html = tm_html.render_stage(tm_core.load_project(root), "risk")
         summary, kids = self._risk_block(html, "RISK-001")
         assert "境界の実装ミスは起きやすい" in kids
-        assert 'href="ids.html#Q-001"' in kids and "の回答待ち" in kids
+        assert 'href="ID索引.html#Q-001"' in kids and "の回答待ち" in kids
         assert kids.index("境界の実装ミス") < kids.index("SPEC-001")
         assert "境界の実装ミスは起きやすい" not in summary
         _, kids2 = self._risk_block(html, "RISK-002")
@@ -176,15 +203,47 @@ class Test視認性アップ:
 
 
 class Testテストレポート:
-    def _build(self, root, judgment=JUDGMENT):
+    def _build(self, root, judgment=JUDGMENT, timestamp="20261101120000"):
         (root / "09_テストレポート").mkdir(exist_ok=True)
         (root / "09_テストレポート/判定.md").write_text(judgment, encoding="utf-8")
         project = tm_core.load_project(root)
-        return tm_html.build_report(project, "20261101120000")
+        return tm_html.build_report(project, timestamp)
+
+    @staticmethod
+    def _target(entry: Path) -> str:
+        """入口のページが飛ぶ先(meta refresh の url)。"""
+        from urllib.parse import unquote
+        html = entry.read_text(encoding="utf-8")
+        return unquote(html.split('http-equiv="refresh" content="0; url=')[1].split('"')[0])
+
+    def test_成果物のフォルダの直下とレポートのフォルダに最新のレポートへ飛ぶ入口を置く(self, root):
+        self._build(root)
+        assert self._target(root / "テストレポート.html") == "09_テストレポート/20261101120000/テストレポート.html"
+        assert self._target(root / "09_テストレポート/テストレポート.html") == "20261101120000/テストレポート.html"
+
+    def test_入口は日時のいちばん新しいレポートへ飛ぶ(self, root):
+        self._build(root, timestamp="20261102120000")
+        self._build(root, timestamp="20261101120000")  # 古い日時で作り直しても、新しい方を指したまま
+        assert "20261102120000" in self._target(root / "テストレポート.html")
+
+    def test_入口は成果物の写しに入れない(self, root):
+        self._build(root, timestamp="20261101120000")
+        out = self._build(root, timestamp="20261102120000")
+        assert not (out / "snapshot/テストレポート.html").exists()
+
+    def test_目次のいちばん上に最新のレポートへのリンクを出す(self, root):
+        self._build(root)
+        (root / "テストレポート.html").unlink()
+        tm_html.build_html(tm_core.load_project(root))
+        index = (root / "結果まとめ/目次.html").read_text(encoding="utf-8")
+        main = index.split("<main>")[1]
+        assert main.index('class="latest-report"') < main.index("<h2>")
+        assert 'href="../09_テストレポート/20261101120000/テストレポート.html"' in main
+        assert (root / "テストレポート.html").exists()  # 視認性アップでも入口を作り直す
 
     def test_ファーストビューに終了条件の判定と問題点を出す(self, root):
         out = self._build(root)
-        html = (out / "index.html").read_text(encoding="utf-8")
+        html = (out / "テストレポート.html").read_text(encoding="utf-8")
         first = html.split('id="first-view"')[1].split('id="details"')[0]
         assert "満たしていない終了条件が 1 件" in first
         assert "EXIT-002" in first and "が未修正" in first
@@ -193,7 +252,7 @@ class Testテストレポート:
 
     def test_満たしていない終了条件を先に並べてバナーにIDを書く(self, root):
         out = self._build(root)
-        html = (out / "index.html").read_text(encoding="utf-8")
+        html = (out / "テストレポート.html").read_text(encoding="utf-8")
         first = html.split('id="first-view"')[1].split('id="details"')[0]
         banner = first.split("</div>")[0]
         assert "EXIT-002" in banner and "EXIT-001" not in banner
@@ -201,14 +260,14 @@ class Testテストレポート:
 
     def test_判定が書かれていない終了条件は未判定として出す(self, root):
         out = self._build(root, JUDGMENT.replace("| EXIT-002 | 満たしていない | 重要度が高の BUG-001 が未修正 |\n", ""))
-        html = (out / "index.html").read_text(encoding="utf-8")
+        html = (out / "テストレポート.html").read_text(encoding="utf-8")
         first = html.split('id="first-view"')[1].split('id="details"')[0]
         assert "未判定" in first
         assert "すべての終了条件を満たした" not in first
 
     def test_すべて満たしたときはそう書く(self, root):
         out = self._build(root, JUDGMENT.replace("満たしていない | 重要度が高の BUG-001 が未修正", "満たした | 未修正は0件"))
-        html = (out / "index.html").read_text(encoding="utf-8")
+        html = (out / "テストレポート.html").read_text(encoding="utf-8")
         assert "すべての終了条件を満たした" in html.split('id="first-view"')[1].split('id="details"')[0]
 
     def _tree_block(self, html, top_id, next_id=None):
@@ -217,7 +276,7 @@ class Testテストレポート:
 
     def test_要求からテスト結果まで開いてたどれる(self, root):
         out = self._build(root)
-        html = (out / "index.html").read_text(encoding="utf-8")
+        html = (out / "テストレポート.html").read_text(encoding="utf-8")
         block = self._tree_block(html, "REQ-001", "REQ-002")
         order = [block.index(i) for i in ["SPEC-001", "COND-001", "HTC-001", "LTC-001"]]
         assert order == sorted(order)
@@ -230,13 +289,13 @@ class Testテストレポート:
         text = text.replace("| COND-001 | 年齢の有効範囲 | FT-001 | TA-001 | SPEC-001 |", "| COND-001 | 年齢の有効範囲 | FT-001 | TA-001 | SPEC-001, REQ-001 |")
         (root / "04_テスト分析/テスト分析.md").write_text(text, encoding="utf-8")
         out = self._build(root)
-        html = (out / "index.html").read_text(encoding="utf-8")
+        html = (out / "テストレポート.html").read_text(encoding="utf-8")
         block = self._tree_block(html, "REQ-001", "REQ-002")
         assert block.count('data-id="COND-001"') == 1
 
     def test_行に実行の割合と問題の件数を出す(self, root):
         out = self._build(root)
-        html = (out / "index.html").read_text(encoding="utf-8")
+        html = (out / "テストレポート.html").read_text(encoding="utf-8")
         summary = self._tree_block(html, "REQ-001").split("</summary>")[0]
         assert "実行 3/3(100%)" in summary  # LTC-001・LTC-002 と、探索したテストチャーター CH-001
         assert "Fail 1" in summary and "不具合 1" in summary
@@ -246,7 +305,7 @@ class Testテストレポート:
 
     def test_テスト条件の行にカバレッジアイテムの通る数を出す(self, root):
         out = self._build(root)
-        html = (out / "index.html").read_text(encoding="utf-8")
+        html = (out / "テストレポート.html").read_text(encoding="utf-8")
         cond = self._tree_block(html, "REQ-001", "REQ-002").split('data-id="COND-001"')[1].split("</summary>")[0]
         assert "カバレッジアイテム 2/2" in cond
 
@@ -257,7 +316,7 @@ class Testテストレポート:
         (root / "05_テスト設計/テスト設計.md").write_text(text, encoding="utf-8")
         append_to(root, "06_テスト実装/未実装.md", "# 未実装\n\n| ハイレベルテストケースID | 理由 |\n|---|---|\n| HTC-004 | 回答待ち(Q-001) |\n")
         out = self._build(root)
-        html = (out / "index.html").read_text(encoding="utf-8")
+        html = (out / "テストレポート.html").read_text(encoding="utf-8")
         htc = self._tree_block(html, "REQ-001", "REQ-002").split('data-id="HTC-004"')[1].split("</details>")[0]
         assert "未実装" in htc and "Q-001" in htc
         cond = self._tree_block(html, "REQ-001", "REQ-002").split('data-id="COND-001"')[1].split("</summary>")[0]
@@ -265,13 +324,13 @@ class Testテストレポート:
 
     def test_リスクからたどる版をリスクレベルの高い順に出す(self, root):
         out = self._build(root)
-        html = (out / "index.html").read_text(encoding="utf-8")
+        html = (out / "テストレポート.html").read_text(encoding="utf-8")
         risk_part = html.split('id="risk-coverage"')[1]
         assert risk_part.index('id="tree-RISK-001"') < risk_part.index('id="tree-RISK-002"')
 
     def test_仕様のカバレッジとテストチャーターの時間を出す(self, root):
         out = self._build(root)
-        html = (out / "index.html").read_text(encoding="utf-8")
+        html = (out / "テストレポート.html").read_text(encoding="utf-8")
         row = next(line for line in html.split("</tr>") if 'id="cov-SPEC-002"' in line)
         assert "まったくテストしていない" in row
         row = next(line for line in html.split("</tr>") if 'id="time-CH-001"' in line)
@@ -288,7 +347,7 @@ class Testテストレポート:
 
     def test_判定に書いた文章と戻し記録を載せる(self, root):
         out = self._build(root)
-        html = (out / "index.html").read_text(encoding="utf-8")
+        html = (out / "テストレポート.html").read_text(encoding="utf-8")
         assert "境界値のテスト条件を最初から厚くする" in html
         assert "RB-001" in html
 
@@ -297,7 +356,22 @@ class Testテストレポート:
         assert (out / "snapshot/01_要求仕様/要求.md").exists()
         assert (out / "snapshot/08_テスト実行/RUN-20261101-100000/証跡/LTC-002.png").exists()
         assert not (out / "snapshot/09_テストレポート").exists()
-        assert (out / "ids.html").exists()
+        assert (out / "ID索引.html").exists() and (out / "リスク分析.html").exists()
+
+    def test_成果物の写しに結果まとめと工程のページは入れない(self, root):
+        tm_html.build_html(tm_core.load_project(root))
+        out = self._build(root)
+        assert not (out / "snapshot/結果まとめ").exists()
+        assert not (out / "snapshot/02_リスク分析/リスク分析.html").exists()
+        assert (out / "snapshot/02_リスク分析/リスク分析.md").exists()
+
+    def test_レポートのページはレポートの中のページへリンクする(self, root):
+        out = self._build(root)
+        html = (out / "リスク分析.html").read_text(encoding="utf-8")
+        assert '<a href="テストレポート.html">テストレポート</a>' in html
+        assert 'href="ID索引.html#RISK-001"' in html and 'href="テスト計画.html"' in html
+        ids = (out / "ID索引.html").read_text(encoding="utf-8")
+        assert 'href="snapshot/02_リスク分析/リスク分析.md"' in ids
 
     def test_判定のファイルが無いと作らずに理由を伝える(self, root):
         project = tm_core.load_project(root)

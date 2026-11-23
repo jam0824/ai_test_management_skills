@@ -69,10 +69,11 @@ def cmd_impact(args) -> int:
 def cmd_html(args) -> int:
     project = _load(args)
     stages = [args.stage] if args.stage else None
-    written = tm_html.build_html(project, project.root / "html", stages)
-    print(f"HTMLを作った: {project.root / 'html'} ({len(written)} ページ)")
-    target = f"{args.stage}.html" if args.stage else "index.html"
-    print(f"開くページ: {(project.root / 'html' / target).resolve()}")
+    written = tm_html.build_html(project, stages)
+    summary = project.root / tm_html.SUMMARY_DIR
+    print(f"HTMLを作った: {summary} と工程のフォルダ ({len(written)} ページ)")
+    target = tm_html.page_name(args.stage) if args.stage else tm_html.INDEX_PAGE
+    print(f"開くページ: {(summary / target).resolve()}")
     return 0
 
 
@@ -141,7 +142,8 @@ def cmd_report(args) -> int:
     except tm_html.ReportError as error:
         print(f"テストレポートを作れない: {error}")
         return 1
-    print(f"テストレポートを作った: {(out / 'index.html').resolve()}")
+    print(f"テストレポートを作った: {(out / tm_html.REPORT_PAGE).resolve()}")
+    print(f"入口(最新のレポートへ飛ぶ): {(project.root / tm_html.REPORT_PAGE).resolve()}")
     return 0
 
 
