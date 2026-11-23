@@ -156,3 +156,26 @@ claude plugin validate .        # プラグインの形の確認
 - `sample_app/` … 試しにテストしてみるための小さなアプリ(老後資金シミュレーター)
   - `web/` … Web版(HTML 1枚)
   - `android/` … Android版(Kotlin + Jetpack Compose、Web版と同じ仕様)
+- `サンプル結果/` … スキルで通しでテストした成果物の見本
+
+### サンプルアプリでスキルを試すときの注意
+
+`sample_app/` の Web版と Android版には、スキルが不具合を見つけられるかを試すため、仕様と違う動きを1つずつ入れてあります。答えは [仕込んだ不具合.md](仕込んだ不具合.md) です。
+
+**テストをするエージェントに、答えを読ませないでください。** このリポジトリをそのままプラグインとして入れる(または `--plugin-dir` で指す)と、プラグインのフォルダに `仕込んだ不具合.md`・`sample_app/`・`サンプル結果/` も入り、エージェントが読めてしまいます。試すときは次のようにします。
+
+1. 答えとサンプルを除いた、プラグインの写しを作る
+
+   ```bash
+   mkdir -p /path/to/plugin_copy
+   git archive HEAD -- . ':!仕込んだ不具合.md' ':!sample_app' ':!サンプル結果' | tar -x -C /path/to/plugin_copy
+   ```
+
+2. テストするアプリ(`sample_app/web` か `sample_app/android`)を、このリポジトリの外の、git の履歴の無いフォルダに写す
+3. そのフォルダで、写したプラグインを読み込んで起動し、`test-manager` でテストする
+
+   ```bash
+   claude --plugin-dir /path/to/plugin_copy
+   ```
+
+4. 終わったら、テストレポートの欠陥レポートを `仕込んだ不具合.md` と見比べる
