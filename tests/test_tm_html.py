@@ -190,6 +190,61 @@ class Test視認性アップ:
         row = self._coverage_row(tm_html.render_stage(tm_core.load_project(root), "plan"), "要求")
         assert "REQ-003" in row and "仕様が無い" in row and "RISK-003" in row and "TA-004" in row
 
+    # ---- テスト分析: テスト条件のカバレッジ ----
+
+    @staticmethod
+    def _pane(html: str, pane_id: str) -> str:
+        return html.split(f'id="{pane_id}"')[1].split('<div class="pane')[0].split("<h2>")[0]
+
+    def test_テスト分析のページはいちばん上にテスト条件のカバレッジを出す(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "analysis")
+        main = html.split("<main>")[1]
+        assert main.index("<h2>テスト条件のカバレッジ</h2>") < main.index("<h2>フィーチャーごとのテスト条件</h2>") \
+            < main.index("<h2>この工程で出た質問</h2>")
+        assert main.split("<h2>")[1].startswith("テスト条件のカバレッジ")
+
+    def test_テスト条件が要求と仕様とリスクとテストアプローチを押さえている割合を出す(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "analysis")
+        table = html.split("<h2>テスト条件のカバレッジ</h2>")[1].split("</table>")[0]
+        rows = {kind: next(r for r in table.split("</tr>") if f">{kind}</span></td>" in r)
+                for kind in ("要求", "仕様", "リスク", "テストアプローチ")}
+        assert "<td>2 / 2</td><td>100%</td>" in rows["要求"]
+        assert "<td>2 / 3</td><td>66%</td>" in rows["仕様"] and "SPEC-002" in rows["仕様"]
+        assert "テスト条件が無い" in rows["仕様"]
+        assert "<td>2 / 2</td><td>100%</td>" in rows["リスク"]
+        assert "<td>3 / 3</td><td>100%</td>" in rows["テストアプローチ"]
+
+    def test_要求からたどると仕様の下にテスト条件が出て無い仕様は赤くなる(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "analysis")
+        pane = self._pane(html, "an-req")
+        req1 = pane.split('id="an-req-REQ-001"')[1]
+        assert "COND-003" in req1.split('id="an-req-SPEC-001"')[0]  # 要求に直接紐づくテスト条件(利用の流れ)
+        assert "COND-001" not in req1.split('id="an-req-SPEC-001"')[0]  # 仕様のテスト条件は要求の直下に重ねて出さない
+        assert "テスト条件 2件" in req1.split("</summary>")[0]
+        assert "COND-001" in req1.split('id="an-req-SPEC-001"')[1].split("</details>")[0]
+        spec2 = pane.split('id="an-req-SPEC-002"')[1].split("</summary>")[0]
+        assert 'class="ng"' in spec2 and "テスト条件 0件" in spec2
+        assert 'class="ok"' in pane.split('id="an-req-SPEC-001"')[1].split("</summary>")[0]
+
+    def test_リスクとテストアプローチからもテスト条件をたどれる(self, root):
+        html = tm_html.render_stage(tm_core.load_project(root), "analysis")
+        risk1 = self._pane(html, "an-risk").split('id="an-risk-RISK-001"')[1].split("</details>")[0]
+        assert "COND-001" in risk1 and "COND-003" in risk1 and "COND-002" not in risk1
+        ta3 = self._pane(html, "an-ta").split('id="an-ta-TA-003"')[1].split("</details>")[0]
+        assert "COND-003" in ta3 and "COND-001" not in ta3
+
+    def test_テスト計画で対象外にした仕様は灰色で理由を出す(self, root):
+        path = root / "03_テスト計画/テスト計画.md"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "## テスト終了条件",
+            "## 対象外/制約\n\n### 対象外\n\n| 対象外にするもの | 理由 |\n|---|---|\n| エラー表示(SPEC-002) | 次の版で作る |\n\n## テスト終了条件"),
+            encoding="utf-8")
+        html = tm_html.render_stage(tm_core.load_project(root), "analysis")
+        spec2 = self._pane(html, "an-req").split('id="an-req-SPEC-002"')[1].split("</summary>")[0]
+        assert 'class="ex"' in spec2
+        table = html.split("<h2>テスト条件のカバレッジ</h2>")[1].split("</table>")[0]
+        assert "次の版で作る" in table
+
     def test_工程のページの質問は並べて開くと理由と関連が出る(self, root):
         html = tm_html.render_stage(tm_core.load_project(root), "analysis")
         summary, kids = self._risk_block(html, "Q-001")

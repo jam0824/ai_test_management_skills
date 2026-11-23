@@ -298,10 +298,11 @@ details{border:1px solid var(--line);border-radius:6px;margin:6px 0;padding:4px 
 .tabs input:checked+label{background:var(--bg);font-weight:700}.tabs input:focus-visible+label{outline:2px solid var(--link)}
 .pane{display:none;border-top:1px solid var(--line)}
 #tab-req:checked~#req-coverage,#tab-risk:checked~#risk-coverage{display:block}
+#tab-an-req:checked~#an-req,#tab-an-risk:checked~#an-risk,#tab-an-ta:checked~#an-ta{display:block}
 .tree details{border:none;border-radius:0;margin:0;padding:0}
 .tree summary{font-weight:400;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:5px 8px;border-bottom:1px solid var(--line)}
 .tree summary:hover{background:var(--soft)}
-.tree summary.ng{box-shadow:inset 3px 0 0 var(--fail)}.tree summary.warn{box-shadow:inset 3px 0 0 var(--block)}.tree summary.ok{box-shadow:inset 3px 0 0 var(--pass)}
+.tree summary.ng{box-shadow:inset 3px 0 0 var(--fail)}.tree summary.warn{box-shadow:inset 3px 0 0 var(--block)}.tree summary.ok{box-shadow:inset 3px 0 0 var(--pass)}.tree summary.ex{box-shadow:inset 3px 0 0 var(--unimpl)}
 .tree .kids{margin-left:22px;border-left:1px dashed var(--line)}
 .tree .lv-REQ>summary,.tree .lv-RISK>summary,.tree .card>summary{font-weight:600}
 .kind{font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;white-space:nowrap}
@@ -344,12 +345,15 @@ def _ids(project: Project, type_key: str) -> list[str]:
 # ---- 工程ごとのページ ----
 
 def _card(v: View, record_id: str, title: str, badges: str = "", meta: str = "",
-          notes: list[tuple[str, str]] = (), sub_label: str = "", leaves: str = "") -> str:
+          notes: list[tuple[str, str]] = (), sub_label: str = "", leaves: str = "",
+          card_id: str = "", cls: str = "") -> str:
     """1件をたためる行にする。開くと、notes(項目名と値)を囲みで、その下に sub_label の見出しと leaves を出す。"""
     note = "".join(f"<dt>{_escape(name)}</dt><dd>{v.text(value)}</dd>" for name, value in notes if value.strip())
     inner = ((f'<dl class="card-note">{note}</dl>' if note else "")
              + (f'<div class="sub">{sub_label}</div>{leaves}' if leaves else ""))
-    return (f'<details class="card" id="row-{record_id}"><summary><span class="kind">{TYPES[type_of(record_id)]}</span>'
+    summary_cls = f' class="{cls}"' if cls else ""
+    return (f'<details class="card" id="{card_id or "row-" + record_id}"><summary{summary_cls}>'
+            f'<span class="kind">{TYPES[type_of(record_id)]}</span>'
             f'{v.ref(record_id, False)} {badges} <span class="title">{_escape(title)}</span>{meta}</summary>'
             f'<div class="kids">{inner}</div></details>')
 
@@ -416,8 +420,7 @@ def _stage_risk(v: View) -> str:
 def _stage_plan(v: View) -> str:
     p = v.project
     # 何を・どこまでテストするかを先に読めるよう、テストアイテムとテストスコープを上に出す
-    plan_file = p.root / tm_core.STAGE_DIRS["plan"] / "テスト計画.md"
-    sections = _sections(plan_file.read_text(encoding="utf-8-sig")) if plan_file.is_file() else {}
+    sections = _plan_sections(p)
     head = "".join(f"<h2>{name}</h2>{md_to_html(sections[name], v.known, v.id_href)}"
                    for name in ("テストアイテム", "テストスコープ") if sections.get(name, "").strip())
     exits = [[v.ref(e.id, False), v.text(e.fields.get("終了条件", e.title)), v.text(e.fields.get("測り方", ""))] for e in p.of_type("EXIT")]
@@ -427,15 +430,8 @@ def _stage_plan(v: View) -> str:
         for ta in p.of_type("TA")]
     # テストアプローチの表の要求・仕様・リスクの列に、どれか1行でも出てくれば「満たしている」と数える
     excluded = _excluded_in_plan(sections.get("対象外/制約", ""))
-    coverage = []
-    for type_key in ("REQ", "SPEC", "RISK"):
-        all_ids = _ids(p, type_key)
-        covered = {i for ta in p.of_type("TA") for i in v.related(ta.id, type_key)}
-        missing = [i for i in all_ids if i not in covered]
-        rate = f"{100 * (len(all_ids) - len(missing)) // len(all_ids)}%" if all_ids else "-"
-        reasons = "<br>".join(f"{v.ref(i, False)} {_not_covered_reason(v, i, excluded)}" for i in missing)
-        coverage.append([f'<span class="nowrap">{TYPES[type_key]}</span>', f"{len(all_ids) - len(missing)} / {len(all_ids)}", rate,
-                         reasons or '<span class="none-text">なし</span>'])
+    covered = {t: {i for ta in p.of_type("TA") for i in v.related(ta.id, t)} for t in ("REQ", "SPEC", "RISK")}
+    coverage = _coverage_rows(v, covered, excluded, "テストアプローチ")
     return (head + "<h2>テスト終了条件</h2>" + _table(["ID", "終了条件", "測り方"], exits)
             + "<h2>テストアプローチが要求・仕様・リスクを満たしている割合</h2>"
             "<p class=\"muted\">下のテストアプローチの表の要求・仕様・リスクの列に、1行でも出てくるものを「満たしている」と数える。</p>"
@@ -443,6 +439,24 @@ def _stage_plan(v: View) -> str:
             + "<h2>テストアプローチ</h2>"
             + _table(["テストタイプ", "テストアプローチ", "実施方法", "要求", "仕様", "リスク"], approaches,
                      ["row-" + ta.id for ta in p.of_type("TA")]))
+
+
+def _plan_sections(p: Project) -> dict[str, str]:
+    plan_file = p.root / tm_core.STAGE_DIRS["plan"] / "テスト計画.md"
+    return _sections(plan_file.read_text(encoding="utf-8-sig")) if plan_file.is_file() else {}
+
+
+def _coverage_rows(v: View, covered: dict[str, set[str]], excluded: dict[str, str], by: str) -> list[list[str]]:
+    """種類ごとに、押さえている数・割合・押さえていないものと理由の行を作る。割合は切り捨て(全部そろうまで100%にしない)。"""
+    rows = []
+    for type_key, done in covered.items():
+        all_ids = _ids(v.project, type_key)
+        missing = [i for i in all_ids if i not in done]
+        rate = f"{100 * (len(all_ids) - len(missing)) // len(all_ids)}%" if all_ids else "-"
+        reasons = "<br>".join(f"{v.ref(i, False)} {_not_covered_reason(v, i, excluded, by)}" for i in missing)
+        rows.append([f'<span class="nowrap">{TYPES[type_key]}</span>', f"{len(all_ids) - len(missing)} / {len(all_ids)}",
+                     rate, reasons or '<span class="none-text">なし</span>'])
+    return rows
 
 
 def _excluded_in_plan(section: str) -> dict[str, str]:
@@ -466,7 +480,7 @@ def _excluded_in_plan(section: str) -> dict[str, str]:
     return excluded
 
 
-def _not_covered_reason(v: View, record_id: str, excluded: dict[str, str]) -> str:
+def _not_covered_reason(v: View, record_id: str, excluded: dict[str, str], by: str = "テストアプローチ") -> str:
     if record_id in excluded:
         return f'<span class="muted">対象外: {v.text(excluded[record_id])}</span>'
     p = v.project
@@ -476,12 +490,13 @@ def _not_covered_reason(v: View, record_id: str, excluded: dict[str, str]) -> st
         handled = (f"。{v.refs(risks, False).replace('<br>', '、')} として "
                    f"{v.refs(tas, False).replace('<br>', '、')} で扱う") if risks and tas else ""
         return f'<span class="muted">仕様が無い{handled}</span>'
-    return '<span class="missing">テストアプローチが無い</span>'
+    return f'<span class="missing">{by}が無い</span>'
 
 
 def _stage_analysis(v: View) -> str:
     p = v.project
-    parts = ["<h2>フィーチャーごとのテスト条件</h2>"]
+    # どこまで押さえたかを先に読めるよう、カバレッジをいちばん上に出す
+    parts = [_condition_coverage(v), "<h2>フィーチャーごとのテスト条件</h2>"]
     grouped: set[str] = set()
     for feature in p.of_type("FT"):
         conditions = [c for c in p.children(feature.id) if type_of(c) == "COND"]
@@ -493,6 +508,64 @@ def _stage_analysis(v: View) -> str:
     if rest:
         parts.append("<h3 class=\"missing\">フィーチャーに紐づいていないテスト条件</h3>" + v.chain(rest, ["COND", "TA", "RISK"]))
     return "".join(parts)
+
+
+def _condition_coverage(v: View) -> str:
+    """テスト条件が、要求・仕様・リスク・テストアプローチをどこまで押さえているか。割合の表と、たどれる一覧。"""
+    p = v.project
+    excluded = _excluded_in_plan(_plan_sections(p).get("対象外/制約", ""))
+
+    def conds(record_id: str) -> list[str]:  # そのIDに直接紐づくテスト条件
+        return [c for c in p.children(record_id) if type_of(c) == "COND"]
+
+    def specs(req_id: str) -> list[str]:
+        return [c for c in p.children(req_id) if type_of(c) == "SPEC"]
+
+    def req_conds(req_id: str) -> set[str]:  # 要求に直接と、その仕様を通して紐づくテスト条件
+        return set(conds(req_id)) | {c for s in specs(req_id) for c in conds(s)}
+
+    covered = {
+        "REQ": {r for r in _ids(p, "REQ") if req_conds(r)},
+        "SPEC": {s for s in _ids(p, "SPEC") if conds(s)},
+        "RISK": {r for r in _ids(p, "RISK") if conds(r)},
+        "TA": {t for t in _ids(p, "TA") if conds(t)},
+    }
+
+    def color(record_id: str, count: int) -> str:
+        return "ok" if count else ("ex" if record_id in excluded else "ng")
+
+    def cond_leaves(ids) -> str:
+        return "".join(_leaf(v, c, _badge(p.records[c].fields.get("優先順位", ""))) for c in sorted(ids, key=tm_core._id_key))
+
+    def card(pane: str, record_id: str, title: str, counted, shown, children: str = "") -> str:
+        """counted: 件数に数えるテスト条件。shown: この行の直下に出すテスト条件(仕様の下に出るものは children に入る)。"""
+        n = len(set(counted))
+        return _card(v, record_id, title, meta=f'<span class="ci">テスト条件 {n}件</span>',
+                     sub_label="仕様とテスト条件" if children else "テスト条件",
+                     leaves=cond_leaves(shown) + children, card_id=f"{pane}-{record_id}", cls=color(record_id, n))
+
+    req_pane = "".join(
+        card("an-req", r.id, r.title, req_conds(r.id), conds(r.id), children="".join(
+            card("an-req", s, p.records[s].title, conds(s), conds(s)) for s in specs(r.id)))
+        for r in p.of_type("REQ"))
+    risk_pane = "".join(card("an-risk", r, p.records[r].title, conds(r), conds(r)) for r in _risk_order(p))
+    ta_pane = "".join(card("an-ta", t.id, t.fields.get("内容", "") or t.title, conds(t.id), conds(t.id))
+                      for t in p.of_type("TA"))
+    return (
+        "<h2>テスト条件のカバレッジ</h2>"
+        "<p class=\"muted\">テスト条件の表で、要求・仕様・リスク・テストアプローチに直接紐づけたものを数える"
+        "(要求は、その仕様に紐づくテスト条件も数える)。</p>"
+        + _table(["", "押さえている数", "割合", "押さえていないものと理由"], _coverage_rows(v, covered, excluded, "テスト条件"))
+        + "<p class=\"muted\">行をクリックすると、紐づくテスト条件が開く。左の線は、緑 = テスト条件がある、"
+        "赤 = テスト条件が無い、灰色 = テスト計画で対象外にした。</p>"
+        '<div class="tabs">'
+        '<input type="radio" name="an-tab" id="tab-an-req" checked><label for="tab-an-req">要求からたどる</label>'
+        '<input type="radio" name="an-tab" id="tab-an-risk"><label for="tab-an-risk">リスクからたどる</label>'
+        '<input type="radio" name="an-tab" id="tab-an-ta"><label for="tab-an-ta">テストアプローチからたどる</label>'
+        f'<div class="pane tree" id="an-req">{req_pane}</div>'
+        f'<div class="pane tree" id="an-risk">{risk_pane}</div>'
+        f'<div class="pane tree" id="an-ta">{ta_pane}</div></div>'
+    )
 
 
 def _htcs_of(project: Project, coverage_item: str) -> list[str]:
