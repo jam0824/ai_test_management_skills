@@ -10,3 +10,4 @@ node_modules/
 # Playwright がテストのたびに出す生の出力(必要なものはテストランの証跡に取り込み済み)
 サンプル結果/**/test-results/
 サンプル結果/**/test-results-webkit/
+実験/
