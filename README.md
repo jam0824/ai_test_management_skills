@@ -46,9 +46,11 @@ flowchart LR
 Claude Code の中で、マーケットプレイスとしてこのリポジトリを追加し、プラグインを入れます。
 
 ```
-/plugin marketplace add <このリポジトリの owner/repo または フォルダのパス>
+/plugin marketplace add jam0824/ai_test_management_skills
 /plugin install ai-test-management@ai-test-management-skills
 ```
+
+クローンしたフォルダから入れるときは、`jam0824/ai_test_management_skills` の代わりにそのフォルダのパスを書きます。
 
 手元のフォルダのまま試すときは、次のように起動します。
 
