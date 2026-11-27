@@ -113,7 +113,7 @@ def cmd_metrics(args) -> int:
         return 0
     t = data["testcases"]
     print(f"テストケース {t['total']} 件 / 実行率 {t['execution_rate']}% (実行 {t['executed']} ÷ ローレベルテストケース {t['total']})")
-    print(f"Pass {t['Pass']} / Fail {t['Fail']} / ブロック {t['ブロック']} / 未実行 {t['未実行']} / 未実装 {t['未実装']}")
+    print(f"Pass {t['Pass']} / Fail {t['Fail']} / ブロック {t['ブロック']} / 未実行 {t['未実行']} / テスト未作成 {t['未実装']}")
     print(f"テストラン: {', '.join(data['runs']) or 'なし'}")
     versions = data["versions"]
     if versions["current"]:
@@ -127,7 +127,7 @@ def cmd_metrics(args) -> int:
         for row in rows:
             level = f" レベル{row['level']}({row['class']})" if "level" in row else ""
             print(f"  {row['id']}{level}: {row['state']} (Pass {row['Pass']} / Fail {row['Fail']} / ブロック {row['ブロック']}"
-                  f" / 未実行 {row['未実行']} / 未実装 {row['未実装']} / セッション {row['sessions']} / 残り {row['remaining']})")
+                  f" / 未実行 {row['未実行']} / テスト未作成 {row['未実装']} / セッション {row['sessions']} / 残り {row['remaining']})")
     print("テストチャーターごとのセッションの時間(中断を除いた時間の合計 / 時間枠):")
     for charter in data["charters"]:
         timebox = f"{charter['timebox']}分" if charter["timebox"] is not None else "時間枠なし"

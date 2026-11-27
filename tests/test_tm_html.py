@@ -477,7 +477,7 @@ class Test視認性アップ:
     def test_テスト実装のページはいちばん上にローレベルテストケースのカバレッジを出し古い表は出さない(self, root):
         main = tm_html.render_stage(tm_core.load_project(root), "implementation").split("<main>")[1]
         assert main.split("<h2>")[1].startswith("ローレベルテストケースのカバレッジ")
-        assert main.index("<h2>ローレベルテストケース</h2>") < main.index("<h2>未実装のテストケースと理由</h2>")
+        assert main.index("<h2>ローレベルテストケース</h2>") < main.index("<h2>ローレベルテストケースを作っていないハイレベルテストケースと理由</h2>")
         assert "要求 → ローレベルテストケース → テスト手順" not in main
         assert "ローレベルテストケースでどこまで通せているか" not in main
 
@@ -851,18 +851,32 @@ class Testテストレポート:
         cond = self._tree_block(html, "REQ-001", "REQ-002").split('data-id="COND-001"')[1].split("</summary>")[0]
         assert "カバレッジアイテム 2/2" in cond
 
-    def test_未実装のハイレベルテストケースは理由を出す(self, root):
+    def _build_with_htc4_waiting(self, root) -> str:
+        """ローレベルテストケースを作っていない HTC-004(回答待ち)を足して、レポートのHTMLを返す。"""
         text = (root / "05_テスト設計/テスト設計.md").read_text(encoding="utf-8")
         text = text.replace("| CI-003 | 確認画面が表示される | COND-002 |", "| CI-003 | 確認画面が表示される | COND-002 |\n| CI-004 | 上限の境界値 65 | COND-001 |")
         text = text.replace("| 手動テスト | 低 | 設計済み |\n", "| 手動テスト | 低 | 設計済み |\n| HTC-004 | 上限の境界値のとき登録できる | COND-001 | CI-004 | 登録できる | E2E自動テスト | 高 | 回答待ち(Q-001) |\n")
         (root / "05_テスト設計/テスト設計.md").write_text(text, encoding="utf-8")
         append_to(root, "06_テスト実装/未実装.md", "# 未実装\n\n| ハイレベルテストケースID | 理由 |\n|---|---|\n| HTC-004 | 回答待ち(Q-001) |\n")
         out = self._build(root)
-        html = (out / "テストレポート.html").read_text(encoding="utf-8")
+        return (out / "テストレポート.html").read_text(encoding="utf-8")
+
+    def test_ローレベルテストケースを作っていないハイレベルテストケースは理由を出す(self, root):
+        html = self._build_with_htc4_waiting(root)
         htc = self._tree_block(html, "REQ-001", "REQ-002").split('data-id="HTC-004"')[1].split("</details>")[0]
-        assert "未実装" in htc and "Q-001" in htc
+        assert "ローレベルテストケース未作成: " in htc and "Q-001" in htc
         cond = self._tree_block(html, "REQ-001", "REQ-002").split('data-id="COND-001"')[1].split("</summary>")[0]
         assert "カバレッジアイテム 2/3" in cond
+
+    def test_テストを作っていないものはテスト未作成と出しプロダクトの未実装と読める言葉を使わない(self, root):
+        html = self._build_with_htc4_waiting(root)
+        first_view = html.split('id="first-view"')[1].split("</section>")[0]
+        assert '<a href="#not-run">テスト未作成</a> <b>1</b> 件' in first_view
+        assert '<span class="badge none">テスト未作成</span>' in html.split('id="not-run"')[1].split("</table>")[0]
+        assert "<th>テスト未作成</th>" in html
+        assert '<b class="w">テスト未作成 1</b>' in self._tree_block(html, "REQ-001", "REQ-002")
+        # ファイル名の 未実装.md はそのまま。それ以外の表示に「未実装」を残さない
+        assert "未実装" not in html.replace("未実装.md", "")
 
     def test_リスクからたどる版をリスクレベルの高い順に出す(self, root):
         out = self._build(root)

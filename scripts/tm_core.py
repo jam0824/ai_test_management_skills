@@ -527,12 +527,12 @@ def _check(project: Project, stage: str | None) -> tuple[list[tuple[str, str]], 
         warn("CI", ["HTC"], "テストケースで通していないカバレッジアイテム。通さないなら「通さない理由」に書く",
              skip=lambda r: bool(r.fields.get(CI_SKIP_REASON, "").strip()))
     if index >= STAGE_KEYS.index("implementation"):
-        warn("HTC", ["LTC"], "ローレベルテストケースが無く、未実装にも記録されていない",
+        warn("HTC", ["LTC"], "ローレベルテストケースが無く、未実装.md にも記録されていない",
              skip=lambda r: r.id in project.unimplemented)
         warn("LTC", ["PROC"], "テスト手順が無い手動テスト",
              skip=lambda r: "手動" not in r.fields.get("実施方法", ""))
     if index >= STAGE_KEYS.index("e2e"):
-        warn("LTC", ["SCR"], "スクリプトが無く、未実装にも記録されていないE2E自動テスト",
+        warn("LTC", ["SCR"], "スクリプトが無く、未実装.md にも記録されていないE2E自動テスト",
              skip=lambda r: "E2E" not in r.fields.get("実施方法", "") or r.id in project.unimplemented)
     if index >= STAGE_KEYS.index("execution"):
         final = project.final_results()

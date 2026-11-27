@@ -213,7 +213,7 @@ def _badge(text: str) -> str:
         "Pass": "ok", "満たした": "ok", "達した": "ok", "達していない": "ng", "すべて実行してすべてPass": "ok", "クローズ": "ok", "低": "low",
         "Fail": "ng", "満たしていない": "ng", "未判定": "ng", "実行したがFailあり": "ng", "未修正": "ng", "高": "high",
         "ブロック": "warn", "一部しか実行していない": "warn", "修正済み": "warn", "中": "mid",
-        "未実行": "none", "まったくテストしていない": "none", "未実装": "none",
+        "未実行": "none", "まったくテストしていない": "none", "テスト未作成": "none",
     }
     return f'<span class="badge {kinds.get(text.strip(), "plain")}">{_escape(text)}</span>'
 
@@ -278,7 +278,7 @@ class View:
         return "<h2>この工程のドキュメント</h2>" + ("".join(blocks) or "<p>まだありません。</p>")
 
 
-COUNT_HEADERS = ["テストケース", "Pass", "Fail", "ブロック", "未実行", "未実装", "探索的テストのセッション", "見つけた不具合", "状態"]
+COUNT_HEADERS = ["テストケース", "Pass", "Fail", "ブロック", "未実行", "テスト未作成", "探索的テストのセッション", "見つけた不具合", "状態"]
 
 CSS = """
 :root{--fg:#1f2328;--muted:#59636e;--line:#d1d9e0;--bg:#fff;--soft:#f6f8fa;--ok:#1a7f37;--ng:#cf222e;--warn:#9a6700;--link:#0969da}
@@ -803,8 +803,8 @@ def _stage_implementation(v: View) -> str:
     # どこまで実装したかを先に読めるよう、ローレベルテストケースのカバレッジをいちばん上に出す
     return (
         _ltc_coverage(v) + _ltc_cards(v)
-        + "<h2>未実装のテストケースと理由</h2>" + _unimplemented_table(v, "HTC")
-        + ("<p class=\"missing\">ローレベルテストケースが無いのに、未実装に記録されていない: " + v.refs(missing) + "</p>" if missing else "")
+        + "<h2>ローレベルテストケースを作っていないハイレベルテストケースと理由</h2>" + _unimplemented_table(v, "HTC")
+        + ("<p class=\"missing\">ローレベルテストケースが無いのに、未実装.md に記録されていない: " + v.refs(missing) + "</p>" if missing else "")
     )
 
 
@@ -837,7 +837,7 @@ def _ltc_coverage(v: View) -> str:
 
     def htc_reason(h: str) -> str:
         if h in p.unimplemented:
-            return f"未実装: {v.text(p.unimplemented[h].reason)}"
+            return f"ローレベルテストケース未作成: {v.text(p.unimplemented[h].reason)}"
         state = p.records[h].fields.get("状態", "")
         return f"回答待ち: {v.text(state)}" if "回答待ち" in state else ""
 
@@ -853,7 +853,7 @@ def _ltc_coverage(v: View) -> str:
         elif t in ("SPEC", "RISK", "REQ") and record_id not in excluded:  # どのテスト条件で止まっているか
             conds = [c for c in (_req_conds(p, record_id) if t == "REQ" else _conds_of(p, record_id)) if htcs_of_cond(c)]
             why = (f"テスト条件 {v.refs(sorted(conds, key=tm_core._id_key), False).replace('<br>', '、')} の"
-                   "ハイレベルテストケースが未実装・回答待ち") if conds else ""
+                   "ハイレベルテストケースが、ローレベルテストケース未作成か回答待ち") if conds else ""
         else:
             return None
         return f'<span class="muted">{why}</span>' if why else None
@@ -935,7 +935,7 @@ def _ltc_coverage(v: View) -> str:
         + _table(["", "押さえている数", "割合", "押さえていないものと理由"],
                  _coverage_rows(v, covered, excluded, "ローレベルテストケース", reason))
         + "<p class=\"muted\">行をクリックすると、下の成果物が開く。左の線は、緑 = 押さえている、"
-        "黄 = 一部だけ・回答待ち、赤 = 無い(未実装を含む)、灰色 = テスト計画で対象外にした。</p>"
+        "黄 = 一部だけ・回答待ち、赤 = 無い(未実装.md に記録したものを含む)、灰色 = テスト計画で対象外にした。</p>"
         + _tabs("im-tab", [("im-cond", "テスト条件からたどる", "".join(cond_cards)),
                            ("im-req", "要求からたどる", req_pane)])
     )
@@ -1520,7 +1520,7 @@ def _first_view(v: View, m: dict, judgments: dict[str, tuple[str, str]], lacking
         f"(うち実機の動きあり <b>{sum(1 for q in m['open_questions'] if q['observed'])}</b> 件)</span>"
         f"<span><a href=\"#not-run\">未実行</a> <b>{t['未実行']}</b> 件</span>"
         f"<span><a href=\"#not-run\">ブロック</a> <b>{t['ブロック']}</b> 件</span>"
-        f"<span><a href=\"#not-run\">未実装</a> <b>{t['未実装']}</b> 件</span></p></div>"
+        f"<span><a href=\"#not-run\">テスト未作成</a> <b>{t['未実装']}</b> 件</span></p></div>"
     )
     # 1列で、帯 → 問題点 → やるべきことをやったか(終了条件ごとの判定)の順に並べる。問題点を先に読めるようにする
     return f'<section id="first-view">{banner}{problems}{done}</section>'
@@ -1533,7 +1533,7 @@ _TREE_CHILDREN = {"REQ": ["SPEC", "COND"], "SPEC": ["COND"], "RISK": ["COND"], "
                   "HTC": ["LTC"], "CH": ["SES"]}
 # 色帯の並び(数えるキー, CSSのクラス)
 _TREE_SEGMENTS = [("Pass", "pass"), ("Fail", "fail"), ("ブロック", "block"), ("未実行", "notrun"),
-                  ("未実装", "unimpl"), ("探索済み", "explored"), ("未探索", "notrun")]
+                  ("テスト未作成", "unimpl"), ("探索済み", "explored"), ("未探索", "notrun")]
 
 
 class _Tree:
@@ -1554,10 +1554,10 @@ class _Tree:
         if t in ("REQ", "SPEC", "RISK", "COND"):
             row = tm_core.coverage(self.p, record_id)
             return zero | {k: row[k] for k in tm_core.RESULTS} | {
-                "未実装": row["未実装"], "探索済み": row["charters_done"],
+                "テスト未作成": row["未実装"], "探索済み": row["charters_done"],
                 "未探索": row["charters"] - row["charters_done"], "bugs": row["open_bugs"]}
         if t == "HTC":
-            c = dict(zero, 未実装=1 if record_id in self.unimplemented else 0)
+            c = dict(zero, テスト未作成=1 if record_id in self.unimplemented else 0)
             for ltc in self.kids(record_id, ["LTC"]):
                 c[tm_core._status(self.final, ltc)] += 1
             open_ids = {b.id for b in tm_core.open_bugs(self.p)}
@@ -1578,7 +1578,7 @@ class _Tree:
         waiting = c["未実行"] + c["ブロック"] + c["未探索"]
         flags = ([f'<b class="f">Fail {c["Fail"]}</b>'] if c["Fail"] else []) \
             + ([f'<b class="w">未実行 {waiting}</b>'] if waiting else []) \
-            + ([f'<b class="w">未実装 {c["未実装"]}</b>'] if c["未実装"] else []) \
+            + ([f'<b class="w">テスト未作成 {c["テスト未作成"]}</b>'] if c["テスト未作成"] else []) \
             + ([f'<b class="f">不具合 {c["bugs"]}</b>'] if c["bugs"] else [])
         level = "ng" if c["Fail"] or c["bugs"] else ("warn" if executed < total else "ok")
         return (f'<span class="bar">{parts}</span>'
@@ -1638,7 +1638,7 @@ class _Tree:
         if t == "HTC" and record_id in self.unimplemented:
             entry = self.p.unimplemented.get(record_id)
             reason = entry.reason if entry else self.p.records[record_id].fields.get("状態", "") or "理由の記録が無い"
-            inner += f'<div class="leaf none-text">未実装: {self.v.text(reason)}</div>'
+            inner += f'<div class="leaf none-text">ローレベルテストケース未作成: {self.v.text(reason)}</div>'
         inner = inner or '<div class="leaf none-text">この下にテストが無い</div>'
         anchor = f' id="tree-{record_id}"' if top else ""
         return (f'<details class="lv-{t}"{anchor} data-id="{record_id}"><summary class="{level}">{self.label(record_id)}'
@@ -1649,14 +1649,14 @@ def _trace_tree(v: View, m: dict) -> str:
     tree = _Tree(v)
     legend = "".join(f'<span><i class="{cls}"></i>{name}</span>' for name, cls in [
         ("Pass", "pass"), ("Fail", "fail"), ("ブロック", "block"), ("未実行・未探索", "notrun"),
-        ("未実装", "unimpl"), ("探索的テスト済み", "explored")])
+        ("テスト未作成", "unimpl"), ("探索的テスト済み", "explored")])
     req = "".join(tree.node(r["id"], top=True) for r in m["requirements"])
     risk = "".join(tree.node(r["id"], top=True) for r in m["risks"])
     return (
         '<h2 id="trace">要求とリスクのカバレッジ(トレーサビリティ)</h2>'
         "<p class=\"muted\">行をクリックすると、紐づく下の成果物が開く(要求 → 仕様 → テスト条件 → テストケース・テストチャーター → 結果・証跡・欠陥レポート)。"
         "左の線は、赤 = Fail か修正されていない不具合がある、黄 = 実行していないものがある、緑 = すべて実行して Pass。"
-        "「実行 x/y」= 実行したもの(Pass + Fail + 探索したテストチャーター) ÷ (ローレベルテストケース + 未実装のハイレベルテストケース + テストチャーター)。"
+        "「実行 x/y」= 実行したもの(Pass + Fail + 探索したテストチャーター) ÷ (ローレベルテストケース + ローレベルテストケースを作っていないハイレベルテストケース + テストチャーター)。"
         "テスト条件の「カバレッジアイテム」は、テスト設計で出したパターンのうち、実装したテストケースで通るものの数。"
         "リスクは、リスクに直接紐づくテスト条件のテストを数え、リスクレベルの高い順に並べる。</p>"
         f'<div class="legend">{legend}</div>'
@@ -1725,7 +1725,7 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
     errors, warnings = tm_core.check(project)
 
     not_run_rows = [[v.ref(r["id"]), _badge(r["status"]), v.text(r["reason"])] for r in m["not_run"]]
-    not_run_rows += [[v.ref(r["id"]), _badge("未実装"), v.text(r["reason"])] for r in m["unimplemented"]]
+    not_run_rows += [[v.ref(r["id"]), _badge("テスト未作成"), v.text(r["reason"])] for r in m["unimplemented"]]
     question_rows = [[v.ref(q["id"], False), _escape(q["stage"]), v.text(q["question"]),
                       v.text(_observed_text(q["observed"])) + _observed_evidence(v, q["observed"])] for q in m["open_questions"]]
     rollback = project.root / "戻し記録.md"
@@ -1744,7 +1744,7 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
         "数字はすべて、このレポートを作った時点の成果物(snapshot フォルダ)から数え直したもの。"
         "同じテストケースを何回か実行したときは、いちばん新しいテストランの結果を数えている。"
         f"実行率 {t['execution_rate']}% = 実行した {t['executed']} 件(Pass + Fail) ÷ ローレベルテストケース {t['total']} 件"
-        f"(未実装の {t['未実装']} 件は分母に入っていない)。</div>"
+        f"(ローレベルテストケースを作っていないハイレベルテストケース {t['未実装']} 件は分母に入っていない)。</div>"
     )
     # まとめのタブには、テスト実行のページの中身に加えて、仕様のカバレッジとチャーターの時間を出す
     summary_extra = (
@@ -1757,7 +1757,7 @@ def build_report(project: Project, timestamp: str | None = None) -> Path:
     # 判定の記録: 判定.md に書いたこと、実行していないもの、未回答の質問、戻し記録、トレーサビリティの確認
     record = (
         written
-        + '<h2 id="not-run">実行していないテストケース(未実行・ブロック・未実装)</h2>'
+        + '<h2 id="not-run">実行していないテストケース(未実行・ブロック・テスト未作成)</h2>'
         + (_table(["テストケース", "状態", "理由"], not_run_rows) if not_run_rows else "<p>ありません。</p>")
         + _stale_results(v, m["versions"])
         + '<h2 id="questions">未回答の質問</h2>'

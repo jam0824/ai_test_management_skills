@@ -99,6 +99,8 @@ use: { screenshot: 'only-on-failure', trace: 'retain-on-failure', video: 'retain
 `未実装.md`(自動化できなかったものがあるときだけ)
 
 ```markdown
+# 自動化できなかったローレベルテストケース
+
 | ローレベルテストケースID | 理由 | 手動テストへ |
 |---|---|---|
 | LTC-014 | 印刷の結果は画面から確かめられない | 報告済み |
@@ -108,7 +110,7 @@ use: { screenshot: 'only-on-failure', trace: 'retain-on-failure', video: 'retain
 
 ## 終わる前に
 
-- `python "${CLAUDE_PLUGIN_ROOT}/scripts/tm.py" check --stage e2e` を実行し、エラーを0件にする。警告(スクリプトが無く未実装にも無いE2E自動テスト)は残さない。
+- `python "${CLAUDE_PLUGIN_ROOT}/scripts/tm.py" check --stage e2e` を実行し、エラーを0件にする。警告(スクリプトが無く `未実装.md` にも無いE2E自動テスト)は残さない。
 - アサーションの無いテスト、必ず合格するテスト(期待値を自分で作って自分と比べている、など)が無いかを見る。
 - 一度実行したときの結果(スクリプトの誤りで止まったものが無いこと、失敗したテストとその内容)を報告に書く。
 - 共通ルールの「作成スキルが終わるときの報告」の4点を報告する。
